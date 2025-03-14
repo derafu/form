@@ -165,7 +165,10 @@ final class FormRenderer implements FormRendererInterface
             'floating_labels' => true,
         ], $options);
 
-        if ($options['floating_labels'] && empty($options['attr']['placeholder'])) {
+        if (
+            $options['floating_labels']
+            && empty($options['attr']['placeholder'])
+        ) {
             $options['attr']['placeholder'] = $field->getControl()->getLabel();
         }
 
@@ -229,7 +232,9 @@ final class FormRenderer implements FormRendererInterface
         FormInterface $form,
         array $options = []
     ): string {
-        $renderer = $this->elementRendererRegistry->getRenderer($element->getType());
+        $renderer = $this->elementRendererRegistry->getRenderer(
+            $element->getType()
+        );
 
         return $renderer->render($element, $form, array_merge([
             'renderer' => $this,
@@ -304,17 +309,36 @@ final class FormRenderer implements FormRendererInterface
                 return 'date';
             } elseif ($format === 'date-time') {
                 return 'datetime';
+            } elseif ($format === 'week') {
+                return 'week';
+            } elseif ($format === 'month') {
+                return 'month';
             } elseif ($format === 'password') {
                 return 'password';
+            } elseif ($format === 'time') {
+                return 'time';
+            } elseif ($format === 'color') {
+                return 'color';
+            } elseif (isset($options['type']) && $options['type'] === 'radio') {
+                return 'radio';
             } elseif ($format === 'uri') {
                 return 'url';
             } elseif ($property->getEnum() !== null) {
                 return 'select';
-            } elseif ($property->getMaxLength() !== null && $property->getMaxLength() > 255) {
+            } elseif (
+                $property->getMaxLength() !== null
+                && $property->getMaxLength() > 255
+            ) {
                 return 'textarea';
             }
             return 'text';
-        } elseif ($type === 'number' || $type === 'integer') {
+        } elseif (
+            $type === 'number'
+            || $type === 'integer'
+            || $type === 'float'
+            || (isset($options['type']) && $options['type'] === 'float')
+            || $type === 'percent'
+        ) {
             return 'number';
         } elseif ($type === 'boolean') {
             return 'checkbox';

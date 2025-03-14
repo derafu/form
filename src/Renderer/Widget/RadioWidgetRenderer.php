@@ -19,16 +19,16 @@ use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use InvalidArgumentException;
 
 /**
- * Renderer for input widgets.
+ * Renderer for radio input widgets.
  */
-final class InputWidgetRenderer implements WidgetRendererInterface
+final class RadioWidgetRenderer implements WidgetRendererInterface
 {
     /**
      * Constructor.
      *
      * @param string $type The type of input to render.
      */
-    public function __construct(private readonly string $type = 'text')
+    public function __construct(private readonly string $type = 'radio')
     {
     }
 
@@ -39,7 +39,6 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         FormFieldInterface $field,
         array $options = []
     ): string {
-        // Get the main form renderer from options.
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
@@ -53,17 +52,8 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         // Determine if there are errors.
         $hasErrors = $options['has_errors'] ?? false;
 
-        // Determine the type of input to render.
-        $type = $options['attr']['type'] ?? $options['type'] ?? $this->type;
-
-        // Prepare CSS classes.
-        $widgetClass = 'form-control';
-
-        if ($type === 'checkbox') {
-            $widgetClass = 'form-check-input';
-        } elseif ($type === 'range') {
-            $widgetClass .= ' form-range';
-        }
+        // Determine the CSS class of the widget.
+        $widgetClass = 'form-check-input';
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
@@ -71,42 +61,26 @@ final class InputWidgetRenderer implements WidgetRendererInterface
             $widgetClass .= ' ' . $options['widget_class'];
         }
 
-        // Get field name.
         $name = $property->getName();
-
-        // Get field value.
         $value = $options['value'] ?? null;
-
-        if ($type === 'percent' || $type === 'float' || $type === 'money') {
-            $type = 'number';
-        }
 
         // Build HTML attributes for the input.
         $attrs = [
-            'type' => $type,
+            'type' => $this->type,
             'id' => $name . '_field',
             'name' => $name,
             'class' => $widgetClass,
         ];
 
-        // Set value if provided.
+        // Add value if present.
         if ($value !== null) {
-            if ($type === 'checkbox') {
-                if (filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
-                    $attrs['checked'] = 'checked';
-                }
-            } elseif ($type === 'datetime-local') {
-                $date = new \DateTime($value);
-                $attrs['value'] = $date->format('Y-m-d\TH:i:s');
-            } else {
-                if (is_array($value) || is_object($value)) {
-                    $value = json_encode($value);
-                }
-                $attrs['value'] = $value;
-            }
+            $attrs['value'] = is_array($value)
+                || is_object($value)
+                ? json_encode($value)
+                : $value
+            ;
         }
 
-        // Add validation attributes from property.
         if ($field->isRequired()) {
             $attrs['required'] = 'required';
         }
@@ -115,46 +89,49 @@ final class InputWidgetRenderer implements WidgetRendererInterface
             if ($property->getMinLength() !== null) {
                 $attrs['minlength'] = (string)$property->getMinLength();
             }
-
             if ($property->getMaxLength() !== null) {
                 $attrs['maxlength'] = (string)$property->getMaxLength();
             }
-
             if ($property->getPattern() !== null) {
                 $attrs['pattern'] = $property->getPattern();
             }
         }
 
-        // Add placeholder from control options if available.
         $controlOptions = $control->getOptions();
         if (!empty($controlOptions['placeholder'])) {
             $attrs['placeholder'] = $controlOptions['placeholder'];
         }
 
-        // Apply custom attributes from options.
         if (isset($options['attr']) && is_array($options['attr'])) {
             $attrs = array_merge($attrs, $options['attr']);
         }
 
+        // Special handling for radio buttons.
+        $choices = [];
         if (
-            $type === 'checkbox'
-            && isset($attrs['checked'])
-            && $attrs['checked'] === 'checked'
+            method_exists($property, 'getEnum')
+            && $property->getEnum() !== null
         ) {
-            $attrs['checked'] = 'checked';
+            foreach ($property->getEnum() as $enumValue) {
+                $choices[$enumValue] = $enumValue;
+            }
+        }
+        if (isset($options['choices']) && is_array($options['choices'])) {
+            $choices = $options['choices'];
         }
 
-
-        // Prepare context for template.
         $context = [
             'field' => $field,
             'options' => $options,
             'attrs' => $attrs,
             'has_errors' => $hasErrors,
+            'choices' => $choices,
+            'value' => $value,
+            'name' => $name,
         ];
 
-        // Render the template.
-        $template = 'form/widget/input';
+        $template = 'form/widget/radio';
+
         return $formRenderer->getRenderer()->render($template, $context);
     }
 }

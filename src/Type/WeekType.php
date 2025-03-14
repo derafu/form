@@ -51,6 +51,17 @@ final class WeekType extends AbstractType
     /**
      * {@inheritDoc}
      */
+    public function getJsonSchema(): array
+    {
+        return [
+            'type' => 'string',
+            'format' => 'week',
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     protected function getDefaultOptions(): array
     {
         return [

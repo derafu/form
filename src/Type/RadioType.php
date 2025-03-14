@@ -28,4 +28,15 @@ final class RadioType extends AbstractType
     {
         return 'radio';
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getJsonSchema(): array
+    {
+        return [
+            'type' => 'string',
+            'enum' => [],
+        ];
+    }
 }

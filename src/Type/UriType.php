@@ -22,11 +22,30 @@ use Derafu\Form\Abstract\AbstractType;
 final class UriType extends AbstractType
 {
     /**
+     * The pattern for the date type.
+     *
+     * @var string
+     */
+    public const PATTERN = '/^(?:[a-zA-Z][a-zA-Z0-9+.-]*):(?:\/\/)?(?:[\w.-]+(?:\:[\w.-]*)?@)?(?:[\w.-]+)(?:\:\d+)?(?:\/[\w\/._-]*)?(?:\?\S*)?(?:#\S*)?$/';
+
+    /**
      * {@inheritDoc}
      */
     public function getName(): string
     {
         return 'uri';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function validateValue(mixed $value): bool
+    {
+        if (!is_string($value)) {
+            return false;
+        }
+
+        return preg_match(self::PATTERN, $value) === 1;
     }
 
     /**
@@ -41,6 +60,16 @@ final class UriType extends AbstractType
             // RFC 3986.
             'maxLength' => 2048,
             'minLength' => 2,
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function getDefaultOptions(): array
+    {
+        return [
+            'pattern' => self::PATTERN,
         ];
     }
 

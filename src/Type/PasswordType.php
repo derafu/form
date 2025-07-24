@@ -36,4 +36,15 @@ final class PasswordType extends AbstractType
     {
         return is_string($value);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getJsonSchema(): array
+    {
+        return [
+            'type' => 'string',
+            'format' => 'password',
+        ];
+    }
 }

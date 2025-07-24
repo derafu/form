@@ -56,6 +56,7 @@ final class PercentType extends AbstractType
     {
         return [
             'type' => 'number',
+            'format' => 'percent',
         ];
     }
 }

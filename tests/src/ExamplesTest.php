@@ -37,6 +37,7 @@ use Derafu\Form\Renderer\ElementRendererRegistry;
 use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Renderer\FormTwigExtension;
 use Derafu\Form\Renderer\Widget\InputWidgetRenderer;
+use Derafu\Form\Renderer\Widget\RadioWidgetRenderer;
 use Derafu\Form\Renderer\WidgetRendererProvider;
 use Derafu\Form\Renderer\WidgetRendererRegistry;
 use Derafu\Form\Schema\ArraySchema;
@@ -127,6 +128,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Ipv4Type::class)]
 #[CoversClass(Ipv6Type::class)]
 #[CoversClass(MonthType::class)]
+#[CoversClass(RadioWidgetRenderer::class)]
 #[CoversClass(TextType::class)]
 #[CoversClass(TextareaType::class)]
 #[CoversClass(TimeType::class)]

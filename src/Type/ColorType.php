@@ -69,6 +69,17 @@ final class ColorType extends AbstractType
     /**
      * {@inheritDoc}
      */
+    public function getJsonSchema(): array
+    {
+        return [
+            'type' => 'string',
+            'format' => 'color',
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isGuessable(): bool
     {
         return true;

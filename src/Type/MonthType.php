@@ -51,6 +51,21 @@ final class MonthType extends AbstractType
     /**
      * {@inheritDoc}
      */
+    public function getJsonSchema(): array
+    {
+        return [
+            'type' => 'string',
+            'format' => 'month',
+
+            // ISO 8601.
+            'maxLength' => 7,
+            'minLength' => 7,
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     protected function getDefaultOptions(): array
     {
         return [

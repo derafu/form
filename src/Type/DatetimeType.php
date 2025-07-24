@@ -27,7 +27,7 @@ final class DatetimeType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^(19\d{2}|20\d{2}|2100)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/';
+    public const PATTERN = '/^(19\d{2}|20\d{2}|2100)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?:\.\d+)?(Z|[+-](?:0\d|1[0-4]):[0-5]\d)?$/';
 
     /**
      * {@inheritDoc}

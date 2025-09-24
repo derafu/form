@@ -125,23 +125,11 @@
                         },
                         "certificateFile": {
                             "type": "string",
-                            "title": "Certificate File (.cer)"
+                            "title": "Certificate File (.p12, .pfx)"
                         },
-                        "privateKeyFile": {
+                        "certificatePassword": {
                             "type": "string",
-                            "title": "Private Key File (.key)"
-                        },
-                        "privateKeyPassword": {
-                            "type": "string",
-                            "title": "Private Key Password"
-                        },
-                        "certificateExpiration": {
-                            "type": [
-                                "null",
-                                "string"
-                            ],
-                            "format": "date",
-                            "title": "Certificate Expiration Date"
+                            "title": "Certificate Password"
                         },
                         "enableNotifications": {
                             "type": "boolean",
@@ -159,8 +147,7 @@
                     "required": [
                         "certificateType",
                         "certificateFile",
-                        "privateKeyFile",
-                        "privateKeyPassword"
+                        "certificatePassword"
                     ]
                 },
                 "documentTypes": {
@@ -537,7 +524,7 @@
                                     "type": "Control",
                                     "scope": "#/properties/companyProfile/properties/logo",
                                     "options": {
-                                        "format": "file"
+                                        "type": "file"
                                     }
                                 }
                             ]
@@ -556,7 +543,7 @@
                                     "type": "Control",
                                     "scope": "#/properties/digitalSignature/properties/certificateType",
                                     "options": {
-                                        "format": "radio"
+                                        "type": "radio"
                                     }
                                 },
                                 {
@@ -566,28 +553,17 @@
                                             "type": "Control",
                                             "scope": "#/properties/digitalSignature/properties/certificateFile",
                                             "options": {
-                                                "format": "file"
-                                            }
-                                        },
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/digitalSignature/properties/privateKeyFile",
-                                            "options": {
-                                                "format": "file"
+                                                "type": "file"
                                             }
                                         }
                                     ]
                                 },
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/digitalSignature/properties/privateKeyPassword",
+                                    "scope": "#/properties/digitalSignature/properties/certificatePassword",
                                     "options": {
-                                        "format": "password"
+                                        "type": "password"
                                     }
-                                },
-                                {
-                                    "type": "Control",
-                                    "scope": "#/properties/digitalSignature/properties/certificateExpiration"
                                 }
                             ]
                         },
@@ -626,10 +602,7 @@
                             "elements": [
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/documentTypes/properties/enabledDocuments",
-                                    "options": {
-                                        "format": "checkbox"
-                                    }
+                                    "scope": "#/properties/documentTypes/properties/enabledDocuments"
                                 }
                             ]
                         },
@@ -951,14 +924,14 @@
                                             "type": "Control",
                                             "scope": "#/properties/integration/properties/apiKeys/properties/production",
                                             "options": {
-                                                "format": "password"
+                                                "type": "password"
                                             }
                                         },
                                         {
                                             "type": "Control",
                                             "scope": "#/properties/integration/properties/apiKeys/properties/testing",
                                             "options": {
-                                                "format": "password"
+                                                "type": "password"
                                             }
                                         }
                                     ]
@@ -990,7 +963,7 @@
                                     "type": "Control",
                                     "scope": "#/properties/integration/properties/webhook/properties/secret",
                                     "options": {
-                                        "format": "password"
+                                        "type": "password"
                                     },
                                     "rule": {
                                         "effect": "SHOW",

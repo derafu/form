@@ -91,7 +91,7 @@
                             "type": "Control",
                             "scope": "#/properties/api_hash",
                             "options": {
-                                "format": "password",
+                                "type": "password",
                                 "showUnfocusedDescription": true
                             }
                         },
@@ -99,7 +99,7 @@
                             "type": "Control",
                             "scope": "#/properties/api_key",
                             "options": {
-                                "format": "password",
+                                "type": "password",
                                 "showUnfocusedDescription": true
                             }
                         }
@@ -113,21 +113,21 @@
                             "type": "Control",
                             "scope": "#/properties/current_password",
                             "options": {
-                                "format": "password"
+                                "type": "password"
                             }
                         },
                         {
                             "type": "Control",
                             "scope": "#/properties/new_password",
                             "options": {
-                                "format": "password"
+                                "type": "password"
                             }
                         },
                         {
                             "type": "Control",
                             "scope": "#/properties/repeat_password",
                             "options": {
-                                "format": "password"
+                                "type": "password"
                             }
                         }
                     ]

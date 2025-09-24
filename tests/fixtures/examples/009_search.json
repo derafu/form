@@ -215,10 +215,7 @@
                         },
                         {
                             "type": "Control",
-                            "scope": "#/properties/basicFilters/properties/invoiceStatus",
-                            "options": {
-                                "format": "checkbox"
-                            }
+                            "scope": "#/properties/basicFilters/properties/invoiceStatus"
                         },
                         {
                             "type": "Control",

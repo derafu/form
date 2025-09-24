@@ -62,8 +62,8 @@
         {% else %}
             {# Single checkbox/radio - use form-check structure #}
             <div class="form-check">
-                {{ widget|raw }}
                 {{ label|raw }}
+                {{ widget|raw }}
             </div>
         {% endif %}
 
@@ -108,7 +108,7 @@
 
                 {% if is_password %}
                     {# Add show/hide password button #}
-                    <button class="btn btn-outline-secondary" type="button" onclick="FormFields.showPassword(this)">
+                    <button class="btn btn-secondary" type="button" onclick="FormFields.showPassword(this)">
                         <i class="fa-regular fa-eye fa-fw"></i>
                     </button>
                 {% endif %}

@@ -315,14 +315,14 @@
                                             "type": "Control",
                                             "scope": "#/properties/plan/properties/selectedPlan",
                                             "options": {
-                                                "format": "radio"
+                                                "type": "radio"
                                             }
                                         },
                                         {
                                             "type": "Control",
                                             "scope": "#/properties/plan/properties/paymentFrequency",
                                             "options": {
-                                                "format": "radio"
+                                                "type": "radio"
                                             }
                                         },
                                         {
@@ -361,7 +361,7 @@
                                             "type": "Control",
                                             "scope": "#/properties/digitalSignature/properties/signaturePassword",
                                             "options": {
-                                                "format": "password"
+                                                "type": "password"
                                             }
                                         },
                                         {
@@ -400,7 +400,7 @@
                                             "type": "Control",
                                             "scope": "#/properties/taxKey/properties/taxPassword",
                                             "options": {
-                                                "format": "password"
+                                                "type": "password"
                                             }
                                         },
                                         {
@@ -595,7 +595,7 @@
                                                             "type": "Control",
                                                             "scope": "#/properties/generalConfig/properties/emailConfig/properties/emailPassword",
                                                             "options": {
-                                                                "format": "password"
+                                                                "type": "password"
                                                             }
                                                         }
                                                     ]

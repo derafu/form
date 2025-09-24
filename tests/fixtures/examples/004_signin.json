@@ -32,6 +32,33 @@
                 "password"
             ]
         },
+        "uischema": {
+            "type": "VerticalLayout",
+            "elements": [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/username",
+                    "options": {
+                        "input_group_prepend_icon": "fa-solid fa-user"
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/password",
+                    "options": {
+                        "type": "password",
+                        "input_group_prepend_icon": "fa-solid fa-key"
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/twoFactorToken",
+                    "options": {
+                        "input_group_prepend_icon": "fa-solid fa-shield-halved"
+                    }
+                }
+            ]
+        },
         "data": {
             "username": "",
             "password": ""

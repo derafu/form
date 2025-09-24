@@ -322,10 +322,7 @@
                                 },
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/address/properties/country",
-                                    "options": {
-                                        "format": "select"
-                                    }
+                                    "scope": "#/properties/address/properties/country"
                                 }
                             ]
                         }
@@ -340,17 +337,11 @@
                             "elements": [
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/preferences/properties/newsletter",
-                                    "options": {
-                                        "format": "checkbox"
-                                    }
+                                    "scope": "#/properties/preferences/properties/newsletter"
                                 },
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/preferences/properties/marketing",
-                                    "options": {
-                                        "format": "checkbox"
-                                    }
+                                    "scope": "#/properties/preferences/properties/marketing"
                                 }
                             ]
                         },
@@ -359,17 +350,11 @@
                             "elements": [
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/preferences/properties/language",
-                                    "options": {
-                                        "format": "select"
-                                    }
+                                    "scope": "#/properties/preferences/properties/language"
                                 },
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/preferences/properties/timezone",
-                                    "options": {
-                                        "format": "select"
-                                    }
+                                    "scope": "#/properties/preferences/properties/timezone"
                                 }
                             ]
                         }
@@ -381,24 +366,15 @@
                     "elements": [
                         {
                             "type": "Control",
-                            "scope": "#/properties/terms/properties/acceptTerms",
-                            "options": {
-                                "format": "checkbox"
-                            }
+                            "scope": "#/properties/terms/properties/acceptTerms"
                         },
                         {
                             "type": "Control",
-                            "scope": "#/properties/terms/properties/acceptPrivacy",
-                            "options": {
-                                "format": "checkbox"
-                            }
+                            "scope": "#/properties/terms/properties/acceptPrivacy"
                         },
                         {
                             "type": "Control",
-                            "scope": "#/properties/terms/properties/ageVerification",
-                            "options": {
-                                "format": "checkbox"
-                            }
+                            "scope": "#/properties/terms/properties/ageVerification"
                         }
                     ]
                 }

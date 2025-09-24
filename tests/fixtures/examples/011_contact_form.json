@@ -159,17 +159,11 @@
                             "elements": [
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/priority",
-                                    "options": {
-                                        "format": "radio"
-                                    }
+                                    "scope": "#/properties/priority"
                                 },
                                 {
                                     "type": "Control",
-                                    "scope": "#/properties/preferredContact",
-                                    "options": {
-                                        "format": "select"
-                                    }
+                                    "scope": "#/properties/preferredContact"
                                 }
                             ]
                         }

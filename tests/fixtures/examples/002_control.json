@@ -295,7 +295,7 @@
                 {
                     "type": "Control",
                     "scope": "#/properties/time",
-                    "options": { "format": "time" }
+                    "options": { "type": "time" }
                 },
                 {
                     "type": "Control",

@@ -7,17 +7,11 @@
 {# Determine if the field has errors to apply the appropriate classes. #}
 {% set has_errors = errors is not empty %}
 
-{# Check if this is a checkbox or radio field using multiple detection methods #}
-{% set input_type = options.type|default(options.attr.type|default('text')) %}
-{% set widget_contains_checkbox = widget matches '/type="checkbox"/' %}
-{% set widget_contains_radio = widget matches '/type="radio"/' %}
-{% set widget_contains_password = widget matches '/type="password"/' or widget matches '/data-password-field="true"/' %}
-{% set widget_has_multiple_checkboxes = widget matches '/type="checkbox".*type="checkbox"/s' %}
-{% set widget_has_form_check_group = widget matches '/checkbox-group/' %}
-
-{% set is_checkbox = input_type == 'checkbox' or input_type == 'radio' or widget_contains_checkbox or widget_contains_radio %}
-{% set is_password = input_type == 'password' or widget_contains_password %}
-{% set is_choice_multiple = widget_has_multiple_checkboxes or widget_has_form_check_group or (options.multiple is defined and options.multiple and options.expanded is defined and options.expanded) %}
+{# Determine field kind from widget type. #}
+{% set widget_type = field.widget.type %}
+{% set is_checkbox = widget_type == 'checkbox' %}
+{% set is_choice_multiple = widget_type in ['checkboxes', 'radio'] %}
+{% set is_password = widget_type == 'password' %}
 
 {# Get options for row and layout. #}
 {% set row_attr = options.row_attr|default({}) %}
@@ -48,7 +42,6 @@
 <div class="{{ row_class }}">
     {# Special handling for checkboxes and radio buttons #}
     {% if is_checkbox or is_choice_multiple %}
-        {# For single checkbox/radio or multiple choice expanded #}
         {% if is_choice_multiple %}
             {# Multiple checkboxes/radios - render the main label first if exists #}
             {% if label %}
@@ -60,7 +53,7 @@
                 {{ widget|raw }}
             {% endif %}
         {% else %}
-            {# Single checkbox/radio - use form-check structure #}
+            {# Single checkbox - use form-check structure #}
             <div class="form-check">
                 {{ label|raw }}
                 {{ widget|raw }}

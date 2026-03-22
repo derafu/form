@@ -15,6 +15,7 @@ namespace Derafu\Form;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Schema\PropertySchemaInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
+use Derafu\Form\Contract\Widget\WidgetInterface;
 use Derafu\Support\JsonSerializer;
 
 /**
@@ -25,6 +26,13 @@ use Derafu\Support\JsonSerializer;
  */
 final class FormField implements FormFieldInterface
 {
+    /**
+     * The widget associated with this field.
+     *
+     * @var WidgetInterface
+     */
+    private WidgetInterface $widget;
+
     /**
      * The name pattern for the field.
      *
@@ -88,6 +96,24 @@ final class FormField implements FormFieldInterface
     public function getControl(): ControlInterface
     {
         return $this->control;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getWidget(): WidgetInterface
+    {
+        return $this->widget;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setWidget(WidgetInterface $widget): static
+    {
+        $this->widget = $widget;
+
+        return $this;
     }
 
     /**

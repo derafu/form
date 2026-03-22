@@ -8,8 +8,10 @@
 {% set label_class = '' %}
 {% set is_required = field.property.isRequired is defined and field.property.isRequired %}
 
-{# If not floating, use form-label, if floating no class. #}
-{% if not options.floating_labels %}
+{# Assign label class based on widget type. #}
+{% if field.widget.type in ['checkbox', 'radio'] %}
+    {% set label_class = 'form-check-label' %}
+{% elseif not options.floating_labels %}
     {% set label_class = 'form-label' %}
 {% endif %}
 

@@ -17,10 +17,6 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererRegistryInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererRegistryInterface;
-use Derafu\Form\Contract\Schema\ArraySchemaInterface;
-use Derafu\Form\Contract\Schema\PropertySchemaInterface;
-use Derafu\Form\Contract\Schema\StringSchemaInterface;
-use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Renderer\Contract\RendererInterface;
 
@@ -123,12 +119,9 @@ final class FormRenderer implements FormRendererInterface
         FormFieldInterface $field,
         array $options = []
     ): string {
-        $property = $field->getProperty();
-        $control = $field->getControl();
-
-        $widgetType = $this->determineWidgetType($property, $control);
-
-        $renderer = $this->widgetRendererRegistry->getRenderer($widgetType);
+        $renderer = $this->widgetRendererRegistry->getRenderer(
+            $field->getWidget()->getType()
+        );
 
         $html = $renderer->render($field, array_merge([
             'renderer' => $this,
@@ -163,7 +156,7 @@ final class FormRenderer implements FormRendererInterface
         array $options = []
     ): string {
         $options = array_merge([
-            'floating_labels' => true,
+            'floating_labels' => $field->getWidget()->supportsFloatingLabel(),
         ], $options);
 
         if (
@@ -293,117 +286,5 @@ final class FormRenderer implements FormRendererInterface
     public function getRenderer(): RendererInterface
     {
         return $this->renderer;
-    }
-
-    /**
-     * Determines the appropriate widget type based on property and control.
-     *
-     * @param PropertySchemaInterface $property The property.
-     * @param ControlInterface $control The control.
-     * @return string The widget type (e.g., 'text', 'email', 'select', etc.).
-     */
-    private function determineWidgetType(
-        PropertySchemaInterface $property,
-        ControlInterface $control
-    ): string {
-        // Check if the control has a specific widget type defined in options.
-        $options = $control->getOptions();
-        if (isset($options['widget'])) {
-            return $options['widget'];
-        }
-
-        // Determine widget type based on property type and format.
-        $type = $property->getType();
-        $format = $property instanceof StringSchemaInterface
-            ? $property->getFormat()
-            : null
-        ;
-
-        // Map property type and format to widget type.
-        if ($property instanceof StringSchemaInterface) {
-            if ($format === 'email') {
-                return 'email';
-            } elseif ($format === 'date') {
-                return 'date';
-            } elseif ($format === 'date-time') {
-                return 'datetime';
-            } elseif ($format === 'week') {
-                return 'week';
-            } elseif ($format === 'month') {
-                return 'month';
-            } elseif ($format === 'password') {
-                return 'password';
-            } elseif ($format === 'time') {
-                return 'time';
-            } elseif ($format === 'color') {
-                return 'color';
-            } elseif (
-                isset($options['type'])
-                && $options['type'] === 'radio'
-            ) {
-                return 'radio';
-            } elseif ($format === 'uri') {
-                return 'url';
-            } elseif ($property->getEnum() !== null) {
-                return 'select';
-            } elseif (
-                !empty($options['multi'])
-                || (
-                    $property->getMaxLength() !== null
-                    && $property->getMaxLength() > 255
-                )
-                || (
-                    isset($options['type'])
-                    && $options['type'] === 'textarea'
-                )
-            ) {
-                return 'textarea';
-            }
-            return 'text';
-        } elseif (
-            $type === 'number'
-            || $type === 'integer'
-            || $type === 'float'
-            || (isset($options['type']) && $options['type'] === 'float')
-            || $type === 'percent'
-        ) {
-            // Check if slider widget is explicitly requested.
-            if (isset($options['type']) && $options['type'] === 'slider') {
-                return 'slider';
-            }
-            // Check if range widget is explicitly requested (alias for slider).
-            if (isset($options['type']) && $options['type'] === 'range') {
-                return 'range';
-            }
-            return 'number';
-        } elseif ($type === 'boolean') {
-            return 'checkbox';
-        } elseif ($type === 'array') {
-            $schema = $property->toArray();
-            if (isset($schema['items']['enum'])) {
-                return 'checkboxes';
-            }
-            return 'collection';
-        } elseif ($property instanceof ArraySchemaInterface) {
-            return 'collection';
-        } elseif ($type === 'object') {
-            return 'compound';
-        }
-
-        // Check if the control has a specific format defined in options.
-        if (isset($options['format'])) {
-            if ($options['format'] === 'checkbox') {
-                // For boolean fields, use single checkbox
-                // For array fields with enum, use multiple checkboxes
-                if ($property->getType() === 'boolean') {
-                    return 'checkbox';
-                } else {
-                    return 'checkboxes';
-                }
-            }
-        }
-
-        // Default to text.
-        return 'text';
     }
 }

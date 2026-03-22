@@ -108,10 +108,15 @@
                     "minimum": 0,
                     "maximum": 100
                 },
-                "tag": {
+                "tags": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "object",
+                        "properties": {
+                            "tag": {
+                                "type": "string"
+                            }
+                        }
                     }
                 },
                 "telephone": {
@@ -275,8 +280,7 @@
                 },
                 {
                     "type": "Control",
-                    "scope": "#/properties/tag",
-                    "options": { "type": "tag" }
+                    "scope": "#/properties/tags"
                 },
                 {
                     "type": "Control",
@@ -345,7 +349,7 @@
             "regex": "abcd1234",
             "search": "Symfony Forms",
             "slider": 60,
-            "tag": ["Symfony", "Forms", "JSON"],
+            "tags": [{"tag": "Symfony"}, {"tag": "Forms"}, {"tag": "JSON"}],
             "telephone": "+56912345678",
             "textarea": "This is a long text.",
             "text": "Sample text",

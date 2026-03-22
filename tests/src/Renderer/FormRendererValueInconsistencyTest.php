@@ -18,6 +18,8 @@ use Derafu\Form\Data\FormData;
 use Derafu\Form\Form;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\UiSchema\VerticalLayout;
+use Derafu\Form\Widget\Widget;
+use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -37,6 +39,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(\Derafu\Form\Schema\StringSchema::class)]
 #[CoversClass(\Derafu\Form\UiSchema\Control::class)]
 #[CoversClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
+#[CoversClass(WidgetFactory::class)]
+#[CoversClass(Widget::class)]
 final class FormRendererValueInconsistencyTest extends TestCase
 {
     /**

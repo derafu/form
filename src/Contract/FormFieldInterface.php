@@ -14,6 +14,7 @@ namespace Derafu\Form\Contract;
 
 use Derafu\Form\Contract\Schema\PropertySchemaInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
+use Derafu\Form\Contract\Widget\WidgetInterface;
 use JsonSerializable;
 
 /**
@@ -40,6 +41,22 @@ interface FormFieldInterface extends JsonSerializable
      * visually represented.
      */
     public function getControl(): ControlInterface;
+
+    /**
+     * Gets the widget associated with this field.
+     *
+     * @return WidgetInterface The widget that defines how the field should be
+     * visually represented.
+     */
+    public function getWidget(): WidgetInterface;
+
+    /**
+     * Sets the widget associated with this field.
+     *
+     * @param WidgetInterface $widget The widget associated with this field.
+     * @return static The current instance.
+     */
+    public function setWidget(WidgetInterface $widget): static;
 
     /**
      * Gets the name for the field.

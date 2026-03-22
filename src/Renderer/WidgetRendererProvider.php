@@ -14,6 +14,7 @@ namespace Derafu\Form\Renderer;
 
 use Derafu\Form\Contract\Renderer\WidgetRendererProviderInterface;
 use Derafu\Form\Renderer\Widget\CheckboxWidgetRenderer;
+use Derafu\Form\Renderer\Widget\CollectionWidgetRenderer;
 use Derafu\Form\Renderer\Widget\InputWidgetRenderer;
 use Derafu\Form\Renderer\Widget\RadioWidgetRenderer;
 use Derafu\Form\Renderer\Widget\SelectWidgetRenderer;
@@ -55,6 +56,7 @@ final class WidgetRendererProvider implements WidgetRendererProviderInterface
             'week' => new InputWidgetRenderer('week'),
             'textarea' => new TextareaWidgetRenderer(),
             'checkboxes' => new CheckboxWidgetRenderer(),
+            'collection' => new CollectionWidgetRenderer(),
             'select' => new SelectWidgetRenderer(),
             'radio' => new RadioWidgetRenderer(),
             'slider' => new SliderWidgetRenderer(),

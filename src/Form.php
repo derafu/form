@@ -21,10 +21,12 @@ use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\ElementsAwareInterface;
 use Derafu\Form\Contract\UiSchema\FormUiSchemaInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
+use Derafu\Form\Contract\Widget\WidgetFactoryInterface;
 use Derafu\Form\Data\FormData;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Schema\FormSchema;
+use Derafu\Form\Widget\WidgetFactory;
 use Derafu\Support\JsonSerializer;
 
 /**
@@ -54,6 +56,7 @@ final class Form implements FormInterface
      * @param FormDataInterface|null $data
      * @param FormOptionsInterface|null $options
      * @param array<string, array>|null $errors Optional errors for each field (by name)
+     * @param WidgetFactoryInterface|null $widgetFactory Optional widget factory.
      */
     public function __construct(
         private readonly FormSchemaInterface $schema,
@@ -61,7 +64,11 @@ final class Form implements FormInterface
         private readonly ?FormDataInterface $data = null,
         private readonly ?FormOptionsInterface $options = null,
         private readonly ?array $errors = null,
+        private ?WidgetFactoryInterface $widgetFactory = null,
     ) {
+        if ($this->widgetFactory === null) {
+            $this->widgetFactory = new WidgetFactory();
+        }
     }
 
     /**
@@ -127,7 +134,9 @@ final class Form implements FormInterface
                 $name = $element->getPropertyName();
                 $property = $this->getSchema()->getProperty($name);
                 if ($property) {
+                    // Create the field and set the widget.
                     $field = new FormField($property, $element);
+                    $field->setWidget($this->widgetFactory->create($field));
 
                     // Initialize field data from form data if available
                     if ($this->data !== null) {
@@ -233,6 +242,7 @@ final class Form implements FormInterface
         $data = isset($definition['data']) ? FormData::fromArray($definition['data']) : null;
         $options = FormOptions::fromArray($definition['options'] ?? []);
         $errors = $definition['errors'] ?? null;
+
         return new static($schema, $uischema, $data, $options, $errors);
     }
 }

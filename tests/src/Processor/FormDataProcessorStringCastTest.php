@@ -53,6 +53,8 @@ use Derafu\Form\Type\UuidType;
 use Derafu\Form\Type\WeekType;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
+use Derafu\Form\Widget\Widget;
+use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -97,6 +99,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WeekType::class)]
 #[CoversClass(Control::class)]
 #[CoversClass(VerticalLayout::class)]
+#[CoversClass(WidgetFactory::class)]
+#[CoversClass(Widget::class)]
 final class FormDataProcessorStringCastTest extends TestCase
 {
     private FormDataProcessorInterface $processor;

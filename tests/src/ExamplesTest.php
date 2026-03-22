@@ -37,6 +37,7 @@ use Derafu\Form\Renderer\ElementRendererRegistry;
 use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Renderer\FormTwigExtension;
 use Derafu\Form\Renderer\Widget\CheckboxWidgetRenderer;
+use Derafu\Form\Renderer\Widget\CollectionWidgetRenderer;
 use Derafu\Form\Renderer\Widget\InputWidgetRenderer;
 use Derafu\Form\Renderer\Widget\RadioWidgetRenderer;
 use Derafu\Form\Renderer\Widget\SelectWidgetRenderer;
@@ -78,6 +79,8 @@ use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\HorizontalLayout;
 use Derafu\Form\UiSchema\Label;
 use Derafu\Form\UiSchema\VerticalLayout;
+use Derafu\Form\Widget\Widget;
+use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -120,6 +123,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FormTwigExtension::class)]
 #[CoversClass(WidgetRendererProvider::class)]
 #[CoversClass(CheckboxWidgetRenderer::class)]
+#[CoversClass(CollectionWidgetRenderer::class)]
 #[CoversClass(InputWidgetRenderer::class)]
 #[CoversClass(RadioWidgetRenderer::class)]
 #[CoversClass(SelectWidgetRenderer::class)]
@@ -146,7 +150,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UrlType::class)]
 #[CoversClass(UuidType::class)]
 #[CoversClass(WeekType::class)]
-
+#[CoversClass(WidgetFactory::class)]
+#[CoversClass(Widget::class)]
 final class ExamplesTest extends TestCase
 {
     private FormRendererInterface $renderer;

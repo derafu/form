@@ -192,6 +192,23 @@ final class FormRenderer implements FormRendererInterface
     /**
      * {@inheritDoc}
      */
+    public function renderBody(
+        FormInterface $form,
+        array $options = []
+    ): string {
+        $html = $this->renderElement($form->getUiSchema(), $form, $options);
+
+        $csrfProtection = $options['csrf_protection'] ?? true;
+        if ($csrfProtection) {
+            $html .= $this->renderCsrf($form);
+        }
+
+        return $html;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function renderRest(
         FormInterface $form,
         array $options = []
@@ -203,7 +220,7 @@ final class FormRenderer implements FormRendererInterface
             if ($field->isRendered()) {
                 continue;
             }
-            $html .= $this->renderRow($field, $options);
+            $html .= $this->renderElement($field->getControl(), $form, $options);
         }
 
         return $html;

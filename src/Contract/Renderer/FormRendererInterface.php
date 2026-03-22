@@ -123,6 +123,21 @@ interface FormRendererInterface
     ): string;
 
     /**
+     * Renders the form body: all fields according to the UI schema layout,
+     * plus the CSRF token if enabled.
+     *
+     * This is the content between the opening and closing form tags.
+     *
+     * @param FormInterface $form The form to render the body for.
+     * @param array $options Additional options for the rendering.
+     * @return string The rendered form body HTML.
+     */
+    public function renderBody(
+        FormInterface $form,
+        array $options = []
+    ): string;
+
+    /**
      * Renders all unrendered fields in the form.
      *
      * @param FormInterface $form The form to render remaining fields for.

@@ -50,6 +50,7 @@ final class FormTwigExtension extends AbstractExtension
         return [
             // Standard functions (compatible with Symfony naming).
             new TwigFunction('form', [$this, 'renderForm']),
+            new TwigFunction('form_body', [$this, 'renderFormBody']),
             new TwigFunction('form_start', [$this, 'renderFormStart']),
             new TwigFunction('form_end', [$this, 'renderFormEnd']),
             new TwigFunction('form_label', [$this, 'renderFormLabel']),
@@ -78,6 +79,21 @@ final class FormTwigExtension extends AbstractExtension
     {
         return new Markup(
             $this->renderer->render($form, $options),
+            $this->charset
+        );
+    }
+
+    /**
+     * Renders the form body: all fields with layout and CSRF token.
+     *
+     * @param FormInterface $form The form to render the body for.
+     * @param array $options Additional options for rendering.
+     * @return Markup The rendered form body HTML.
+     */
+    public function renderFormBody(FormInterface $form, array $options = []): Markup
+    {
+        return new Markup(
+            $this->renderer->renderBody($form, $options),
             $this->charset
         );
     }

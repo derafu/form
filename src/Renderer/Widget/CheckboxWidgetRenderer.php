@@ -57,7 +57,7 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
         }
 
         // Get field name.
-        $name = $property->getName();
+        $name = $field->getName();
 
         // Get field value.
         $value = $options['value'] ?? $field->getData();

@@ -57,7 +57,7 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         }
 
         // Get field name.
-        $name = $property->getName();
+        $name = $field->getName();
         if ($isMultiple) {
             $name .= '[]';
         }

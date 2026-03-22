@@ -26,6 +26,13 @@ use Derafu\Support\JsonSerializer;
 final class FormField implements FormFieldInterface
 {
     /**
+     * The name pattern for the field.
+     *
+     * @var string
+     */
+    private string $namePattern = '%s';
+
+    /**
      * Whether the field is required.
      *
      * @var bool
@@ -81,6 +88,24 @@ final class FormField implements FormFieldInterface
     public function getControl(): ControlInterface
     {
         return $this->control;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getName(): string
+    {
+        return sprintf($this->namePattern, $this->property->getName());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setNamePattern(string $pattern): static
+    {
+        $this->namePattern = $pattern;
+
+        return $this;
     }
 
     /**

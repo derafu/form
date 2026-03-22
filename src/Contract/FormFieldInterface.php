@@ -42,6 +42,21 @@ interface FormFieldInterface extends JsonSerializable
     public function getControl(): ControlInterface;
 
     /**
+     * Gets the name for the field.
+     *
+     * @return string The name for the field.
+     */
+    public function getName(): string;
+
+    /**
+     * Sets the name pattern for the field.
+     *
+     * @param string $pattern The name pattern for the field.
+     * @return static The current instance.
+     */
+    public function setNamePattern(string $pattern): static;
+
+    /**
      * Checks if the field is required.
      *
      * @return bool True if the field is required, false otherwise.

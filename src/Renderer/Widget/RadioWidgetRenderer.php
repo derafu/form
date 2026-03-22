@@ -62,7 +62,7 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             $widgetClass .= ' ' . $options['widget_class'];
         }
 
-        $name = $property->getName();
+        $name = $field->getName();
         $value = $options['value'] ?? null;
 
         // Build HTML attributes for the radio.

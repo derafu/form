@@ -49,7 +49,7 @@ final class FormDataProcessor implements FormDataProcessorInterface
             // caller to provide the data. This solution is a workaround to
             // avoid the need to pass the request to the processor in some
             // cases, but it's not a good solution neither recommended.
-            $data = $_POST;
+            $data = array_merge($_POST, $_FILES);
         }
 
         $processedData = [];

@@ -4,26 +4,22 @@
    - is_simple=true:  all controls are direct (no nested layouts) → table-like
    - is_simple=false: nested layouts → bordered block per row
 #}
-{% set add_onclick %}
-    const widget = this.closest('.collection-widget');
-    const count = parseInt(widget.dataset.count);
-    const tpl = document.getElementById('{{ field_name }}_template');
-    const div = document.createElement('div');
-    div.innerHTML = tpl.innerHTML.replaceAll('__INDEX__', count);
-    widget.querySelector('.collection-rows').appendChild(div.firstElementChild);
-    widget.dataset.count = count + 1;
-{% endset %}
+{% set min_items = field.property.minItems ?? 0 %}
+{% set max_items = field.property.maxItems is defined and field.property.maxItems is not null ? field.property.maxItems : '' %}
 
-<div class="collection-widget position-relative"
+<div class="derafu-form-collection-widget position-relative"
      data-collection="{{ field_name }}"
-     data-count="{{ rows|length }}">
+     data-count="{{ rows|length }}"
+     data-min-items="{{ min_items }}"
+     data-max-items="{{ max_items }}">
 
     {% if is_simple %}
 
         {# + button absolute top-right, headers below #}
-        <button type="button" class="btn btn-sm btn-primary p-0 position-absolute top-0 end-0"
+        <button type="button"
+                class="derafu-form-collection-add btn btn-sm btn-primary p-0 position-absolute top-0 end-0"
                 style="width:1.5rem;height:1.5rem;line-height:1.5rem;z-index:1;"
-                onclick="{{ add_onclick }}">
+                onclick="CollectionWidget.add(this)">
             +
         </button>
 
@@ -38,16 +34,17 @@
         {% endif %}
 
         {# Data rows (each row_widgets is an array of rendered widget HTML) #}
-        <div class="collection-rows" id="{{ field_name }}_rows">
+        <div class="derafu-form-collection-rows" id="{{ field_name }}_rows">
             {% for i, row_widgets in rows %}
-                <div class="collection-row row g-2 align-items-center mb-1" data-index="{{ i }}">
+                <div class="derafu-form-collection-row row g-2 align-items-center mb-1" data-index="{{ i }}">
                     {% for widget in row_widgets %}
                         <div class="col">{{ widget|raw }}</div>
                     {% endfor %}
                     <div class="col-auto d-flex align-items-center" style="width:2rem">
-                        <button type="button" class="btn btn-sm btn-danger p-0"
+                        <button type="button"
+                                class="derafu-form-collection-remove btn btn-sm btn-danger p-0"
                                 style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
-                                onclick="this.closest('.collection-row').remove()">
+                                onclick="CollectionWidget.remove(this)">
                             &times;
                         </button>
                     </div>
@@ -56,14 +53,15 @@
         </div>
 
         <template id="{{ field_name }}_template">
-            <div class="collection-row row g-2 align-items-center mb-1" data-index="__INDEX__">
+            <div class="derafu-form-collection-row row g-2 align-items-center mb-1" data-index="__INDEX__">
                 {% for widget in template_row %}
                     <div class="col">{{ widget|raw }}</div>
                 {% endfor %}
                 <div class="col-auto d-flex align-items-center" style="width:2rem">
-                    <button type="button" class="btn btn-sm btn-danger p-0"
+                    <button type="button"
+                            class="derafu-form-collection-remove btn btn-sm btn-danger p-0"
                             style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
-                            onclick="this.closest('.collection-row').remove()">
+                            onclick="CollectionWidget.remove(this)">
                         &times;
                     </button>
                 </div>
@@ -74,20 +72,22 @@
 
         {# + button in its own row above the blocks #}
         <div class="d-flex justify-content-end mb-1">
-            <button type="button" class="btn btn-sm btn-primary p-0"
+            <button type="button"
+                    class="derafu-form-collection-add btn btn-sm btn-primary p-0"
                     style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
-                    onclick="{{ add_onclick }}">
+                    onclick="CollectionWidget.add(this)">
                 +
             </button>
         </div>
 
         {# Block rows with full sub-form inside #}
-        <div class="collection-rows" id="{{ field_name }}_rows">
+        <div class="derafu-form-collection-rows" id="{{ field_name }}_rows">
             {% for i, row in rows %}
-                <div class="collection-row border rounded p-3 mb-2 position-relative" data-index="{{ i }}">
-                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
+                <div class="derafu-form-collection-row border rounded p-3 mb-2 position-relative" data-index="{{ i }}">
+                    <button type="button"
+                            class="derafu-form-collection-remove btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
                             style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
-                            onclick="this.closest('.collection-row').remove()">
+                            onclick="CollectionWidget.remove(this)">
                         &times;
                     </button>
                     {{ row|raw }}
@@ -96,10 +96,11 @@
         </div>
 
         <template id="{{ field_name }}_template">
-            <div class="collection-row border rounded p-3 mb-2 position-relative" data-index="__INDEX__">
-                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
+            <div class="derafu-form-collection-row border rounded p-3 mb-2 position-relative" data-index="__INDEX__">
+                <button type="button"
+                        class="derafu-form-collection-remove btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
                         style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
-                        onclick="this.closest('.collection-row').remove()">
+                        onclick="CollectionWidget.remove(this)">
                     &times;
                 </button>
                 {{ template_row|raw }}

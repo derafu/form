@@ -1,0 +1,323 @@
+{
+    "meta": {
+        "name": "Collection / Array",
+        "description": "Examples of array/collection fields covering the typical CRUD cases: simple items, selects, files, complex block layouts, and minItems/maxItems constraints.",
+        "tags": [
+            "array",
+            "collection"
+        ]
+    },
+    "form": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "title": "Tags",
+                    "minItems": 0,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "tag": {
+                                "type": "string",
+                                "title": "Tag"
+                            }
+                        }
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "title": "Roles",
+                    "minItems": 1,
+                    "maxItems": 5,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "role": {
+                                "type": "string",
+                                "title": "Role",
+                                "enum": ["admin", "editor", "viewer"]
+                            }
+                        }
+                    }
+                },
+                "attachments": {
+                    "type": "array",
+                    "title": "Attachments",
+                    "minItems": 0,
+                    "maxItems": 3,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file": {
+                                "type": "string",
+                                "title": "File"
+                            },
+                            "description": {
+                                "type": "string",
+                                "title": "Description"
+                            }
+                        }
+                    }
+                },
+                "orderLines": {
+                    "type": "array",
+                    "title": "Order Lines",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "product": {
+                                "type": "string",
+                                "title": "Product"
+                            },
+                            "category": {
+                                "type": "string",
+                                "title": "Category",
+                                "enum": ["Electronics", "Clothing", "Food", "Other"]
+                            },
+                            "quantity": {
+                                "type": "integer",
+                                "title": "Quantity",
+                                "minimum": 1
+                            },
+                            "unitPrice": {
+                                "type": "number",
+                                "title": "Unit Price",
+                                "exclusiveMinimum": 0
+                            },
+                            "discount": {
+                                "type": "number",
+                                "title": "Discount %",
+                                "minimum": 0,
+                                "maximum": 100
+                            },
+                            "notes": {
+                                "type": "string",
+                                "title": "Notes"
+                            }
+                        },
+                        "required": ["product", "quantity", "unitPrice"]
+                    }
+                },
+                "contacts": {
+                    "type": "array",
+                    "title": "Contacts",
+                    "minItems": 0,
+                    "maxItems": 10,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "title": "Name"
+                            },
+                            "email": {
+                                "type": "string",
+                                "title": "Email",
+                                "format": "email"
+                            },
+                            "phone": {
+                                "type": "string",
+                                "title": "Phone"
+                            },
+                            "type": {
+                                "type": "string",
+                                "title": "Type",
+                                "enum": ["personal", "work", "other"]
+                            },
+                            "isPrimary": {
+                                "type": "boolean",
+                                "title": "Primary contact"
+                            }
+                        },
+                        "required": ["name", "email"]
+                    }
+                }
+            }
+        },
+        "uischema": {
+            "type": "VerticalLayout",
+            "elements": [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/tags"
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/roles"
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/attachments",
+                    "options": {
+                        "detail": {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/file",
+                                    "options": {
+                                        "type": "file",
+                                        "accept": ".pdf,.doc,.docx,.xml"
+                                    }
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/description"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "type": "Group",
+                    "label": "Order Lines",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/orderLines",
+                            "options": {
+                                "detail": {
+                                    "type": "VerticalLayout",
+                                    "elements": [
+                                        {
+                                            "type": "HorizontalLayout",
+                                            "elements": [
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/product"
+                                                },
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/category"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "HorizontalLayout",
+                                            "elements": [
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/quantity"
+                                                },
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/unitPrice"
+                                                },
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/discount"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "Control",
+                                            "scope": "#/properties/notes",
+                                            "options": {
+                                                "type": "textarea"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Group",
+                    "label": "Contacts",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/contacts",
+                            "options": {
+                                "detail": {
+                                    "type": "VerticalLayout",
+                                    "elements": [
+                                        {
+                                            "type": "HorizontalLayout",
+                                            "elements": [
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/name"
+                                                },
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/email"
+                                                },
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/phone"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "HorizontalLayout",
+                                            "elements": [
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/type"
+                                                },
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/isPrimary"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "data": {
+            "tags": [
+                {"tag": "PHP"},
+                {"tag": "JSON Forms"},
+                {"tag": "Symfony"}
+            ],
+            "roles": [
+                {"role": "admin"},
+                {"role": "editor"}
+            ],
+            "attachments": [],
+            "orderLines": [
+                {
+                    "product": "Laptop Pro 15",
+                    "category": "Electronics",
+                    "quantity": 2,
+                    "unitPrice": 1299.99,
+                    "discount": 10,
+                    "notes": "Include charger"
+                },
+                {
+                    "product": "USB-C Hub",
+                    "category": "Electronics",
+                    "quantity": 5,
+                    "unitPrice": 49.99,
+                    "discount": 0,
+                    "notes": ""
+                }
+            ],
+            "contacts": [
+                {
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "phone": "+1-555-0100",
+                    "type": "work",
+                    "isPrimary": true
+                },
+                {
+                    "name": "Jane Smith",
+                    "email": "jane@example.com",
+                    "phone": "+1-555-0200",
+                    "type": "personal",
+                    "isPrimary": false
+                }
+            ]
+        }
+    }
+}

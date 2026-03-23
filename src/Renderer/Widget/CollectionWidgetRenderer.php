@@ -197,12 +197,12 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         );
 
         $widgets = [];
-        foreach ($detailDefinition['elements'] as $element) {
-            $propName = $this->scopeToPropertyName($element['scope'] ?? '');
-            $subField = $subForm->getField($propName);
-            if ($subField !== null) {
-                $widgets[] = $formRenderer->renderWidget($subField, []);
-            }
+        foreach ($subForm->getUiSchema()->getElements() as $controlElement) {
+            $widgets[] = $formRenderer->renderElement(
+                $controlElement,
+                $subForm,
+                ['render_mode' => 'widget']
+            );
         }
 
         return $widgets;

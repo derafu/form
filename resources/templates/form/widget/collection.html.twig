@@ -6,6 +6,7 @@
 #}
 {% set min_items = field.property.minItems ?? 0 %}
 {% set max_items = field.property.maxItems is defined and field.property.maxItems is not null ? field.property.maxItems : '' %}
+{% set fixed_size = max_items is not same as('') and max_items == min_items %}
 
 <div class="derafu-form-collection-widget position-relative"
      data-collection="{{ field_name }}"
@@ -16,12 +17,14 @@
     {% if is_simple %}
 
         {# + button absolute top-right, headers below #}
+        {% if not fixed_size %}
         <button type="button"
                 class="derafu-form-collection-add btn btn-sm btn-primary p-0 position-absolute top-0 end-0"
                 style="width:1.5rem;height:1.5rem;line-height:1.5rem;z-index:1;"
                 onclick="CollectionWidget.add(this)">
             +
         </button>
+        {% endif %}
 
         {# Header row #}
         {% if headers %}
@@ -40,6 +43,7 @@
                     {% for widget in row_widgets %}
                         <div class="col">{{ widget|raw }}</div>
                     {% endfor %}
+                    {% if not fixed_size %}
                     <div class="col-auto d-flex align-items-center" style="width:2rem">
                         <button type="button"
                                 class="derafu-form-collection-remove btn btn-sm btn-danger p-0"
@@ -48,6 +52,7 @@
                             &times;
                         </button>
                     </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
@@ -57,6 +62,7 @@
                 {% for widget in template_row %}
                     <div class="col">{{ widget|raw }}</div>
                 {% endfor %}
+                {% if not fixed_size %}
                 <div class="col-auto d-flex align-items-center" style="width:2rem">
                     <button type="button"
                             class="derafu-form-collection-remove btn btn-sm btn-danger p-0"
@@ -65,12 +71,14 @@
                         &times;
                     </button>
                 </div>
+                {% endif %}
             </div>
         </template>
 
     {% else %}
 
         {# + button in its own row above the blocks #}
+        {% if not fixed_size %}
         <div class="d-flex justify-content-end mb-1">
             <button type="button"
                     class="derafu-form-collection-add btn btn-sm btn-primary p-0"
@@ -79,17 +87,20 @@
                 +
             </button>
         </div>
+        {% endif %}
 
         {# Block rows with full sub-form inside #}
         <div class="derafu-form-collection-rows" id="{{ field_name }}_rows">
             {% for i, row in rows %}
                 <div class="derafu-form-collection-row border rounded p-3 mb-2 position-relative" data-index="{{ i }}">
+                    {% if not fixed_size %}
                     <button type="button"
                             class="derafu-form-collection-remove btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
                             style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
                             onclick="CollectionWidget.remove(this)">
                         &times;
                     </button>
+                    {% endif %}
                     {{ row|raw }}
                 </div>
             {% endfor %}
@@ -97,12 +108,14 @@
 
         <template id="{{ field_name }}_template">
             <div class="derafu-form-collection-row border rounded p-3 mb-2 position-relative" data-index="__INDEX__">
+                {% if not fixed_size %}
                 <button type="button"
                         class="derafu-form-collection-remove btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
                         style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
                         onclick="CollectionWidget.remove(this)">
                     &times;
                 </button>
+                {% endif %}
                 {{ template_row|raw }}
             </div>
         </template>

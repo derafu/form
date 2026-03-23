@@ -43,6 +43,13 @@ export const CollectionWidget = {
 
     init() {
         document.querySelectorAll('.derafu-form-collection-widget').forEach(widget => {
+            const min = parseInt(widget.dataset.minItems || '0');
+            const rows = widget.querySelectorAll('.derafu-form-collection-rows > .derafu-form-collection-row');
+            const missing = min - rows.length;
+            for (let i = 0; i < missing; i++) {
+                const addBtn = widget.querySelector('.derafu-form-collection-add');
+                if (addBtn) CollectionWidget.add(addBtn);
+            }
             CollectionWidget.updateButtons(widget);
         });
     },

@@ -22,9 +22,11 @@ use InvalidArgumentException;
 /**
  * Renderer for collection widgets (array of objects).
  *
- * Renders a dynamic list of rows where each row is rendered using the
- * `detail` layout defined in the control options, or a default vertical
- * layout built from the items schema properties.
+ * Supports two rendering modes:
+ * - Simple: all detail elements are direct Controls → table-like layout with
+ *   a header row and compact widget-only rows.
+ * - Complex: detail contains nested layouts → bordered block rows with the
+ *   full sub-form rendered inside each.
  */
 final class CollectionWidgetRenderer implements WidgetRendererInterface
 {
@@ -35,7 +37,6 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         FormFieldInterface $field,
         array $options = []
     ): string {
-        // Get the main form renderer from options.
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
@@ -62,39 +63,89 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         }
 
         $fieldName = $field->getName();
+        $isSimple = $this->isSimpleDetail($detailDefinition);
 
-        $renderedRows = [];
-        foreach ($rows as $i => $rowData) {
-            $renderedRows[] = $this->renderRow(
+        if ($isSimple) {
+            $headers = $this->extractHeaders($itemsSchema, $detailDefinition);
+            $renderedRows = [];
+            foreach ($rows as $i => $rowData) {
+                $renderedRows[] = $this->renderSimpleRow(
+                    $formRenderer,
+                    $itemsSchema,
+                    $detailDefinition,
+                    is_array($rowData) ? $rowData : [],
+                    $fieldName,
+                    $i
+                );
+            }
+            $templateRow = $this->renderSimpleRow(
                 $formRenderer,
                 $itemsSchema,
                 $detailDefinition,
-                $rowData,
+                [],
                 $fieldName,
-                $i
+                '__INDEX__'
+            );
+        } else {
+            $headers = [];
+            $renderedRows = [];
+            foreach ($rows as $i => $rowData) {
+                $renderedRows[] = $this->renderRow(
+                    $formRenderer,
+                    $itemsSchema,
+                    $detailDefinition,
+                    $rowData,
+                    $fieldName,
+                    $i
+                );
+            }
+            $templateRow = $this->renderRow(
+                $formRenderer,
+                $itemsSchema,
+                $detailDefinition,
+                [],
+                $fieldName,
+                '__INDEX__'
             );
         }
-
-        $templateRow = $this->renderRow(
-            $formRenderer,
-            $itemsSchema,
-            $detailDefinition,
-            [],
-            $fieldName,
-            '__INDEX__'
-        );
 
         return $formRenderer->getRenderer()->render('form/widget/collection', [
             'field' => $field,
             'field_name' => $fieldName,
             'rows' => $renderedRows,
             'template_row' => $templateRow,
+            'is_simple' => $isSimple,
+            'headers' => $headers,
             'options' => $options,
         ]);
     }
 
     /**
-     * Renders a single row of the collection.
+     * Builds a sub-form for a single row and applies the name pattern.
+     */
+    private function buildSubForm(
+        array $itemsSchema,
+        array $detailDefinition,
+        array $rowData,
+        string $fieldName,
+        int|string $index
+    ): Form {
+        $subForm = Form::fromArray([
+            'schema' => $itemsSchema,
+            'uischema' => $detailDefinition,
+            'data' => $rowData ?: null,
+        ]);
+
+        $namePattern = $fieldName . '[' . $index . '][%s]';
+        foreach ($subForm->getFields() as $subField) {
+            $subField->setNamePattern($namePattern);
+        }
+
+        return $subForm;
+    }
+
+    /**
+     * Renders a complex row as a full sub-form (block mode).
      */
     private function renderRow(
         FormRendererInterface $formRenderer,
@@ -111,22 +162,89 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
             $rowData = [];
         }
 
-        $subForm = Form::fromArray([
-            'schema' => $itemsSchema,
-            'uischema' => $detailDefinition,
-            'data' => $rowData ?: null,
-        ]);
-
-        $namePattern = $fieldName . '[' . $index . '][%s]';
-        foreach ($subForm->getFields() as $subField) {
-            $subField->setNamePattern($namePattern);
-        }
+        $subForm = $this->buildSubForm(
+            $itemsSchema,
+            $detailDefinition,
+            $rowData,
+            $fieldName,
+            $index
+        );
 
         return $formRenderer->renderElement(
             $subForm->getUiSchema(),
             $subForm,
             ['floating_labels' => false]
         );
+    }
+
+    /**
+     * Renders a simple row as an array of widget HTML strings (table mode).
+     */
+    private function renderSimpleRow(
+        FormRendererInterface $formRenderer,
+        array $itemsSchema,
+        array $detailDefinition,
+        array $rowData,
+        string $fieldName,
+        int|string $index
+    ): array {
+        $subForm = $this->buildSubForm(
+            $itemsSchema,
+            $detailDefinition,
+            $rowData,
+            $fieldName,
+            $index
+        );
+
+        $widgets = [];
+        foreach ($detailDefinition['elements'] as $element) {
+            $propName = $this->scopeToPropertyName($element['scope'] ?? '');
+            $subField = $subForm->getField($propName);
+            if ($subField !== null) {
+                $widgets[] = $formRenderer->renderWidget($subField, []);
+            }
+        }
+
+        return $widgets;
+    }
+
+    /**
+     * Returns true if all detail elements are direct Controls (no nested layouts).
+     */
+    private function isSimpleDetail(array $detailDefinition): bool
+    {
+        foreach ($detailDefinition['elements'] ?? [] as $element) {
+            if (($element['type'] ?? '') !== 'Control') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Extracts header labels from items schema in detail element order.
+     */
+    private function extractHeaders(array $itemsSchema, array $detailDefinition): array
+    {
+        $headers = [];
+        foreach ($detailDefinition['elements'] ?? [] as $element) {
+            $propName = $this->scopeToPropertyName($element['scope'] ?? '');
+            $headers[] = $itemsSchema['properties'][$propName]['title']
+                ?? ucfirst($propName);
+        }
+
+        return $headers;
+    }
+
+    /**
+     * Extracts the property name from a JSON Forms scope string.
+     */
+    private function scopeToPropertyName(string $scope): string
+    {
+        $parts = explode('/', $scope);
+
+        return end($parts);
     }
 
     /**

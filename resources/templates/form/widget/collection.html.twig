@@ -1,44 +1,111 @@
 {#
-   This template renders a dynamic collection of rows (array of objects).
-   Each row is rendered using the detail layout and supports add/remove.
+   Renders a dynamic collection of rows (array of objects).
+   Two modes:
+   - is_simple=true:  all controls are direct (no nested layouts) → table-like
+   - is_simple=false: nested layouts → bordered block per row
 #}
-<div class="collection-widget"
+{% set add_onclick %}
+    const widget = this.closest('.collection-widget');
+    const count = parseInt(widget.dataset.count);
+    const tpl = document.getElementById('{{ field_name }}_template');
+    const div = document.createElement('div');
+    div.innerHTML = tpl.innerHTML.replaceAll('__INDEX__', count);
+    widget.querySelector('.collection-rows').appendChild(div.firstElementChild);
+    widget.dataset.count = count + 1;
+{% endset %}
+
+<div class="collection-widget position-relative"
      data-collection="{{ field_name }}"
      data-count="{{ rows|length }}">
 
-    <div class="collection-rows" id="{{ field_name }}_rows">
-        {% for i, row in rows %}
-            <div class="collection-row border rounded p-3 mb-2 position-relative" data-index="{{ i }}">
-                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0" style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
+    {% if is_simple %}
+
+        {# + button absolute top-right, headers below #}
+        <button type="button" class="btn btn-sm btn-primary p-0 position-absolute top-0 end-0"
+                style="width:1.5rem;height:1.5rem;line-height:1.5rem;z-index:1;"
+                onclick="{{ add_onclick }}">
+            +
+        </button>
+
+        {# Header row #}
+        {% if headers %}
+            <div class="row g-2 mb-1">
+                {% for header in headers %}
+                    <div class="col fw-semibold small text-muted">{{ header }}</div>
+                {% endfor %}
+                <div class="col-auto" style="width:2rem"></div>
+            </div>
+        {% endif %}
+
+        {# Data rows (each row_widgets is an array of rendered widget HTML) #}
+        <div class="collection-rows" id="{{ field_name }}_rows">
+            {% for i, row_widgets in rows %}
+                <div class="collection-row row g-2 align-items-center mb-1" data-index="{{ i }}">
+                    {% for widget in row_widgets %}
+                        <div class="col">{{ widget|raw }}</div>
+                    {% endfor %}
+                    <div class="col-auto d-flex align-items-center" style="width:2rem">
+                        <button type="button" class="btn btn-sm btn-danger p-0"
+                                style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
+                                onclick="this.closest('.collection-row').remove()">
+                            &times;
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <template id="{{ field_name }}_template">
+            <div class="collection-row row g-2 align-items-center mb-1" data-index="__INDEX__">
+                {% for widget in template_row %}
+                    <div class="col">{{ widget|raw }}</div>
+                {% endfor %}
+                <div class="col-auto d-flex align-items-center" style="width:2rem">
+                    <button type="button" class="btn btn-sm btn-danger p-0"
+                            style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
+                            onclick="this.closest('.collection-row').remove()">
+                        &times;
+                    </button>
+                </div>
+            </div>
+        </template>
+
+    {% else %}
+
+        {# + button in its own row above the blocks #}
+        <div class="d-flex justify-content-end mb-1">
+            <button type="button" class="btn btn-sm btn-primary p-0"
+                    style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
+                    onclick="{{ add_onclick }}">
+                +
+            </button>
+        </div>
+
+        {# Block rows with full sub-form inside #}
+        <div class="collection-rows" id="{{ field_name }}_rows">
+            {% for i, row in rows %}
+                <div class="collection-row border rounded p-3 mb-2 position-relative" data-index="{{ i }}">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
+                            style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
+                            onclick="this.closest('.collection-row').remove()">
+                        &times;
+                    </button>
+                    {{ row|raw }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <template id="{{ field_name }}_template">
+            <div class="collection-row border rounded p-3 mb-2 position-relative" data-index="__INDEX__">
+                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0"
+                        style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
                         onclick="this.closest('.collection-row').remove()">
                     &times;
                 </button>
-                {{ row|raw }}
+                {{ template_row|raw }}
             </div>
-        {% endfor %}
-    </div>
+        </template>
 
-    <template id="{{ field_name }}_template">
-        <div class="collection-row border rounded p-3 mb-2 position-relative" data-index="__INDEX__">
-            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0" style="width:1.5rem;height:1.5rem;line-height:1.5rem;"
-                    onclick="this.closest('.collection-row').remove()">
-                &times;
-            </button>
-            {{ template_row|raw }}
-        </div>
-    </template>
-
-    <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
-            onclick="
-                const widget = this.closest('.collection-widget');
-                const count = parseInt(widget.dataset.count);
-                const tpl = document.getElementById('{{ field_name }}_template');
-                const div = document.createElement('div');
-                div.innerHTML = tpl.innerHTML.replaceAll('__INDEX__', count);
-                widget.querySelector('.collection-rows').appendChild(div.firstElementChild);
-                widget.dataset.count = count + 1;
-            ">
-        + Add row
-    </button>
+    {% endif %}
 
 </div>

@@ -36,12 +36,15 @@ final class SchemaToRulesMapper implements SchemaToRulesMapperInterface
         foreach ($form->getFields() as $fieldName => $field) {
             $fieldRules[$fieldName] = $this->mapFieldToRules($field);
 
-            // Check if this field is required and add the validation rule
+            // Check if this field is required and prepend the validation rule
+            // so it fires before type-specific validators (e.g. 'file', 'image')
+            // and produces a meaningful "required" error rather than
+            // "invalid file format" when no value is submitted.
             if (in_array($fieldName, $requiredFields)) {
                 if (!isset($fieldRules[$fieldName]['validate'])) {
                     $fieldRules[$fieldName]['validate'] = [];
                 }
-                $fieldRules[$fieldName]['validate'][] = 'required';
+                array_unshift($fieldRules[$fieldName]['validate'], 'required');
             }
         }
 
@@ -55,6 +58,16 @@ final class SchemaToRulesMapper implements SchemaToRulesMapperInterface
     {
         $propertySchema = $field->getProperty()->toArray();
         $controlOptions = $field->getControl()->getOptions();
+
+        // Upload controls (file, image) carry an array value ($_FILES-style or
+        // PSR-7 UploadedFileInterface), never a plain string. Applying cast or
+        // sanitize rules designed for strings would throw a CastingException.
+        // Their only relevant processing is file/image validation.
+        $uploadControls = ['file', 'image'];
+        if (in_array($controlOptions['type'] ?? null, $uploadControls, true)) {
+            $uiValidateRules = $this->mapControlOptionsToValidateRules($controlOptions);
+            return empty($uiValidateRules) ? [] : ['validate' => $uiValidateRules];
+        }
 
         // Start with schema-based rules.
         $rules = $this->mapSchemaToRules($propertySchema);

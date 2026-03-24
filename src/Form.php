@@ -138,12 +138,11 @@ final class Form implements FormInterface
                     $field = new FormField($property, $element);
                     $field->setWidget($this->widgetFactory->create($field));
 
-                    // Initialize field data from form data if available
-                    if ($this->data !== null) {
-                        $fieldValue = $this->data->get($name);
-                        if ($fieldValue !== null) {
-                            $field->setData($fieldValue);
-                        }
+                    // Initialize field data: explicit form data takes precedence,
+                    // schema default is the fallback for empty/new forms.
+                    $fieldValue = $this->data?->get($name) ?? $property->getDefault();
+                    if ($fieldValue !== null) {
+                        $field->setData($fieldValue);
                     }
 
                     // Initialize field errors from errors array if available

@@ -31,14 +31,12 @@ function initJsonEditor(selector, options) {
         options = { ...defaultOptions, ...options };
     }
 
-    // Initialize the JSON editor for each input.
-    $(selector).each(function() {
-        const $input = $(this);
-
-        // Parse the current value of the input as the initial JSON content.
+    // Initialize the JSON editor for each field (input or textarea).
+    document.querySelectorAll(selector).forEach(function(field) {
+        // Parse the current value of the field as the initial JSON content.
         // Fall back to an empty object if the value is empty or invalid.
         let initialJson = {};
-        const rawValue = $input.val().trim();
+        const rawValue = field.value.trim();
         if (rawValue) {
             try {
                 initialJson = JSON.parse(rawValue);
@@ -47,35 +45,36 @@ function initJsonEditor(selector, options) {
             }
         }
 
-        // Create the container div and insert it right after the input.
-        const $container = $('<div></div>').addClass('derafu-form-json-editor-container');
+        // Create the container div and insert it right after the field.
+        const container = document.createElement('div');
+        container.classList.add('derafu-form-json-editor-container');
 
-        // Match the container height to the input's rendered height (which
+        // Match the container height to the field's rendered height (which
         // already reflects the "rows" attribute plus padding/border).
         const minHeight = 350;
-        const inputHeight = $input.outerHeight() || 0;
-        $container.css('height', Math.max(inputHeight, minHeight) + 'px');
+        const fieldHeight = field.offsetHeight || 0;
+        container.style.height = Math.max(fieldHeight, minHeight) + 'px';
 
-        $input.after($container);
+        field.insertAdjacentElement('afterend', container);
 
-        // Hide the original input (kept in the DOM so the form can submit it).
-        $input.hide();
+        // Hide the original field (kept in the DOM so the form can submit it).
+        field.style.display = 'none';
 
         // Hide the label if it exists, by looking for a label child within the
-        // input's parent element.
-        const $label = $input.parent().find('label').first();
-        if ($label.length) {
-            $label.hide();
+        // field's parent element.
+        const label = field.parentElement.querySelector('label');
+        if (label) {
+            label.style.display = 'none';
         }
 
-        // Build the options with the onChange callback wired to sync the input.
+        // Build the options with the onChange callback wired to sync the field.
         const editorOptions = {
             ...options,
             onChange: function() {
                 try {
                     // Get the current JSON from the editor and write it back.
                     const json = editor.get();
-                    $input.val(JSON.stringify(json));
+                    field.value = JSON.stringify(json);
                 } catch (e) {
                     // The content may be temporarily invalid while the user is typing
                     // (especially in 'code' mode). Silently ignore until it's valid.
@@ -89,7 +88,7 @@ function initJsonEditor(selector, options) {
         };
 
         // Initialize JSONEditor on the container div.
-        const editor = new JSONEditor($container[0], editorOptions, initialJson);
+        const editor = new JSONEditor(container, editorOptions, initialJson);
     });
 }
 

@@ -38,9 +38,6 @@
                     "pattern": "^P(?:\\d+Y)?(?:\\d+M)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$",
                     "description": "P1Y2M3DT4H5M6S (ISO 8601)"
                 },
-                "editor": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string",
                     "format": "email"
@@ -186,11 +183,6 @@
                 },
                 {
                     "type": "Control",
-                    "scope": "#/properties/editor",
-                    "options": { "type": "editor" }
-                },
-                {
-                    "type": "Control",
                     "scope": "#/properties/email"
                 },
                 {
@@ -329,7 +321,6 @@
             "datetime": "2025-03-04T14:30:00+02:00",
             "date": "2025-03-04",
             "duration": "P1Y2M3DT4H5M6S",
-            "editor": "This is a long text.",
             "email": "user@example.com",
             "file": "",
             "float": 123.45,

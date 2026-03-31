@@ -1,0 +1,65 @@
+{
+    "meta": {
+        "name": "Editors",
+        "description": "Different editors using controls.",
+        "tags": [
+            "withSchema",
+            "withOutUiSchema",
+            "withData"
+        ]
+    },
+    "form": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "html_editor": {
+                    "type": "string"
+                },
+                "json_editor": {
+                    "type": "object"
+                }
+            }
+        },
+        "uischema": {
+            "type": "Categorization",
+            "elements": [
+                {
+                    "type": "Category",
+                    "label": "HTML Editor",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/html_editor",
+                            "options": {
+                                "multi": true,
+                                "widget_class": "derafu-form-html-editor"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Category",
+                    "label": "JSON Editor",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/json_editor",
+                            "options": {
+                                "multi": true,
+                                "widget_class": "derafu-form-json-editor"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "data": {
+            "html_editor": "This is a long text with <strong>bold</strong> and <em>italic</em> text.",
+            "json_editor": {
+                "name": "John Doe",
+                "age": 30,
+                "email": "john.doe@example.com"
+            }
+        }
+    }
+}

@@ -132,6 +132,17 @@ final class InputWidgetRenderer implements WidgetRendererInterface
             $attrs['placeholder'] = $controlOptions['placeholder'];
         }
 
+        // Handle multiple file inputs: append [] to name and add multiple attr.
+        if ($type === 'file' && !empty($controlOptions['multiple'])) {
+            $attrs['name'] .= '[]';
+            $attrs['multiple'] = 'multiple';
+        }
+
+        // Handle readonly from schema property or control options.
+        if ($property->isReadOnly() || !empty($controlOptions['readonly'])) {
+            $attrs['readonly'] = 'readonly';
+        }
+
         // Apply custom attributes from options.
         if (isset($options['attr']) && is_array($options['attr'])) {
             $attrs = array_merge($attrs, $options['attr']);

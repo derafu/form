@@ -1,0 +1,11 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"}
+        }
+    },
+    "data": {
+        "name": "from-json"
+    }
+}

@@ -37,7 +37,11 @@
         "phpunit/phpunit": "^11.5",
         "symfony/form": "^8.0",
         "symfony/validator": "^8.0",
+        "symfony/yaml": "^8.0",
         "derafu/data-processor": "dev-main"
+    },
+    "suggest": {
+        "symfony/yaml": "Required to use Derafu\\Form\\Loader\\YamlFormLoader for loading form definitions from .form.yaml files."
     },
     "scripts": {
         "docs": "php tools/phpdocumentor run --config=phpdoc.xml",

@@ -1,0 +1,9 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "foo": {"type": "string"}
+        }
+    },
+    "data": {"foo": "json-only"}
+}

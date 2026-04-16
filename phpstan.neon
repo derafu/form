@@ -5,8 +5,9 @@ parameters:
     paths:
         - src
         - tests
-    # PHPUnit's CoversClass is repeatable (Attribute::IS_REPEATABLE); PHPStan does not read it.
-    # Ignore only this message so real non-repeatable attribute errors are still reported.
+    # PHPUnit's CoversClass and UsesClass are repeatable (Attribute::IS_REPEATABLE);
+    # PHPStan does not read the bitwise OR flag. Ignore only these messages so real
+    # non-repeatable attribute errors are still reported.
     ignoreErrors:
-        - message: '#CoversClass.*is not repeatable#'
+        - message: '#(CoversClass|UsesClass).*is not repeatable#'
           identifier: attribute.nonRepeatable

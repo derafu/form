@@ -32,11 +32,13 @@ final class FormTwigExtension extends AbstractExtension
      * Constructor.
      *
      * @param FormRendererInterface $renderer The form renderer to use.
-     * @param string $charset The character encoding to use (default UTF-8).
+     * @param string $charset The character encoding to use.
+     * @param string $prefix The prefix to use for the form functions.
      */
     public function __construct(
         private readonly FormRendererInterface $renderer,
-        private readonly string $charset = 'UTF-8'
+        private readonly string $charset = 'UTF-8',
+        private readonly string $prefix = ''
     ) {
     }
 
@@ -48,23 +50,23 @@ final class FormTwigExtension extends AbstractExtension
     public function getFunctions(): array
     {
         return [
-            // Standard functions (compatible with Symfony naming).
-            new TwigFunction('form', [$this, 'renderForm']),
-            new TwigFunction('form_body', [$this, 'renderFormBody']),
-            new TwigFunction('form_start', [$this, 'renderFormStart']),
-            new TwigFunction('form_end', [$this, 'renderFormEnd']),
-            new TwigFunction('form_label', [$this, 'renderFormLabel']),
-            new TwigFunction('form_errors', [$this, 'renderFormErrors']),
-            new TwigFunction('form_widget', [$this, 'renderFormWidget']),
-            new TwigFunction('form_help', [$this, 'renderFormHelp']),
-            new TwigFunction('form_row', [$this, 'renderRow']),
-            new TwigFunction('form_rest', [$this, 'renderRest']),
-            new TwigFunction('form_enctype', [$this, 'renderEnctype']),
+            // Standard functions (similar to Symfony naming).
+            new TwigFunction($this->prefix . 'form', [$this, 'renderForm']),
+            new TwigFunction($this->prefix . 'form_body', [$this, 'renderFormBody']),
+            new TwigFunction($this->prefix . 'form_start', [$this, 'renderFormStart']),
+            new TwigFunction($this->prefix . 'form_end', [$this, 'renderFormEnd']),
+            new TwigFunction($this->prefix . 'form_label', [$this, 'renderFormLabel']),
+            new TwigFunction($this->prefix . 'form_errors', [$this, 'renderFormErrors']),
+            new TwigFunction($this->prefix . 'form_widget', [$this, 'renderFormWidget']),
+            new TwigFunction($this->prefix . 'form_help', [$this, 'renderFormHelp']),
+            new TwigFunction($this->prefix . 'form_row', [$this, 'renderRow']),
+            new TwigFunction($this->prefix . 'form_rest', [$this, 'renderRest']),
+            new TwigFunction($this->prefix . 'form_enctype', [$this, 'renderEnctype']),
 
             // Custom functions.
-            new TwigFunction('form_element', [$this, 'renderElement']),
-            new TwigFunction('form_elements', [$this, 'renderElements']),
-            new TwigFunction('form_csrf', [$this, 'renderCsrf']),
+            new TwigFunction($this->prefix . 'form_element', [$this, 'renderElement']),
+            new TwigFunction($this->prefix . 'form_elements', [$this, 'renderElements']),
+            new TwigFunction($this->prefix . 'form_csrf', [$this, 'renderCsrf']),
         ];
     }
 

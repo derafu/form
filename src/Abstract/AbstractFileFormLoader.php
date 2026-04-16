@@ -35,9 +35,19 @@ abstract class AbstractFileFormLoader implements FormLoaderInterface
     /** @var string[] Registered directories (searched last-to-first). */
     private array $paths = [];
 
+    /**
+     * @param FormFactoryInterface $formFactory The form factory to use.
+     * @param string[]             $paths       Initial directories, applied
+     *                                          in order through `addPath()`.
+     *                                          The last one registered wins.
+     */
     public function __construct(
         protected readonly FormFactoryInterface $formFactory,
+        array $paths = [],
     ) {
+        foreach ($paths as $path) {
+            $this->addPath($path);
+        }
     }
 
     /**

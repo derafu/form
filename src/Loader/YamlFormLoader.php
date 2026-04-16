@@ -40,8 +40,9 @@ class YamlFormLoader extends AbstractFileFormLoader
      * Constructor.
      *
      * @param FormFactoryInterface $formFactory The form factory to use.
+     * @param string[]             $paths       Initial directories.
      */
-    public function __construct(FormFactoryInterface $formFactory)
+    public function __construct(FormFactoryInterface $formFactory, array $paths = [])
     {
         if (!class_exists(Yaml::class)) {
             throw new RuntimeException(
@@ -50,7 +51,7 @@ class YamlFormLoader extends AbstractFileFormLoader
             );
         }
 
-        parent::__construct($formFactory);
+        parent::__construct($formFactory, $paths);
     }
 
     /**

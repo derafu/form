@@ -95,6 +95,20 @@ final class PhpFormLoaderTest extends TestCase
         $this->assertSame('overridden', $captured['data']['name']);
     }
 
+    public function testPathsViaConstructor(): void
+    {
+        $captured = null;
+        $loader = new PhpFormLoader(
+            $this->makeFactory($captured),
+            [self::FIXTURES, self::OVERRIDES],
+        );
+
+        $loader->load('static');
+
+        // Constructor applies paths via addPath() in order → OVERRIDES wins.
+        $this->assertSame('overridden', $captured['data']['name']);
+    }
+
     public function testNestedNameResolves(): void
     {
         $captured = null;

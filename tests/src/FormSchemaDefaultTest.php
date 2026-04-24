@@ -565,7 +565,7 @@ final class FormSchemaDefaultTest extends TestCase
                 'properties' => [
                     'status' => [
                         'type' => 'string',
-                        'enum' => ['pending', 'active', 'closed'],
+                        'enum' => ['pending' => 'pending', 'active' => 'active', 'closed' => 'closed'],
                         'default' => 'active',
                     ],
                 ],

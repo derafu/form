@@ -77,19 +77,17 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
             && $schema['type'] === 'array'
             && isset($schema['items']['enum'])
         ) {
-            $isSequentialEnum = array_is_list($schema['items']['enum']);
             foreach ($schema['items']['enum'] as $enumKey => $enumValue) {
                 $label = ucfirst(str_replace(['_', '-'], ' ', $enumValue));
-                $choices[$isSequentialEnum ? $enumValue : $enumKey] = $label;
+                $choices[$enumKey] = $label;
             }
         }
 
         // Try direct enum.
         if (empty($choices) && $property->getEnum() !== null) {
             $directEnum = $property->getEnum();
-            $isSequentialEnum = array_is_list($directEnum);
             foreach ($directEnum as $enumKey => $enumValue) {
-                $choices[$isSequentialEnum ? $enumValue : $enumKey] = $enumValue;
+                $choices[$enumKey] = $enumValue;
             }
         }
 

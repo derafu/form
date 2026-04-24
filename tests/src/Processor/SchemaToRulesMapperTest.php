@@ -95,7 +95,7 @@ final class SchemaToRulesMapperTest extends TestCase
             'string_with_enum' => [
                 [
                     'type' => 'string',
-                    'enum' => ['pending', 'approved', 'rejected'],
+                    'enum' => ['pending' => 'pending', 'approved' => 'approved', 'rejected' => 'rejected'],
                 ],
                 [
                     'cast' => 'string',

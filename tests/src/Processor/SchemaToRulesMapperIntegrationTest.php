@@ -113,7 +113,7 @@ final class SchemaToRulesMapperIntegrationTest extends TestCase
     {
         $statusSchema = [
             'type' => 'string',
-            'enum' => ['pending', 'approved', 'rejected'],
+            'enum' => ['pending' => 'pending', 'approved' => 'approved', 'rejected' => 'rejected'],
         ];
 
         $rules = $this->mapper->mapSchemaToRules($statusSchema);

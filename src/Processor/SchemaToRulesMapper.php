@@ -246,9 +246,8 @@ final class SchemaToRulesMapper implements SchemaToRulesMapperInterface
             // Enum validation.
             if (isset($propertySchema['enum'])) {
                 $enumKeys = [];
-                $isSequentialEnum = array_is_list($propertySchema['enum']);
                 foreach ($propertySchema['enum'] as $enumKey => $enumValue) {
-                    $enumKeys[] = $isSequentialEnum ? $enumValue : $enumKey;
+                    $enumKeys[] = $enumKey;
                 }
                 $enumValues = array_map('strtolower', $enumKeys);
                 $enumValues = implode(',', $enumValues);

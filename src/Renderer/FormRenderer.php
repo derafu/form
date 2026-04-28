@@ -52,6 +52,12 @@ final class FormRenderer implements FormRendererInterface
         FormInterface $form,
         array $options = []
     ): string {
+        $formOptions = $form->getOptions()?->toArray() ?? [];
+        $options = array_merge(
+            array_filter($formOptions, static fn ($v) => $v !== null && $v !== ''),
+            $options,
+        );
+
         $context = [
             'form' => $form,
             'options' => $options,

@@ -119,7 +119,7 @@ final class SchemaToRulesMapperIntegrationTest extends TestCase
         $rules = $this->mapper->mapSchemaToRules($statusSchema);
 
         // Test valid status.
-        $result = $this->processor->process('  APPROVED  ', $rules);
+        $result = $this->processor->process('  approved  ', $rules);
         $this->assertSame('approved', $result);
 
         // Test invalid status.

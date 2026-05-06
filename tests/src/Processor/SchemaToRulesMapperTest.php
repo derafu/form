@@ -100,7 +100,6 @@ final class SchemaToRulesMapperTest extends TestCase
                 [
                     'cast' => 'string',
                     'sanitize' => ['trim'],
-                    'transform' => ['lowercase'],
                     'validate' => ['in:pending,approved,rejected'],
                 ],
             ],

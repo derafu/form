@@ -195,11 +195,6 @@ final class SchemaToRulesMapper implements SchemaToRulesMapperInterface
             if (($propertySchema['format'] ?? '') === 'email') {
                 $rules[] = 'lowercase';
             }
-
-            // Enum values - lowercase for case-insensitive comparison.
-            if (isset($propertySchema['enum'])) {
-                $rules[] = 'lowercase';
-            }
         }
 
         return $rules;
@@ -245,13 +240,9 @@ final class SchemaToRulesMapper implements SchemaToRulesMapperInterface
 
             // Enum validation.
             if (isset($propertySchema['enum'])) {
-                $enumKeys = [];
-                foreach ($propertySchema['enum'] as $enumKey => $enumValue) {
-                    $enumKeys[] = $enumKey;
-                }
-                $enumValues = array_map('strtolower', $enumKeys);
-                $enumValues = implode(',', $enumValues);
-                $rules[] = "in:{$enumValues}";
+                $enumKeys = array_keys($propertySchema['enum']);
+                $enumKeys = implode(',', $enumKeys);
+                $rules[] = "in:{$enumKeys}";
             }
 
             // Additional string validations based on common patterns.

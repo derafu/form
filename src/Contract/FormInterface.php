@@ -14,6 +14,7 @@ namespace Derafu\Form\Contract;
 
 use Derafu\Form\Contract\Data\FormDataInterface;
 use Derafu\Form\Contract\Options\FormOptionsInterface;
+use Derafu\Form\Contract\Rules\FormRulesInterface;
 use Derafu\Form\Contract\Schema\FormSchemaInterface;
 use Derafu\Form\Contract\UiSchema\FormUiSchemaInterface;
 use JsonSerializable;
@@ -43,6 +44,22 @@ interface FormInterface extends JsonSerializable
      * @return FormUiSchemaInterface The form's UI schema
      */
     public function getUiSchema(): FormUiSchemaInterface;
+
+    /**
+     * Gets the explicit processing rules defined in the form's 'rules' section.
+     *
+     * These rules supplement the rules derived automatically from the schema
+     * and UI schema. They are merged on top of the derived rules when the form
+     * is processed via FormRulesResolverInterface, allowing field-level overrides
+     * and extensions without modifying the schema or UI schema.
+     *
+     * Field names follow dot notation for nested fields (e.g. "address.city").
+     * Rule categories match Derafu Data Processor terminology: cast, sanitize,
+     * transform, and validate.
+     *
+     * @return FormRulesInterface The explicit rules collection.
+     */
+    public function getRules(): FormRulesInterface;
 
     /**
      * Gets the current data values of the form.

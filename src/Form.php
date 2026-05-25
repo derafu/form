@@ -16,6 +16,7 @@ use Derafu\Form\Contract\Data\FormDataInterface;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Options\FormOptionsInterface;
+use Derafu\Form\Contract\Rules\FormRulesInterface;
 use Derafu\Form\Contract\Schema\FormSchemaInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\ElementsAwareInterface;
@@ -25,6 +26,7 @@ use Derafu\Form\Contract\Widget\WidgetFactoryInterface;
 use Derafu\Form\Data\FormData;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Options\FormOptions;
+use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Widget\WidgetFactory;
 use Derafu\Support\JsonSerializer;
@@ -53,6 +55,7 @@ final class Form implements FormInterface
      *
      * @param FormSchemaInterface $schema
      * @param FormUiSchemaInterface $uischema
+     * @param FormRulesInterface $rules Explicit processing rules.
      * @param FormDataInterface|null $data
      * @param FormOptionsInterface|null $options
      * @param array<string, array>|null $errors Optional errors for each field (by name)
@@ -61,6 +64,7 @@ final class Form implements FormInterface
     public function __construct(
         private readonly FormSchemaInterface $schema,
         private readonly FormUiSchemaInterface $uischema,
+        private readonly FormRulesInterface $rules = new FormRules(),
         private readonly ?FormDataInterface $data = null,
         private readonly ?FormOptionsInterface $options = null,
         private readonly ?array $errors = null,
@@ -85,6 +89,14 @@ final class Form implements FormInterface
     public function getUiSchema(): FormUiSchemaInterface
     {
         return $this->uischema;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRules(): FormRulesInterface
+    {
+        return $this->rules;
     }
 
     /**
@@ -180,7 +192,7 @@ final class Form implements FormInterface
      */
     public function withData(FormDataInterface $data, ?array $errors = null): static
     {
-        return new static($this->schema, $this->uischema, $data, $this->options, $errors);
+        return new static($this->schema, $this->uischema, $this->rules, $data, $this->options, $errors);
     }
 
     /**
@@ -188,12 +200,20 @@ final class Form implements FormInterface
      */
     public function toArray(): array
     {
-        return [
-            'schema' => $this->schema->toArray(),
+        $array = [
+            'schema'   => $this->schema->toArray(),
             'uischema' => $this->uischema->toArray(),
-            'data' => $this->data?->toArray(),
-            'options' => $this->options?->toArray(),
         ];
+
+        $rulesArray = $this->getRules()->toArray();
+        if (!empty($rulesArray)) {
+            $array['rules'] = $rulesArray;
+        }
+
+        $array['data']    = $this->data?->toArray();
+        $array['options'] = $this->options?->toArray();
+
+        return $array;
     }
 
     /**
@@ -201,12 +221,20 @@ final class Form implements FormInterface
      */
     public function jsonSerialize(): array
     {
-        return [
-            'schema' => $this->schema,
+        $array = [
+            'schema'   => $this->schema,
             'uischema' => $this->uischema,
-            'data' => $this->data,
-            'options' => $this->options,
         ];
+
+        $rules = $this->getRules();
+        if (!empty($rules->toArray())) {
+            $array['rules'] = $rules;
+        }
+
+        $array['data']    = $this->data;
+        $array['options'] = $this->options;
+
+        return $array;
     }
 
     /**
@@ -236,12 +264,13 @@ final class Form implements FormInterface
      */
     public static function fromArray(array $definition): static
     {
-        $schema = FormSchema::fromArray($definition['schema'] ?? []);
+        $schema   = FormSchema::fromArray($definition['schema'] ?? []);
         $uischema = FormUiSchemaFactory::create($definition['uischema'] ?? []);
-        $data = isset($definition['data']) ? FormData::fromArray($definition['data']) : null;
-        $options = FormOptions::fromArray($definition['options'] ?? []);
-        $errors = $definition['errors'] ?? null;
+        $rules    = FormRules::fromArray($definition['rules'] ?? []);
+        $data     = isset($definition['data']) ? FormData::fromArray($definition['data']) : null;
+        $options  = FormOptions::fromArray($definition['options'] ?? []);
+        $errors   = $definition['errors'] ?? null;
 
-        return new static($schema, $uischema, $data, $options, $errors);
+        return new static($schema, $uischema, $rules, $data, $options, $errors);
     }
 }

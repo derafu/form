@@ -45,11 +45,13 @@ use Derafu\Form\Renderer\Widget\SliderWidgetRenderer;
 use Derafu\Form\Renderer\Widget\TextareaWidgetRenderer;
 use Derafu\Form\Renderer\WidgetRendererProvider;
 use Derafu\Form\Renderer\WidgetRendererRegistry;
+use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\ArraySchema;
 use Derafu\Form\Schema\BooleanSchema;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
+use Derafu\Form\Schema\ObjectSchemaTrait;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -108,6 +110,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Label::class)]
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(FormData::class)]
+#[CoversClass(FormRules::class)]
+#[CoversClass(ObjectSchemaTrait::class)]
 #[CoversClass(FormRendererFactory::class)]
 #[CoversClass(FormRenderer::class)]
 #[CoversClass(FormRendererFactory::class)]

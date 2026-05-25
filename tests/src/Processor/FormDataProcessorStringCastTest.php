@@ -25,8 +25,9 @@ use Derafu\Form\Form;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
+use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Processor\ProcessResult;
-use Derafu\Form\Processor\SchemaToRulesMapper;
+use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
 use Derafu\Form\Schema\StringSchema;
@@ -62,7 +63,8 @@ use PHPUnit\Framework\TestCase;
  * Test to reproduce the "Caster rule 'string' not found" error.
  */
 #[CoversClass(FormDataProcessor::class)]
-#[CoversClass(SchemaToRulesMapper::class)]
+#[CoversClass(FormRulesResolver::class)]
+#[CoversClass(FormRules::class)]
 #[CoversClass(AbstractPropertySchema::class)]
 #[CoversClass(AbstractType::class)]
 #[CoversClass(AbstractUiSchemaElement::class)]
@@ -105,18 +107,15 @@ final class FormDataProcessorStringCastTest extends TestCase
 {
     private FormDataProcessorInterface $processor;
 
-    private SchemaToRulesMapper $mapper;
-
     private ProcessorInterface $dataProcessor;
 
     private FormFactory $formFactory;
 
     protected function setUp(): void
     {
-        $this->mapper = new SchemaToRulesMapper();
         $this->dataProcessor = (new ProcessorFactory())->create();
         $this->processor = new FormDataProcessor(
-            $this->mapper,
+            new FormRulesResolver(),
             $this->dataProcessor
         );
         $this->formFactory = new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider())));

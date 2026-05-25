@@ -26,8 +26,8 @@ use Derafu\Form\FormField;
 use Derafu\Form\Options\FormAttributes;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
+use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Processor\ProcessResult;
-use Derafu\Form\Processor\SchemaToRulesMapper;
 use Derafu\Form\Renderer\Element\CategorizationRenderer;
 use Derafu\Form\Renderer\Element\ControlRenderer;
 use Derafu\Form\Renderer\Element\GroupRenderer;
@@ -47,6 +47,7 @@ use Derafu\Form\Renderer\Widget\SliderWidgetRenderer;
 use Derafu\Form\Renderer\Widget\TextareaWidgetRenderer;
 use Derafu\Form\Renderer\WidgetRendererProvider;
 use Derafu\Form\Renderer\WidgetRendererRegistry;
+use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\ArraySchema;
 use Derafu\Form\Schema\BooleanSchema;
 use Derafu\Form\Schema\FormSchema;
@@ -168,7 +169,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SliderWidgetRenderer::class)]
 #[CoversClass(TextareaWidgetRenderer::class)]
 #[CoversClass(FormDataProcessor::class)]
-#[CoversClass(SchemaToRulesMapper::class)]
+#[CoversClass(FormRulesResolver::class)]
+#[CoversClass(FormRules::class)]
 #[CoversClass(ProcessResult::class)]
 final class FormSchemaDefaultTest extends TestCase
 {
@@ -276,7 +278,7 @@ final class FormSchemaDefaultTest extends TestCase
     private function processor(): FormDataProcessor
     {
         return new FormDataProcessor(
-            new SchemaToRulesMapper(),
+            new FormRulesResolver(),
             (new ProcessorFactory())->create()
         );
     }

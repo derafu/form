@@ -16,6 +16,7 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Data\FormData;
 use Derafu\Form\Form;
+use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
@@ -41,6 +42,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
 #[CoversClass(WidgetFactory::class)]
 #[CoversClass(Widget::class)]
+#[CoversClass(FormRules::class)]
 final class FormRendererValueInconsistencyTest extends TestCase
 {
     /**
@@ -88,7 +90,7 @@ final class FormRendererValueInconsistencyTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $form = new Form($schema, $uiSchema, $data);
+        $form = new Form($schema, $uiSchema, data: $data);
 
         // Mock the form renderer to capture what values are being used
         $mockRenderer = $this->createMock(FormRendererInterface::class);
@@ -165,7 +167,7 @@ final class FormRendererValueInconsistencyTest extends TestCase
         ]);
 
         $data = new FormData(['name' => 'John Doe']);
-        $form = new Form($schema, $uiSchema, $data);
+        $form = new Form($schema, $uiSchema, data: $data);
 
         // Get the fields (this is what form_rest() does)
         $fields = $form->getFields();

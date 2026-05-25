@@ -15,7 +15,7 @@ namespace Derafu\Form\Processor;
 use Derafu\DataProcessor\Contract\ProcessorInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
-use Derafu\Form\Contract\Processor\SchemaToRulesMapperInterface;
+use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
 use Derafu\Form\Exception\ValidationException;
 use Throwable;
 
@@ -27,13 +27,13 @@ final class FormDataProcessor implements FormDataProcessorInterface
     /**
      * Constructor.
      *
-     * @param SchemaToRulesMapperInterface $mapper The mapper to convert form
-     * definitions to rules of Derafu\DataProcessor
+     * @param FormRulesResolverInterface $resolver The resolver that derives and
+     * merges all processing rules for the form fields.
      * @param ProcessorInterface $processor The processor to process the data
-     * using Derafu\DataProcessor
+     * using Derafu\DataProcessor.
      */
     public function __construct(
-        private readonly SchemaToRulesMapperInterface $mapper,
+        private readonly FormRulesResolverInterface $resolver,
         private readonly ProcessorInterface $processor
     ) {
     }
@@ -56,11 +56,11 @@ final class FormDataProcessor implements FormDataProcessorInterface
         $errors = [];
         $isValid = true;
 
-        // Map form to rules.
-        $rules = $this->mapper->mapFormToRules($form);
+        // Resolve the complete, merged rules into the form's own FormRules instance.
+        $this->resolver->resolve($form);
 
-        // Process each field.
-        foreach ($rules as $fieldName => $fieldRules) {
+        // Process each field using the rules now stored in the form.
+        foreach ($form->getRules()->toArray() as $fieldName => $fieldRules) {
             $fieldValue = $data[$fieldName] ?? null;
 
             try {

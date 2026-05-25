@@ -1,0 +1,382 @@
+{
+    "meta": {
+        "name": "Product (E-commerce)",
+        "description": "Product creation form for an e-commerce store. Demonstrates Categorization tabs, mixed field types, nested dot-notation fields, and the 'rules' section for processing rules that go beyond what the schema alone can express.",
+        "tags": [
+            "ecommerce",
+            "product",
+            "categorization",
+            "rules",
+            "transform",
+            "cast-override"
+        ]
+    },
+    "form": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "title": "Product Name",
+                    "minLength": 3,
+                    "maxLength": 200,
+                    "description": "The full name that customers will see in the store."
+                },
+                "slug": {
+                    "type": "string",
+                    "title": "URL Slug",
+                    "maxLength": 250,
+                    "description": "Used in the product URL. Will be automatically normalized to lowercase with hyphens."
+                },
+                "sku": {
+                    "type": "string",
+                    "title": "SKU",
+                    "minLength": 2,
+                    "maxLength": 50,
+                    "description": "Stock Keeping Unit. Will be normalized to uppercase."
+                },
+                "description": {
+                    "type": "string",
+                    "title": "Full Description",
+                    "description": "Detailed product description. HTML tags are stripped on save."
+                },
+                "short_description": {
+                    "type": "string",
+                    "title": "Short Description",
+                    "maxLength": 300,
+                    "description": "A brief summary shown in product listings."
+                },
+                "status": {
+                    "type": "string",
+                    "title": "Status",
+                    "enum": {
+                        "draft": "Draft",
+                        "active": "Active",
+                        "archived": "Archived"
+                    },
+                    "default": "draft",
+                    "description": "Only 'active' products are visible in the store."
+                },
+                "category": {
+                    "type": "string",
+                    "title": "Category",
+                    "enum": {
+                        "electronics": "Electronics",
+                        "clothing": "Clothing & Apparel",
+                        "books": "Books & Media",
+                        "home": "Home & Garden",
+                        "sports": "Sports & Outdoors",
+                        "beauty": "Beauty & Personal Care",
+                        "toys": "Toys & Games",
+                        "food": "Food & Grocery"
+                    },
+                    "description": "Primary category for search and filtering."
+                },
+                "tags": {
+                    "type": "array",
+                    "title": "Tags",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 20,
+                    "description": "Keywords to improve discoverability."
+                },
+                "price": {
+                    "type": "number",
+                    "title": "Price",
+                    "minimum": 0,
+                    "description": "Selling price shown to customers. Must be greater than zero."
+                },
+                "compare_at_price": {
+                    "type": "number",
+                    "title": "Compare-at Price",
+                    "minimum": 0,
+                    "description": "Original price shown as a strikethrough. Leave empty if no discount."
+                },
+                "cost_per_item": {
+                    "type": "number",
+                    "title": "Cost per Item",
+                    "minimum": 0,
+                    "description": "Your cost. Used to calculate profit margin. Not shown to customers."
+                },
+                "taxable": {
+                    "type": "boolean",
+                    "title": "Charge taxes on this product",
+                    "default": true
+                },
+                "stock": {
+                    "type": "integer",
+                    "title": "Stock Quantity",
+                    "minimum": 0,
+                    "default": 0
+                },
+                "track_quantity": {
+                    "type": "boolean",
+                    "title": "Track inventory quantity",
+                    "default": true,
+                    "description": "Uncheck to never show 'out of stock' for this product."
+                },
+                "allow_backorder": {
+                    "type": "boolean",
+                    "title": "Continue selling when out of stock",
+                    "default": false
+                },
+                "low_stock_threshold": {
+                    "type": "integer",
+                    "title": "Low-stock alert threshold",
+                    "minimum": 0,
+                    "default": 5,
+                    "description": "Sends an alert when stock falls to or below this number."
+                },
+                "weight": {
+                    "type": "number",
+                    "title": "Weight (kg)",
+                    "minimum": 0,
+                    "description": "Used to calculate shipping costs."
+                },
+                "sort_order": {
+                    "type": "string",
+                    "title": "Sort Order",
+                    "description": "Display position in category listings. Stored as string by the API; cast to integer on processing. Lower numbers appear first."
+                },
+                "image": {
+                    "type": "string",
+                    "title": "Main Product Image",
+                    "description": "Displayed as the primary image in listings and on the product page."
+                }
+            },
+            "required": ["name", "slug", "sku", "status", "category", "price"]
+        },
+        "uischema": {
+            "type": "Categorization",
+            "elements": [
+                {
+                    "type": "Category",
+                    "label": "General",
+                    "elements": [
+                        {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/name",
+                                    "options": {
+                                        "placeholder": "e.g. Wireless Bluetooth Headphones"
+                                    }
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/slug",
+                                    "options": {
+                                        "placeholder": "e.g. wireless-bluetooth-headphones"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/sku",
+                                    "options": {
+                                        "placeholder": "e.g. WBH-001-BLK"
+                                    }
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/status",
+                                    "options": {
+                                        "type": "choice"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/category",
+                            "options": {
+                                "type": "choice"
+                            }
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/description",
+                            "options": {
+                                "type": "editor"
+                            }
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/short_description",
+                            "options": {
+                                "type": "textarea"
+                            }
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/tags",
+                            "options": {
+                                "type": "tag"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Category",
+                    "label": "Pricing",
+                    "elements": [
+                        {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/price",
+                                    "options": {
+                                        "type": "money",
+                                        "symbol": "$"
+                                    }
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/compare_at_price",
+                                    "options": {
+                                        "type": "money",
+                                        "symbol": "$"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/cost_per_item",
+                                    "options": {
+                                        "type": "money",
+                                        "symbol": "$"
+                                    }
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/taxable"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Category",
+                    "label": "Inventory",
+                    "elements": [
+                        {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/stock",
+                                    "options": {
+                                        "type": "integer"
+                                    }
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/low_stock_threshold",
+                                    "options": {
+                                        "type": "integer"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/track_quantity"
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/allow_backorder"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "HorizontalLayout",
+                            "elements": [
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/weight",
+                                    "options": {
+                                        "type": "float"
+                                    }
+                                },
+                                {
+                                    "type": "Control",
+                                    "scope": "#/properties/sort_order",
+                                    "options": {
+                                        "placeholder": "0"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Category",
+                    "label": "Media",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/image",
+                            "options": {
+                                "type": "image"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "rules": {
+            "slug": {
+                "transform": ["lowercase", "slug"]
+            },
+            "sku": {
+                "transform": ["uppercase"],
+                "sanitize": ["trim", "spaces"]
+            },
+            "description": {
+                "sanitize": ["strip_tags"]
+            },
+            "price": {
+                "validate": ["gt:0"]
+            },
+            "sort_order": {
+                "cast": "integer",
+                "validate": ["gte:0"]
+            }
+        },
+        "data": {
+            "name": "Wireless Bluetooth Headphones",
+            "slug": "Wireless Bluetooth Headphones",
+            "sku": "wbh-001-blk",
+            "description": "<p>Premium over-ear headphones with active noise cancellation and 30-hour battery life.</p>",
+            "short_description": "Over-ear ANC headphones with 30h battery.",
+            "status": "draft",
+            "category": "electronics",
+            "tags": ["headphones", "bluetooth", "wireless", "anc"],
+            "price": 89.99,
+            "compare_at_price": 129.99,
+            "cost_per_item": 34.50,
+            "taxable": true,
+            "stock": 150,
+            "track_quantity": true,
+            "allow_backorder": false,
+            "low_stock_threshold": 10,
+            "weight": 0.285,
+            "sort_order": "3"
+        }
+    }
+}

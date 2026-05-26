@@ -76,7 +76,12 @@
                     "type": "array",
                     "title": "Tags",
                     "items": {
-                        "type": "string"
+                        "type": "object",
+                        "properties": {
+                            "tag": {
+                                "type": "string"
+                            }
+                        }
                     },
                     "uniqueItems": true,
                     "maxItems": 20,
@@ -366,7 +371,7 @@
             "short_description": "Over-ear ANC headphones with 30h battery.",
             "status": "draft",
             "category": "electronics",
-            "tags": ["headphones", "bluetooth", "wireless", "anc"],
+            "tags": [{"tag": "headphones"}, {"tag": "bluetooth"}, {"tag": "wireless"}, {"tag": "anc"}],
             "price": 89.99,
             "compare_at_price": 129.99,
             "cost_per_item": 34.50,

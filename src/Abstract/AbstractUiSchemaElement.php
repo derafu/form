@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Derafu\Form\Abstract;
 
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
+use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
+use Derafu\Form\UiSchema\UiSchemaRule;
 use Derafu\Support\JsonSerializer;
 
 /**
@@ -38,6 +40,16 @@ abstract class AbstractUiSchemaElement implements UiSchemaElementInterface
     public function getOptions(): array
     {
         return $this->definition['options'] ?? [];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRule(): ?UiSchemaRuleInterface
+    {
+        $rule = $this->definition['rule'] ?? null;
+
+        return $rule !== null ? UiSchemaRule::fromArray($rule) : null;
     }
 
     /**

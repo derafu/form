@@ -80,6 +80,11 @@ use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\HorizontalLayout;
 use Derafu\Form\UiSchema\Label;
+use Derafu\Form\UiSchema\UiSchemaCompositeCondition;
+use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
+use Derafu\Form\UiSchema\UiSchemaCondition;
+use Derafu\Form\UiSchema\UiSchemaRule;
+use Derafu\Form\UiSchema\UiSchemaRuleEffect;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
@@ -156,6 +161,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WeekType::class)]
 #[CoversClass(WidgetFactory::class)]
 #[CoversClass(Widget::class)]
+#[CoversClass(UiSchemaRule::class)]
+#[CoversClass(UiSchemaRuleEffect::class)]
+#[CoversClass(UiSchemaCondition::class)]
+#[CoversClass(UiSchemaCompositeCondition::class)]
+#[CoversClass(UiSchemaCompositeConditionType::class)]
 final class ExamplesTest extends TestCase
 {
     private FormRendererInterface $renderer;

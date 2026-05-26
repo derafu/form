@@ -30,6 +30,16 @@ interface UiSchemaElementInterface extends JsonSerializable
     public function getType(): string;
 
     /**
+     * Gets the rule that conditionally controls the behavior of this element.
+     *
+     * A rule defines whether this element is shown, hidden, enabled, or
+     * disabled based on the value of another field.
+     *
+     * @return UiSchemaRuleInterface|null The rule, or null if none is defined.
+     */
+    public function getRule(): ?UiSchemaRuleInterface;
+
+    /**
      * Gets the options of the UI element.
      *
      * @return array The options of the UI element.

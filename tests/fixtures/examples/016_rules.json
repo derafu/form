@@ -1,0 +1,159 @@
+{
+    "meta": {
+        "name": "Field Rules",
+        "description": "Demonstrates the 4 JSON Forms rule effects (SHOW, HIDE, ENABLE, DISABLE) applied to individual controls. Based on an employee contract form where fields appear, disappear, enable, or disable depending on the selected contract type and medical benefit.",
+        "tags": [
+            "withSchema",
+            "withUiSchema",
+            "withData",
+            "withRules"
+        ]
+    },
+    "form": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "tipo_contrato": {
+                    "type": "string",
+                    "title": "Tipo de Contrato",
+                    "enum": {
+                        "indefinido": "Indefinido",
+                        "plazo_fijo": "Plazo Fijo",
+                        "honorarios": "Honorarios"
+                    }
+                },
+                "fecha_inicio": {
+                    "type": "string",
+                    "format": "date",
+                    "title": "Fecha de Inicio"
+                },
+                "fecha_termino": {
+                    "type": "string",
+                    "format": "date",
+                    "title": "Fecha de Término"
+                },
+                "semanas_cotizadas": {
+                    "type": "integer",
+                    "title": "Semanas Cotizadas AFP",
+                    "minimum": 0
+                },
+                "beneficio_medico": {
+                    "type": "string",
+                    "title": "Beneficio Médico",
+                    "enum": {
+                        "si": "Sí",
+                        "no": "No"
+                    }
+                },
+                "aseguradora": {
+                    "type": "string",
+                    "title": "Nombre de Aseguradora"
+                },
+                "copago": {
+                    "type": "integer",
+                    "title": "Copago (%)",
+                    "minimum": 0,
+                    "maximum": 100
+                }
+            },
+            "required": [
+                "tipo_contrato",
+                "fecha_inicio",
+                "beneficio_medico"
+            ]
+        },
+        "uischema": {
+            "type": "VerticalLayout",
+            "elements": [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/tipo_contrato",
+                    "label": "Tipo de Contrato",
+                    "options": {
+                        "type": "choice",
+                        "placeholder": "Seleccione un tipo..."
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/fecha_inicio",
+                    "label": "Fecha de Inicio"
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/fecha_termino",
+                    "label": "Fecha de Término",
+                    "rule": {
+                        "effect": "SHOW",
+                        "condition": {
+                            "scope": "#/properties/tipo_contrato",
+                            "schema": {
+                                "const": "plazo_fijo"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/semanas_cotizadas",
+                    "label": "Semanas Cotizadas AFP",
+                    "rule": {
+                        "effect": "HIDE",
+                        "condition": {
+                            "scope": "#/properties/tipo_contrato",
+                            "schema": {
+                                "const": "honorarios"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/beneficio_medico",
+                    "label": "Beneficio Médico",
+                    "options": {
+                        "type": "choice",
+                        "placeholder": "Seleccione..."
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/aseguradora",
+                    "label": "Nombre de Aseguradora",
+                    "rule": {
+                        "effect": "ENABLE",
+                        "condition": {
+                            "scope": "#/properties/beneficio_medico",
+                            "schema": {
+                                "const": "si"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/copago",
+                    "label": "Copago (%)",
+                    "rule": {
+                        "effect": "DISABLE",
+                        "condition": {
+                            "scope": "#/properties/beneficio_medico",
+                            "schema": {
+                                "const": "no"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "data": {
+            "tipo_contrato": "plazo_fijo",
+            "fecha_inicio": "2025-03-01",
+            "fecha_termino": "2025-12-31",
+            "semanas_cotizadas": 12,
+            "beneficio_medico": "si",
+            "aseguradora": "Consalud",
+            "copago": 20
+        }
+    }
+}

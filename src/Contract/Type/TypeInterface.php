@@ -74,6 +74,20 @@ interface TypeInterface
     public function getJsonSchema(): array;
 
     /**
+     * Returns the PCRE-ready regex for this type's pattern.
+     *
+     * The `PATTERN` constant is stored in ECMA format (no delimiters), which
+     * is the canonical format used by JSON Schema and HTML `pattern=""`. This
+     * method wraps it with `/` delimiters and escapes any literal `/` inside
+     * the pattern so it can be passed directly to PHP's `preg_match()`.
+     *
+     * Returns null when the type has no pattern (i.e., `PATTERN === null`).
+     *
+     * @return string|null The PCRE pattern, or null if no pattern is defined.
+     */
+    public function getRegex(): ?string;
+
+    /**
      * Checks if the type is guessable.
      *
      * @return bool True if the type is guessable, false otherwise.

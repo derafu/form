@@ -26,7 +26,7 @@ final class MonthType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^[1-9]\d{3}-(0[1-9]|1[0-2])$/';
+    public const PATTERN = '^[1-9]\d{3}-(0[1-9]|1[0-2])$';
 
     /**
      * {@inheritDoc}
@@ -45,7 +45,7 @@ final class MonthType extends AbstractType
             return false;
         }
 
-        return preg_match(self::PATTERN, $value) === 1;
+        return preg_match($this->getRegex(), $value) === 1;
     }
 
     /**

@@ -200,20 +200,13 @@ final class Form implements FormInterface
      */
     public function toArray(): array
     {
-        $array = [
+        return [
             'schema'   => $this->schema->toArray(),
             'uischema' => $this->uischema->toArray(),
+            'rules'    => $this->getRules()->toArray(),
+            'data'     => $this->data?->toArray(),
+            'options'  => $this->options?->toArray(),
         ];
-
-        $rulesArray = $this->getRules()->toArray();
-        if (!empty($rulesArray)) {
-            $array['rules'] = $rulesArray;
-        }
-
-        $array['data']    = $this->data?->toArray();
-        $array['options'] = $this->options?->toArray();
-
-        return $array;
     }
 
     /**

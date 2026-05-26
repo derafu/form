@@ -93,9 +93,8 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             if ($property->getMaxLength() !== null) {
                 $attrs['maxlength'] = (string)$property->getMaxLength();
             }
-            if ($property->getPattern() !== null) {
-                $attrs['pattern'] = $property->getPattern();
-            }
+            // Note: the HTML `pattern` attribute is only valid for text-type
+            // inputs. Radio buttons do not support it; omitted intentionally.
         }
 
         $controlOptions = $control->getOptions();

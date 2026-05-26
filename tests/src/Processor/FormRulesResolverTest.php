@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Derafu: Form - Declarative Forms, Seamless Rendering.
  *
- * Copyright (c) 2025 Esteban De La Fuente Rubio / Derafu <https://www.derafu.dev>
+ * Copyright (c) 2026 Esteban De La Fuente Rubio / Derafu <https://www.derafu.dev>
  * Licensed under the MIT License.
  * See LICENSE file for more details.
  */
@@ -99,7 +99,7 @@ final class FormRulesResolverTest extends TestCase
             ],
             'string_with_pattern' => [
                 ['type' => 'string', 'pattern' => '^[A-Za-z]+$'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['regex:^[A-Za-z]+$']],
+                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['regex:/^[A-Za-z]+$/']],
             ],
             'string_with_enum' => [
                 ['type' => 'string', 'enum' => ['pending' => 'pending', 'approved' => 'approved', 'rejected' => 'rejected']],

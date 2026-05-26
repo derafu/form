@@ -26,7 +26,7 @@ final class DurationType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/';
+    public const PATTERN = '^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$';
 
     /**
      * {@inheritDoc}
@@ -55,7 +55,7 @@ final class DurationType extends AbstractType
             return false;
         }
 
-        return preg_match(self::PATTERN, $value) === 1;
+        return preg_match($this->getRegex(), $value) === 1;
     }
 
     /**

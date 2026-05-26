@@ -23,5 +23,5 @@ services:
     Derafu\Form\Contract\Processor\FormDataProcessorInterface:
         class: Derafu\Form\Processor\FormDataProcessor
 
-    Derafu\Form\Contract\Processor\SchemaToRulesMapperInterface:
-        class: Derafu\Form\Processor\SchemaToRulesMapper
+    Derafu\Form\Contract\Processor\FormRulesResolverInterface:
+        class: Derafu\Form\Processor\FormRulesResolver

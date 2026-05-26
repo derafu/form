@@ -147,13 +147,6 @@ final class FormRulesTest extends TestCase
         $this->assertSame($definition['rules'], $form->getRules()->toArray());
     }
 
-    public function testToArrayOmitsRulesKeyWhenEmpty(): void
-    {
-        $array = Form::fromArray($this->baseDefinition())->toArray();
-
-        $this->assertArrayNotHasKey('rules', $array);
-    }
-
     public function testToArrayRoundTrip(): void
     {
         $definition = $this->baseDefinition();

@@ -26,7 +26,7 @@ final class UriType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^(?:[a-zA-Z][a-zA-Z0-9+.-]*):(?:\/\/)?(?:[\w.-]+(?:\:[\w.-]*)?@)?(?:[\w.-]+)(?:\:\d+)?(?:\/[\w\/._-]*)?(?:\?\S*)?(?:#\S*)?$/';
+    public const PATTERN = '^(?:[a-zA-Z][a-zA-Z0-9+.-]*):(?://)?(?:[\w.-]+(?:\:[\w.-]*)?@)?(?:[\w.-]+)(?:\:\d+)?(?:/[\w/._-]*)?(?:\?\S*)?(?:#\S*)?$';
 
     /**
      * {@inheritDoc}
@@ -45,7 +45,7 @@ final class UriType extends AbstractType
             return false;
         }
 
-        return preg_match(self::PATTERN, $value) === 1;
+        return preg_match($this->getRegex(), $value) === 1;
     }
 
     /**

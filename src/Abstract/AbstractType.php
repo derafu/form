@@ -77,10 +77,23 @@ abstract class AbstractType implements TypeInterface
     /**
      * {@inheritDoc}
      */
+    public function getRegex(): ?string
+    {
+        if (static::PATTERN === null) {
+            return null;
+        }
+
+        return '/' . str_replace('/', '\/', static::PATTERN) . '/';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function validateValue(mixed $value): bool
     {
-        if ($this->getOption('pattern')) {
-            if (!preg_match($this->getOption('pattern'), $value)) {
+        $regex = $this->getRegex();
+        if ($regex !== null) {
+            if (!preg_match($regex, $value)) {
                 return false;
             }
         }
@@ -106,7 +119,7 @@ abstract class AbstractType implements TypeInterface
         ];
 
         if (static::PATTERN !== null) {
-            $schema['regex'] = static::PATTERN;
+            $schema['pattern'] = static::PATTERN;
         }
 
         return $schema;

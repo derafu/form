@@ -26,7 +26,7 @@ final class WeekType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^[0-9]{4}-W(0[1-9]|[1-4][0-9]|5[0-3])$/';
+    public const PATTERN = '^[0-9]{4}-W(0[1-9]|[1-4][0-9]|5[0-3])$';
 
     /**
      * {@inheritDoc}
@@ -60,7 +60,7 @@ final class WeekType extends AbstractType
             return false;
         }
 
-        return preg_match(self::PATTERN, $value) === 1;
+        return preg_match($this->getRegex(), $value) === 1;
     }
 
     /**

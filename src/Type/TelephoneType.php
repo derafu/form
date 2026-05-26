@@ -28,7 +28,7 @@ final class TelephoneType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^(\+?\d{1,4})?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,5}[-.\s]?\d{1,9}$/';
+    public const PATTERN = '^(\+?\d{1,4})?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,5}[-.\s]?\d{1,9}$';
 
     /**
      * {@inheritDoc}
@@ -47,7 +47,7 @@ final class TelephoneType extends AbstractType
             return false;
         }
 
-        return preg_match(self::PATTERN, $value) === 1;
+        return preg_match($this->getRegex(), $value) === 1;
     }
 
     /**

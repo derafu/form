@@ -15,6 +15,7 @@ namespace Derafu\Form\UiSchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\CategoryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
+use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 
 /**
@@ -41,18 +42,18 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
     /**
      * The rule for the category.
      *
-     * @var array|null
+     * @var UiSchemaRuleInterface|null
      */
-    private ?array $rule;
+    private ?UiSchemaRuleInterface $rule;
 
     /**
      * Constructor.
      *
      * @param string $label The label text.
      * @param array<UiSchemaElementInterface> $elements The elements of the category.
-     * @param array|null $rule The rule for the category.
+     * @param UiSchemaRuleInterface|null $rule The rule for the category.
      */
-    public function __construct(string $label, array $elements = [], ?array $rule = null)
+    public function __construct(string $label, array $elements = [], ?UiSchemaRuleInterface $rule = null)
     {
         parent::__construct([]);
 
@@ -88,6 +89,14 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
     /**
      * {@inheritDoc}
      */
+    public function getRule(): ?UiSchemaRuleInterface
+    {
+        return $this->rule;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function addElement(UiSchemaElementInterface $element): static
     {
         $this->elements[] = $element;
@@ -110,7 +119,7 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
         ];
 
         if ($this->rule !== null) {
-            $array['rule'] = $this->rule;
+            $array['rule'] = $this->rule->toArray();
         }
 
         return $array;
@@ -129,7 +138,7 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
         return new static(
             $definition['label'],
             $elements,
-            $definition['rule'] ?? null
+            isset($definition['rule']) ? UiSchemaRule::fromArray($definition['rule']) : null,
         );
     }
 }

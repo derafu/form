@@ -26,7 +26,7 @@ final class ColorType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/';
+    public const PATTERN = '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$';
 
     /**
      * {@inheritDoc}
@@ -55,7 +55,7 @@ final class ColorType extends AbstractType
             return false;
         }
 
-        return preg_match(self::PATTERN, $value) === 1;
+        return preg_match($this->getRegex(), $value) === 1;
     }
 
     /**

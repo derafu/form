@@ -80,6 +80,10 @@ final class InputWidgetRenderer implements WidgetRendererInterface
 
         if ($type === 'percent' || $type === 'float' || $type === 'money') {
             $type = 'number';
+        } elseif ($type === 'image') {
+            // 'image' is a UI control type for image-file uploads.
+            // HTML's <input type="image"> is a submit button — not what we want.
+            $type = 'file';
         }
 
         // Build HTML attributes for the input.
@@ -136,6 +140,11 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         if ($type === 'file' && !empty($controlOptions['multiple'])) {
             $attrs['name'] .= '[]';
             $attrs['multiple'] = 'multiple';
+        }
+
+        // Image upload controls restrict accepted MIME types to images.
+        if ($type === 'file' && ($controlOptions['type'] ?? null) === 'image') {
+            $attrs['accept'] = 'image/*';
         }
 
         // Handle readonly from schema property or control options.

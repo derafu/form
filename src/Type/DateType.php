@@ -27,7 +27,7 @@ final class DateType extends AbstractType
      *
      * @var string
      */
-    public const PATTERN = '/^(19\d{2}|20\d{2}|2100)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/';
+    public const PATTERN = '^(19\d{2}|20\d{2}|2100)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$';
 
     /**
      * {@inheritDoc}
@@ -46,7 +46,7 @@ final class DateType extends AbstractType
             return false;
         }
 
-        return preg_match(self::PATTERN, $value) === 1;
+        return preg_match($this->getRegex(), $value) === 1;
     }
 
     /**

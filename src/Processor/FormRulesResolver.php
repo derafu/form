@@ -306,7 +306,10 @@ final class FormRulesResolver implements FormRulesResolverInterface
             }
 
             if (isset($propertySchema['pattern'])) {
-                $rules[] = "regex:{$propertySchema['pattern']}";
+                // JSON Schema patterns are ECMA (no delimiters). The DataProcessor's
+                // RegexRule uses preg_match(), which requires PCRE delimiters.
+                // We add '/' delimiters and escape any literal '/' inside the pattern.
+                $rules[] = 'regex:/' . str_replace('/', '\/', $propertySchema['pattern']) . '/';
             }
 
             if (isset($propertySchema['enum'])) {

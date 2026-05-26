@@ -23,6 +23,7 @@ use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
 use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Processor\ProcessResult;
+use Derafu\Form\Processor\UiSchemaRuleEvaluator;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
@@ -63,6 +64,7 @@ use PHPUnit\Framework\TestCase;
  * as a hidden field is.
  */
 #[CoversClass(FormDataProcessor::class)]
+#[CoversClass(UiSchemaRuleEvaluator::class)]
 #[CoversClass(FormRulesResolver::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(ProcessResult::class)]

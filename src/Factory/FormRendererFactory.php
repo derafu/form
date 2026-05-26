@@ -14,6 +14,7 @@ namespace Derafu\Form\Factory;
 
 use Derafu\Form\Contract\Factory\FormRendererFactoryInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
+use Derafu\Form\Processor\UiSchemaRuleEvaluator;
 use Derafu\Form\Renderer\ElementRendererProvider;
 use Derafu\Form\Renderer\ElementRendererRegistry;
 use Derafu\Form\Renderer\FormRenderer;
@@ -43,8 +44,12 @@ final class FormRendererFactory implements FormRendererFactoryInterface
 
         $renderer = RendererFactory::create($options['renderer']);
 
+        // Rule evaluator is shared between ControlRenderer (initial render
+        // state) and, via the DI container, FormDataProcessor (processing).
+        $ruleEvaluator = new UiSchemaRuleEvaluator();
+
         $elementRendererRegistry = new ElementRendererRegistry(
-            $options['element_renderers'] ?? new ElementRendererProvider()
+            $options['element_renderers'] ?? new ElementRendererProvider($ruleEvaluator)
         );
 
         $widgetRendererRegistry = new WidgetRendererRegistry(

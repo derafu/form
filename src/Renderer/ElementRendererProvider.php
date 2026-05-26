@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer;
 
+use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererProviderInterface;
 use Derafu\Form\Renderer\Element\CategorizationRenderer;
 use Derafu\Form\Renderer\Element\ControlRenderer;
@@ -26,12 +27,22 @@ use Derafu\Form\Renderer\Element\VerticalLayoutRenderer;
 final class ElementRendererProvider implements ElementRendererProviderInterface
 {
     /**
+     * @param UiSchemaRuleEvaluatorInterface|null $ruleEvaluator Optional
+     * evaluator forwarded to ControlRenderer for initial render-state
+     * computation. When null, rule evaluation is skipped (backwards compatible).
+     */
+    public function __construct(
+        private readonly ?UiSchemaRuleEvaluatorInterface $ruleEvaluator = null,
+    ) {
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getRenderers(): array
     {
         return [
-            'Control' => new ControlRenderer(),
+            'Control' => new ControlRenderer($this->ruleEvaluator),
             'Categorization' => new CategorizationRenderer(),
             'Group' => new GroupRenderer(),
             'HorizontalLayout' => new HorizontalLayoutRenderer(),

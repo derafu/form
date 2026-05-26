@@ -26,6 +26,7 @@ use Derafu\Form\Form;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormAttributes;
 use Derafu\Form\Options\FormOptions;
+use Derafu\Form\Processor\UiSchemaRuleEvaluator;
 use Derafu\Form\Renderer\Element\CategorizationRenderer;
 use Derafu\Form\Renderer\Element\ControlRenderer;
 use Derafu\Form\Renderer\Element\GroupRenderer;
@@ -166,6 +167,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UiSchemaCondition::class)]
 #[CoversClass(UiSchemaCompositeCondition::class)]
 #[CoversClass(UiSchemaCompositeConditionType::class)]
+#[CoversClass(UiSchemaRuleEvaluator::class)]
 final class ExamplesTest extends TestCase
 {
     private FormRendererInterface $renderer;

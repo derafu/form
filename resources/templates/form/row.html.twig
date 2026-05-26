@@ -24,6 +24,9 @@
 {% if has_errors %}
     {% set row_class = row_class ~ ' has-error' %}
 {% endif %}
+{% if options.rule_initially_hidden|default(false) %}
+    {% set row_class = row_class ~ ' d-none' %}
+{% endif %}
 
 {# Get options for input group (not applicable to checkboxes). #}
 {% set input_group_prepend_text = options.input_group_prepend_text|default(null) %}
@@ -39,7 +42,11 @@
     or input_group_append_icon is not null
     or input_group_append is not null %}
 
-<div class="{{ row_class }}">
+<div class="{{ row_class }}"
+    {% if options.rule is defined and options.rule is not null %}
+        data-rule="{{ options.rule|json_encode }}"
+        data-field="{{ field.property.name }}"
+    {% endif %}>
     {# Special handling for checkboxes and radio buttons #}
     {% if is_checkbox or is_choice_multiple %}
         {% if is_choice_multiple %}

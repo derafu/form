@@ -20,6 +20,9 @@ services:
 
     Derafu\Form\Type\TypeProvider: ~
 
+    Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface:
+        class: Derafu\Form\Processor\UiSchemaRuleEvaluator
+
     Derafu\Form\Contract\Processor\FormDataProcessorInterface:
         class: Derafu\Form\Processor\FormDataProcessor
 

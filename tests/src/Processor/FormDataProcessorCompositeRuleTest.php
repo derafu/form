@@ -23,6 +23,7 @@ use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
 use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Processor\ProcessResult;
+use Derafu\Form\Processor\UiSchemaRuleEvaluator;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\ArraySchema;
 use Derafu\Form\Schema\FormSchema;
@@ -68,6 +69,7 @@ use PHPUnit\Framework\TestCase;
  *   children is itself a two-field AND condition.
  */
 #[CoversClass(FormDataProcessor::class)]
+#[CoversClass(UiSchemaRuleEvaluator::class)]
 #[CoversClass(FormRulesResolver::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(ProcessResult::class)]

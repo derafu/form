@@ -120,6 +120,16 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
             $attrs['data-placeholder'] = $controlOptions['placeholder'];
         }
 
+        // Emit cascade configuration for client-side dependent select handling.
+        // The 'cascade' key may contain either 'choices' (static map) or 'url'
+        // (AJAX endpoint) — the renderer is agnostic to which one is present.
+        if (isset($controlOptions['cascade']) && is_array($controlOptions['cascade'])) {
+            $attrs['data-cascade'] = json_encode(
+                $controlOptions['cascade'],
+                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            );
+        }
+
         // Apply custom attributes from options.
         if (isset($options['attr']) && is_array($options['attr'])) {
             $attrs = array_merge($attrs, $options['attr']);

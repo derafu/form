@@ -80,6 +80,11 @@ final class WidgetFactory implements WidgetFactoryInterface
                 && $options['type'] === 'radio'
             ) {
                 return 'radio';
+            } elseif (
+                isset($options['type'])
+                && $options['type'] === 'choice'
+            ) {
+                return 'select';
             } elseif ($format === 'uri') {
                 return 'url';
             } elseif ($property->getEnum() !== null) {

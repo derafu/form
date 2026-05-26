@@ -1,0 +1,205 @@
+{
+    "meta": {
+        "name": "Dependent Selects (Cascade)",
+        "description": "Demonstrates cascading select fields using real Chilean administrative divisions (región → provincia → comuna). Tab 1 uses static choices embedded in the form definition. Tab 2 uses AJAX URLs. Both tabs expose the same three-level chain. The client-side JS module (ui-schema-cascade.js) is responsible for populating dependent options; the PHP renderer only emits the data-cascade attribute.",
+        "tags": [
+            "withSchema",
+            "withUiSchema",
+            "withData",
+            "cascade",
+            "categories"
+        ]
+    },
+    "form": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "region": {
+                    "type": "string",
+                    "title": "Región",
+                    "enum": {
+                        "rm":     "Región Metropolitana",
+                        "valpo":  "Región de Valparaíso",
+                        "biobio": "Región del Biobío"
+                    }
+                },
+                "provincia": {
+                    "type": "string",
+                    "title": "Provincia"
+                },
+                "comuna": {
+                    "type": "string",
+                    "title": "Comuna"
+                },
+                "region_api": {
+                    "type": "string",
+                    "title": "Región",
+                    "enum": {
+                        "rm":     "Región Metropolitana",
+                        "valpo":  "Región de Valparaíso",
+                        "biobio": "Región del Biobío"
+                    }
+                },
+                "provincia_api": {
+                    "type": "string",
+                    "title": "Provincia"
+                },
+                "comuna_api": {
+                    "type": "string",
+                    "title": "Comuna"
+                }
+            },
+            "required": [
+                "region",
+                "region_api"
+            ]
+        },
+        "uischema": {
+            "type": "Categorization",
+            "elements": [
+                {
+                    "type": "Category",
+                    "label": "Estático",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/region",
+                            "label": "Región",
+                            "options": {
+                                "type": "choice"
+                            }
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/provincia",
+                            "label": "Provincia",
+                            "options": {
+                                "type": "choice",
+                                "cascade": {
+                                    "dependsOn": "#/properties/region",
+                                    "choices": {
+                                        "rm": {
+                                            "santiago":  "Santiago",
+                                            "maipo":     "Maipo"
+                                        },
+                                        "valpo": {
+                                            "valparaiso":  "Valparaíso",
+                                            "san_antonio": "San Antonio"
+                                        },
+                                        "biobio": {
+                                            "concepcion":   "Concepción",
+                                            "prov_biobio":  "Biobío"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/comuna",
+                            "label": "Comuna",
+                            "options": {
+                                "type": "choice",
+                                "cascade": {
+                                    "dependsOn": "#/properties/provincia",
+                                    "choices": {
+                                        "santiago": {
+                                            "santiago":   "Santiago",
+                                            "providencia": "Providencia",
+                                            "las_condes": "Las Condes"
+                                        },
+                                        "maipo": {
+                                            "san_bernardo": "San Bernardo",
+                                            "buin":         "Buín"
+                                        },
+                                        "valparaiso": {
+                                            "valparaiso":  "Valparaíso",
+                                            "vina_del_mar": "Viña del Mar",
+                                            "concon":      "Concón"
+                                        },
+                                        "san_antonio": {
+                                            "san_antonio": "San Antonio",
+                                            "cartagena":   "Cartagena"
+                                        },
+                                        "concepcion": {
+                                            "concepcion":  "Concepción",
+                                            "talcahuano":  "Talcahuano",
+                                            "hualpen":     "Hualpén"
+                                        },
+                                        "prov_biobio": {
+                                            "los_angeles": "Los Ángeles",
+                                            "nacimiento":  "Nacimiento"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Category",
+                    "label": "AJAX",
+                    "elements": [
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/region_api",
+                            "label": "Región",
+                            "options": {
+                                "type": "choice",
+                                "placeholder": "Seleccione una región..."
+                            }
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/provincia_api",
+                            "label": "Provincia",
+                            "rule": {
+                                "effect": "SHOW",
+                                "condition": {
+                                    "scope": "#/properties/region_api",
+                                    "schema": { "not": { "const": "" } }
+                                }
+                            },
+                            "options": {
+                                "type": "choice",
+                                "placeholder": "Seleccione una provincia...",
+                                "cascade": {
+                                    "dependsOn": "#/properties/region_api",
+                                    "url": "/api/playground/form/cascade?resource=provincias&region={value}"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Control",
+                            "scope": "#/properties/comuna_api",
+                            "label": "Comuna",
+                            "rule": {
+                                "effect": "SHOW",
+                                "condition": {
+                                    "scope": "#/properties/provincia_api",
+                                    "schema": { "not": { "const": "" } }
+                                }
+                            },
+                            "options": {
+                                "type": "choice",
+                                "placeholder": "Seleccione una comuna...",
+                                "cascade": {
+                                    "dependsOn": "#/properties/provincia_api",
+                                    "url": "/api/playground/form/cascade?resource=comunas&provincia={value}"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "data": {
+            "region":       "rm",
+            "provincia":    "santiago",
+            "comuna":       "providencia",
+            "region_api":   "",
+            "provincia_api": "",
+            "comuna_api":   ""
+        }
+    }
+}

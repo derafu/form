@@ -17,11 +17,11 @@
                 "region": {
                     "type": "string",
                     "title": "Región",
-                    "enum": {
-                        "rm":     "Región Metropolitana",
-                        "valpo":  "Región de Valparaíso",
-                        "biobio": "Región del Biobío"
-                    }
+                    "oneOf": [
+                        { "const": "rm",     "title": "Región Metropolitana" },
+                        { "const": "valpo",  "title": "Región de Valparaíso" },
+                        { "const": "biobio", "title": "Región del Biobío" }
+                    ]
                 },
                 "provincia": {
                     "type": "string",
@@ -34,11 +34,11 @@
                 "region_api": {
                     "type": "string",
                     "title": "Región",
-                    "enum": {
-                        "rm":     "Región Metropolitana",
-                        "valpo":  "Región de Valparaíso",
-                        "biobio": "Región del Biobío"
-                    }
+                    "oneOf": [
+                        { "const": "rm",     "title": "Región Metropolitana" },
+                        { "const": "valpo",  "title": "Región de Valparaíso" },
+                        { "const": "biobio", "title": "Región del Biobío" }
+                    ]
                 },
                 "provincia_api": {
                     "type": "string",

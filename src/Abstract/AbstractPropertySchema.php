@@ -79,9 +79,9 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
     protected ?bool $writeOnly = null;
 
     /**
-     * Enum values for the property.
+     * Enum values for the property (plain list of allowed values).
      *
-     * @var array<int,int|float|string|bool>|null
+     * @var list<int|float|string|bool>|null
      */
     protected ?array $enum = null;
 
@@ -360,6 +360,32 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
         $this->oneOf = $oneOf;
 
         return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getChoices(): ?array
+    {
+        if ($this->oneOf !== null) {
+            $choices = [];
+            foreach ($this->oneOf as $option) {
+                if (isset($option['const'])) {
+                    $choices[$option['const']] = $option['title'] ?? $option['const'];
+                }
+            }
+            return $choices !== [] ? $choices : null;
+        }
+
+        if ($this->enum !== null) {
+            $choices = [];
+            foreach ($this->enum as $value) {
+                $choices[$value] = $value;
+            }
+            return $choices !== [] ? $choices : null;
+        }
+
+        return null;
     }
 
     /**

@@ -128,15 +128,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
         }
 
         if ($schema->getEnum() !== null) {
-            $enum = $schema->getEnum();
-            // Support both plain arrays (JSON Schema standard: values are valid
-            // values) and key→label arrays (keys are submitted values, values
-            // are display labels).
-            if (array_is_list($enum)) {
-                $checks[] = in_array($value, $enum, strict: true);
-            } else {
-                $checks[] = array_key_exists($value, $enum);
-            }
+            $checks[] = in_array($value, $schema->getEnum(), strict: true);
         }
 
         if ($schema->getContains() !== null) {

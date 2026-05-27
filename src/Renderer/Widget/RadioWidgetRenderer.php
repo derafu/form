@@ -94,16 +94,8 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             $attrs = array_merge($attrs, $options['attr']);
         }
 
-        // Special handling for radio buttons.
-        $choices = [];
-        if ($property->getEnum() !== null) {
-            foreach ($property->getEnum() as $enumKey => $enumValue) {
-                $choices[$enumKey] = $enumValue;
-            }
-        }
-        if (isset($options['choices']) && is_array($options['choices'])) {
-            $choices = $options['choices'];
-        }
+        // Build choices from the property schema (oneOf or enum).
+        $choices = $property->getChoices() ?? [];
 
         $context = [
             'field' => $field,

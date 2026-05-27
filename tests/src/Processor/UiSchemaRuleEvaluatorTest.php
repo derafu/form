@@ -160,17 +160,7 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
         $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'd']));
     }
 
-    public function testEnumKeyLabelFormatMatchesOnKey(): void
-    {
-        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['enum' => ['draft' => 'Draft', 'active' => 'Active']]);
-        $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => 'draft']));
-    }
 
-    public function testEnumKeyLabelFormatNoMatchOnLabel(): void
-    {
-        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['enum' => ['draft' => 'Draft', 'active' => 'Active']]);
-        $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'Draft']));
-    }
 
     // =========================================================================
     // Schema keyword: contains

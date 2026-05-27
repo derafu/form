@@ -320,23 +320,11 @@ final class FormRulesResolver implements FormRulesResolverInterface
             }
         }
 
-        // enum validation (any property type can define an enum).
-        if ($property->getEnum() !== null) {
-            $enum = $property->getEnum();
-            // Support both plain list ['a','b'] and associative ['a'=>'Label A'].
-            $allowedValues = array_is_list($enum) ? $enum : array_keys($enum);
-            $rules[] = 'in:' . implode(',', $allowedValues);
-        }
-
-        // oneOf validation: labeled const/title pairs used in JSON Forms selects.
-        if ($property->getOneOf() !== null) {
-            $consts = array_values(array_filter(
-                array_column($property->getOneOf(), 'const'),
-                fn ($c) => $c !== null
-            ));
-            if (!empty($consts)) {
-                $rules[] = 'in:' . implode(',', $consts);
-            }
+        // choices validation: derives allowed values from oneOf (const+title pairs)
+        // or enum (plain list). getChoices() normalises both sources to [value => label].
+        $choices = $property->getChoices();
+        if ($choices !== null) {
+            $rules[] = 'in:' . implode(',', array_keys($choices));
         }
 
         // Integer validations.

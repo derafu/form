@@ -55,9 +55,10 @@ interface ConditionSchemaInterface
     public function getConst(): mixed;
 
     /**
-     * Returns the `enum` array, or null when the keyword is absent.
+     * Returns the `enum` array (plain list), or null when the keyword is absent.
      *
-     * Supports plain lists ['a','b'] and associative ['a'=>'Label A','b'=>'Label B'].
+     * Per JSON Schema spec, `enum` is always a plain array of values.
+     * Use the `oneOf`/`const`+`title` pattern for labelled choices.
      */
     public function getEnum(): ?array;
 

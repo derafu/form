@@ -16,11 +16,11 @@
                 "tipo_contrato": {
                     "type": "string",
                     "title": "Tipo de Contrato",
-                    "enum": {
-                        "indefinido": "Indefinido",
-                        "plazo_fijo": "Plazo Fijo",
-                        "honorarios": "Honorarios"
-                    }
+                    "oneOf": [
+                        { "const": "indefinido", "title": "Indefinido" },
+                        { "const": "plazo_fijo", "title": "Plazo Fijo" },
+                        { "const": "honorarios", "title": "Honorarios" }
+                    ]
                 },
                 "fecha_inicio": {
                     "type": "string",
@@ -40,10 +40,10 @@
                 "beneficio_medico": {
                     "type": "string",
                     "title": "Beneficio Médico",
-                    "enum": {
-                        "si": "Sí",
-                        "no": "No"
-                    }
+                    "oneOf": [
+                        { "const": "si", "title": "Sí" },
+                        { "const": "no", "title": "No" }
+                    ]
                 },
                 "aseguradora": {
                     "type": "string",

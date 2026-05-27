@@ -249,6 +249,23 @@ interface PropertySchemaInterface extends JsonSerializable
     public function setOneOf(array $oneOf): static;
 
     /**
+     * Returns the normalized choices for this property as a `[value => label]`
+     * array, or null when the property has no constrained set of options.
+     *
+     * The source of truth is resolved in this order:
+     *   1. `oneOf` — each entry's `const` becomes the key and `title` the label
+     *      (falls back to the `const` value itself when `title` is absent).
+     *   2. `enum` — each item in the plain list becomes both key and label.
+     *
+     * This method is the single point of access for choices. Renderers and
+     * validators must use it instead of calling `getEnum()` or `getOneOf()`
+     * directly.
+     *
+     * @return array<string|int, string>|null
+     */
+    public function getChoices(): ?array;
+
+    /**
      * Converts the Schema to an array representation.
      *
      * @return array The complete schema as an array.

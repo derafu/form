@@ -81,7 +81,7 @@ final class WidgetFactory implements WidgetFactoryInterface
                 return 'select';
             } elseif ($format === 'uri') {
                 return 'url';
-            } elseif ($property->getEnum() !== null) {
+            } elseif ($property->getChoices() !== null) {
                 return 'select';
             } elseif (
                 !empty($options['multi'])
@@ -116,7 +116,7 @@ final class WidgetFactory implements WidgetFactoryInterface
             if (
                 $property instanceof ArraySchemaInterface
                 && $property->getItems() !== null
-                && $property->getItems()->getEnum() !== null
+                && $property->getItems()->getChoices() !== null
             ) {
                 return 'checkboxes';
             }

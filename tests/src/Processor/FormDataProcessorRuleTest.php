@@ -132,7 +132,10 @@ final class FormDataProcessorRuleTest extends TestCase
                     'trigger' => [
                         'type' => 'string',
                         'title' => 'Trigger',
-                        'enum' => ['active' => 'Active', 'inactive' => 'Inactive'],
+                        'oneOf' => [
+                            ['const' => 'active',   'title' => 'Active'],
+                            ['const' => 'inactive', 'title' => 'Inactive'],
+                        ],
                     ],
                     'dependent' => [
                         'type' => 'string',

@@ -69,32 +69,12 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
             $value = $value !== null && $value !== '' ? [$value] : [];
         }
 
-        $choices = [];
-
-        // First try array items enum.
-        if (
-            $property instanceof ArraySchemaInterface
-            && $property->getItems() !== null
-            && $property->getItems()->getEnum() !== null
-        ) {
-            foreach ($property->getItems()->getEnum() as $enumKey => $enumValue) {
-                $label = ucfirst(str_replace(['_', '-'], ' ', $enumValue));
-                $choices[$enumKey] = $label;
-            }
-        }
-
-        // Try direct enum.
-        if (empty($choices) && $property->getEnum() !== null) {
-            $directEnum = $property->getEnum();
-            foreach ($directEnum as $enumKey => $enumValue) {
-                $choices[$enumKey] = $enumValue;
-            }
-        }
-
-        // Override with explicit choices from options.
-        if (isset($options['choices']) && is_array($options['choices'])) {
-            $choices = $options['choices'];
-        }
+        // Build choices from the property schema (oneOf or enum).
+        // For array-type fields the choices live on the items sub-schema;
+        // for other field types they live on the property itself.
+        $choices = ($property instanceof ArraySchemaInterface && $property->getItems() !== null)
+            ? ($property->getItems()->getChoices() ?? [])
+            : ($property->getChoices() ?? []);
 
         if (empty($choices)) {
             throw new InvalidArgumentException(

@@ -49,27 +49,27 @@
                 "status": {
                     "type": "string",
                     "title": "Status",
-                    "enum": {
-                        "draft": "Draft",
-                        "active": "Active",
-                        "archived": "Archived"
-                    },
+                    "oneOf": [
+                        { "const": "draft",    "title": "Draft" },
+                        { "const": "active",   "title": "Active" },
+                        { "const": "archived", "title": "Archived" }
+                    ],
                     "default": "draft",
                     "description": "Only 'active' products are visible in the store."
                 },
                 "category": {
                     "type": "string",
                     "title": "Category",
-                    "enum": {
-                        "electronics": "Electronics",
-                        "clothing": "Clothing & Apparel",
-                        "books": "Books & Media",
-                        "home": "Home & Garden",
-                        "sports": "Sports & Outdoors",
-                        "beauty": "Beauty & Personal Care",
-                        "toys": "Toys & Games",
-                        "food": "Food & Grocery"
-                    },
+                    "oneOf": [
+                        { "const": "electronics", "title": "Electronics" },
+                        { "const": "clothing",    "title": "Clothing & Apparel" },
+                        { "const": "books",       "title": "Books & Media" },
+                        { "const": "home",        "title": "Home & Garden" },
+                        { "const": "sports",      "title": "Sports & Outdoors" },
+                        { "const": "beauty",      "title": "Beauty & Personal Care" },
+                        { "const": "toys",        "title": "Toys & Games" },
+                        { "const": "food",        "title": "Food & Grocery" }
+                    ],
                     "description": "Primary category for search and filtering."
                 },
                 "tags": {

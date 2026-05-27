@@ -66,31 +66,8 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         // Get field value (can be a single value or an array for multiple select).
         $value = $options['value'] ?? $field->getData() ?? null;
 
-        // Get options for the select.
-        $choices = [];
-
-        // If the property has an enum, use it for choices.
-        if ($property->getEnum() !== null) {
-            foreach ($property->getEnum() as $enumKey => $enumValue) {
-                $choices[$enumKey] = $enumValue;
-            }
-        }
-
-        // If the property has oneOf, use it for choices.
-        // if (method_exists($property, 'getOneOf') && $property->getOneOf() !== null) {
-        //     $oneOf = $property->getOneOf();
-        //     foreach ($oneOf as $option) {
-        //         if (method_exists($option, 'getConst') && $option->getConst() !== null &&
-        //             method_exists($option, 'getTitle') && $option->getTitle() !== null) {
-        //             $choices[$option->getConst()] = $option->getTitle();
-        //         }
-        //     }
-        // }
-
-        // Allow overriding choices from options.
-        if (isset($options['choices']) && is_array($options['choices'])) {
-            $choices = $options['choices'];
-        }
+        // Build choices from the property schema (oneOf or enum).
+        $choices = $property->getChoices() ?? [];
 
         // Build HTML attributes for the select.
         $attrs = [

@@ -14,6 +14,7 @@ namespace Derafu\Form\Schema;
 
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Contract\Schema\ObjectSchemaInterface;
+use Derafu\Form\Factory\PropertySchemaFactory;
 
 /**
  * Implementation of ObjectSchemaInterface.

@@ -17,6 +17,7 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Type\TypeResolverInterface;
 use Derafu\Form\Form;
 use InvalidArgumentException;
+use LogicException;
 
 /**
  * Factory class for creating form instances with automatic schema generation.
@@ -93,6 +94,9 @@ final class FormFactory implements FormFactoryInterface
             }
         }
 
+        // Promote control.options.choices shorthands to schema oneOf.
+        $this->applyChoicesShorthand($definition);
+
         return $definition;
     }
 
@@ -150,5 +154,161 @@ final class FormFactory implements FormFactoryInterface
         }
 
         return $uischema;
+    }
+
+    /**
+     * Promotes every `control.options.choices` dict found in the raw definition
+     * to a proper `oneOf` (const+title pairs) on the corresponding schema
+     * property, then removes the `choices` key so it never reaches any object.
+     *
+     * This is a write-time convenience: authors may write a compact dict
+     * instead of the verbose oneOf/const/title structure. The dict is promoted
+     * here, during normalization, and is never persisted to any object.
+     *
+     * ## Behaviour by property type
+     *
+     *   - `string`          → oneOf injected directly on the property.
+     *   - `array`           → oneOf injected on `property.items` (each item
+     *                         must be one of the listed values — checkboxes /
+     *                         multi-select pattern).
+     *   - `integer`/`number`→ NOT supported. Use oneOf directly in the schema.
+     *                         Throws LogicException if attempted.
+     *
+     * ## Error conditions (LogicException)
+     *
+     *   - Nested scope (`#/properties/a/properties/b`) — not supported in v1.
+     *   - Property referenced by scope not found in schema.
+     *   - Property type is `integer` or `number`.
+     *   - Property already has a `oneOf` defined (ambiguity).
+     *   - Array property's `items` already has a `oneOf` defined (ambiguity).
+     *
+     * @param array $definition The raw form definition array (modified in place).
+     * @throws LogicException On any of the error conditions listed above.
+     */
+    private function applyChoicesShorthand(array &$definition): void
+    {
+        if (empty($definition['uischema']['elements'])
+            || empty($definition['schema']['properties'])
+        ) {
+            return;
+        }
+
+        $this->applyChoicesFromElements(
+            $definition['uischema']['elements'],
+            $definition['schema']['properties']
+        );
+    }
+
+    /**
+     * Recursively walks the uischema elements array and applies the choices
+     * shorthand for every Control that carries `options.choices`.
+     *
+     * @param array $elements Uischema elements (modified in place).
+     * @param array $properties Schema properties (modified in place).
+     */
+    private function applyChoicesFromElements(
+        array &$elements,
+        array &$properties
+    ): void {
+        foreach ($elements as &$element) {
+            // Recurse into layout elements (VerticalLayout, HorizontalLayout,
+            // Group, Category, Categorization…) before processing controls so
+            // nested controls are also handled.
+            if (isset($element['elements']) && is_array($element['elements'])) {
+                $this->applyChoicesFromElements($element['elements'], $properties);
+            }
+
+            // Only process Control elements that carry options.choices.
+            if (($element['type'] ?? null) !== 'Control') {
+                continue;
+            }
+
+            if (!isset($element['options']['choices'])) {
+                continue;
+            }
+
+            $choices = $element['options']['choices'];
+            $scope   = $element['scope'] ?? '';
+
+            // Reject nested scopes — not supported in v1.
+            if (!preg_match('/^#\/properties\/([^\/]+)$/', $scope, $m)) {
+                throw new LogicException(sprintf(
+                    'choices shorthand does not support nested scopes: "%s". '
+                    . 'Use oneOf directly in the schema for nested properties.',
+                    $scope
+                ));
+            }
+
+            $name = $m[1];
+
+            // The property must exist in the schema.
+            if (!array_key_exists($name, $properties)) {
+                throw new LogicException(sprintf(
+                    'choices shorthand: property "%s" not found in schema '
+                    . '(referenced by scope "%s").',
+                    $name,
+                    $scope
+                ));
+            }
+
+            $prop = &$properties[$name];
+            $type = $prop['type'] ?? 'string';
+
+            // Integer and number selects are not supported via shorthand.
+            // The const values would silently become strings (JSON object keys
+            // are always strings), producing wrong validation. Use oneOf
+            // directly in the schema instead.
+            if ($type === 'integer' || $type === 'number') {
+                throw new LogicException(sprintf(
+                    'choices shorthand is not supported for type "%s" (property "%s"). '
+                    . 'Use oneOf directly in the schema to preserve numeric const values.',
+                    $type,
+                    $name
+                ));
+            }
+
+            // Build the oneOf array from the choices dict.
+            $oneOf = [];
+            foreach ($choices as $const => $title) {
+                $oneOf[] = ['const' => $const, 'title' => (string) $title];
+            }
+
+            if ($type === 'array') {
+                // For array types, choices describe each item's allowed values.
+                if (!isset($prop['items'])) {
+                    $prop['items'] = [];
+                }
+
+                if (isset($prop['items']['oneOf'])) {
+                    throw new LogicException(sprintf(
+                        'choices shorthand: property "%s" items already has oneOf defined. '
+                        . 'Remove either the choices shorthand or the items.oneOf.',
+                        $name
+                    ));
+                }
+
+                $prop['items']['oneOf'] = $oneOf;
+            } else {
+                // String (and any other scalar type).
+                if (isset($prop['oneOf'])) {
+                    throw new LogicException(sprintf(
+                        'choices shorthand: property "%s" already has oneOf defined. '
+                        . 'Remove either the choices shorthand or the schema oneOf.',
+                        $name
+                    ));
+                }
+
+                $prop['oneOf'] = $oneOf;
+            }
+
+            // Remove choices from the control options — it must not reach
+            // any Control object.
+            unset($element['options']['choices']);
+
+            // Drop the options key entirely when it becomes empty.
+            if (isset($element['options']) && $element['options'] === []) {
+                unset($element['options']);
+            }
+        }
     }
 }

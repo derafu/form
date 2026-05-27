@@ -15,6 +15,7 @@ namespace Derafu\Form\Schema;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
 use Derafu\Form\Contract\Schema\PropertySchemaInterface;
+use Derafu\Form\Factory\PropertySchemaFactory;
 
 /**
  * Implementation of ArraySchemaInterface.

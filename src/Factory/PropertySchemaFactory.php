@@ -10,9 +10,17 @@ declare(strict_types=1);
  * See LICENSE file for more details.
  */
 
-namespace Derafu\Form\Schema;
+namespace Derafu\Form\Factory;
 
+use Derafu\Form\Contract\Factory\PropertySchemaFactoryInterface;
 use Derafu\Form\Contract\Schema\PropertySchemaInterface;
+use Derafu\Form\Schema\ArraySchema;
+use Derafu\Form\Schema\BooleanSchema;
+use Derafu\Form\Schema\IntegerSchema;
+use Derafu\Form\Schema\NullSchema;
+use Derafu\Form\Schema\NumberSchema;
+use Derafu\Form\Schema\ObjectSchema;
+use Derafu\Form\Schema\StringSchema;
 
 /**
  * Creates the appropriate PropertySchemaInterface implementation for a given
@@ -21,17 +29,10 @@ use Derafu\Form\Contract\Schema\PropertySchemaInterface;
  * This factory centralises the type-dispatch logic that was previously
  * duplicated across FormSchema::fromArray() and ObjectSchema::fromArray().
  */
-final class PropertySchemaFactory
+final class PropertySchemaFactory implements PropertySchemaFactoryInterface
 {
     /**
-     * Creates a PropertySchemaInterface instance from a definition array.
-     *
-     * Dispatches to the concrete schema class that matches the `type` key.
-     * Defaults to StringSchema when the type is absent or unrecognised.
-     *
-     * @param array $definition The JSON Schema property definition, including
-     *   a `name` key that identifies the property within its parent schema.
-     * @return PropertySchemaInterface
+     * {@inheritDoc}
      */
     public static function create(array $definition): PropertySchemaInterface
     {

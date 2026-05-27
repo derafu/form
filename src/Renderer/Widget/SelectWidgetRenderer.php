@@ -67,7 +67,13 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         $value = $options['value'] ?? $field->getData() ?? null;
 
         // Build choices from the property schema (oneOf or enum).
-        $choices = $property->getChoices() ?? [];
+        // For array types (multiple select) the choices live on the items
+        // sub-schema — consistent with CheckboxWidgetRenderer and JSON Schema
+        // semantics (items describes each element, not the array itself).
+        $choices = ($isMultiple && $property->getItems() !== null)
+            ? ($property->getItems()->getChoices() ?? [])
+            : ($property->getChoices() ?? [])
+        ;
 
         // Build HTML attributes for the select.
         $attrs = [

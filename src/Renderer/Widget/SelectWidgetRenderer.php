@@ -15,6 +15,7 @@ namespace Derafu\Form\Renderer\Widget;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
+use Derafu\Form\Contract\Schema\ArraySchemaInterface;
 use InvalidArgumentException;
 
 /**
@@ -45,7 +46,7 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         $hasErrors = !$field->isValid();
 
         // Check if multiple selection is enabled.
-        $isMultiple = $property->getType() === 'array';
+        $isMultiple = $property instanceof ArraySchemaInterface;
 
         // Prepare CSS classes.
         $widgetClass = 'form-select';
@@ -69,9 +70,8 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         $choices = [];
 
         // If the property has an enum, use it for choices.
-        if (method_exists($property, 'getEnum') && $property->getEnum() !== null) {
-            $enum = $property->getEnum();
-            foreach ($enum as $enumKey => $enumValue) {
+        if ($property->getEnum() !== null) {
+            foreach ($property->getEnum() as $enumKey => $enumValue) {
                 $choices[$enumKey] = $enumValue;
             }
         }
@@ -102,6 +102,18 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         // Add multiple attribute if necessary.
         if ($isMultiple) {
             $attrs['multiple'] = 'multiple';
+        }
+
+        // For multiple selects, pass min/max item constraints as data attributes
+        // so client-side validation can enforce them (HTML <select> has no native
+        // min/max for number of selections).
+        if ($isMultiple) {
+            if ($property->getMinItems() !== null) {
+                $attrs['data-min-items'] = (string)$property->getMinItems();
+            }
+            if ($property->getMaxItems() !== null) {
+                $attrs['data-max-items'] = (string)$property->getMaxItems();
+            }
         }
 
         // Add validation attributes from property

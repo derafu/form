@@ -30,6 +30,7 @@ use Derafu\Form\Processor\ProcessResult;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -63,6 +64,7 @@ use PHPUnit\Framework\TestCase;
  * Test to reproduce the "Caster rule 'string' not found" error.
  */
 #[CoversClass(FormDataProcessor::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormRulesResolver::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(AbstractPropertySchema::class)]

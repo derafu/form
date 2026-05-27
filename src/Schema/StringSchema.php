@@ -51,6 +51,13 @@ final class StringSchema extends AbstractPropertySchema implements StringSchemaI
     protected ?string $pattern = null;
 
     /**
+     * The media type of the string content.
+     *
+     * @var string|null
+     */
+    protected ?string $contentMediaType = null;
+
+    /**
      * {@inheritDoc}
      */
     public function getType(): string
@@ -129,6 +136,23 @@ final class StringSchema extends AbstractPropertySchema implements StringSchemaI
     /**
      * {@inheritDoc}
      */
+    public function getContentMediaType(): ?string
+    {
+        return $this->contentMediaType;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setContentMediaType(string $contentMediaType): static
+    {
+        $this->contentMediaType = $contentMediaType;
+        return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function toArray(): array
     {
         $array = parent::toArray();
@@ -147,6 +171,10 @@ final class StringSchema extends AbstractPropertySchema implements StringSchemaI
 
         if ($this->pattern !== null) {
             $array['pattern'] = $this->pattern;
+        }
+
+        if ($this->contentMediaType !== null) {
+            $array['contentMediaType'] = $this->contentMediaType;
         }
 
         return $array;
@@ -223,6 +251,10 @@ final class StringSchema extends AbstractPropertySchema implements StringSchemaI
 
         if (isset($definition['pattern'])) {
             $schema->setPattern($definition['pattern']);
+        }
+
+        if (isset($definition['contentMediaType'])) {
+            $schema->setContentMediaType($definition['contentMediaType']);
         }
 
         return $schema;

@@ -54,6 +54,7 @@ use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -101,6 +102,7 @@ use PHPUnit\Framework\TestCase;
  * D) Rendered HTML: the correct value appears in the rendered output.
  */
 #[CoversClass(Form::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormField::class)]
 #[CoversClass(FormData::class)]
 #[CoversClass(AbstractPropertySchema::class)]

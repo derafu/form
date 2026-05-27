@@ -17,7 +17,7 @@
         {% endif %}
 
         {# Add validation attributes if needed #}
-        {% if field.isRequired and loop.first %}
+        {% if required and loop.first %}
             {% set checkbox_attrs = checkbox_attrs|merge({'required': 'required'}) %}
         {% endif %}
 

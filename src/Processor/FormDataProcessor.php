@@ -73,17 +73,17 @@ final class FormDataProcessor implements FormDataProcessorInterface
         $this->resolver->resolve($form);
 
         // Process each field using the rules now stored in the form.
-        foreach ($form->getRules()->toArray() as $fieldName => $fieldRules) {
+        foreach ($form->getFields() as $fieldName => $field) {
             // Skip fields whose UiSchema rule makes them inactive given the
             // current submitted data. Inactive fields are not validated and
             // not included in the processed result.
-            $field = $form->getField($fieldName);
-            if ($field !== null && !$this->isFieldActive($field, $data)) {
+            if (!$this->isFieldActive($field, $data)) {
                 $skippedFields[$fieldName] = true;
                 continue;
             }
 
             $fieldValue = $data[$fieldName] ?? null;
+            $fieldRules = $form->getRules()[$fieldName];
 
             try {
                 // Process the field value through all rules.

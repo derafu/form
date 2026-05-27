@@ -75,15 +75,9 @@ final class WidgetFactory implements WidgetFactoryInterface
                 return 'time';
             } elseif ($format === 'color') {
                 return 'color';
-            } elseif (
-                isset($options['type'])
-                && $options['type'] === 'radio'
-            ) {
+            } elseif ($control->getControlType() === 'radio') {
                 return 'radio';
-            } elseif (
-                isset($options['type'])
-                && $options['type'] === 'choice'
-            ) {
+            } elseif ($control->getControlType() === 'choice') {
                 return 'select';
             } elseif ($format === 'uri') {
                 return 'url';
@@ -95,10 +89,7 @@ final class WidgetFactory implements WidgetFactoryInterface
                     $property->getMaxLength() !== null
                     && $property->getMaxLength() > 255
                 )
-                || (
-                    isset($options['type'])
-                    && $options['type'] === 'textarea'
-                )
+                || $control->getControlType() === 'textarea'
             ) {
                 return 'textarea';
             }
@@ -107,23 +98,26 @@ final class WidgetFactory implements WidgetFactoryInterface
             $type === 'number'
             || $type === 'integer'
             || $type === 'float'
-            || (isset($options['type']) && $options['type'] === 'float')
+            || $control->getControlType() === 'float'
             || $type === 'percent'
         ) {
             // Check if slider widget is explicitly requested.
-            if (isset($options['type']) && $options['type'] === 'slider') {
+            if ($control->getControlType() === 'slider') {
                 return 'slider';
             }
             // Check if range widget is explicitly requested (alias for slider).
-            if (isset($options['type']) && $options['type'] === 'range') {
+            if ($control->getControlType() === 'range') {
                 return 'range';
             }
             return 'number';
         } elseif ($type === 'boolean') {
             return 'checkbox';
         } elseif ($type === 'array') {
-            $schema = $property->toArray();
-            if (isset($schema['items']['enum'])) {
+            if (
+                $property instanceof ArraySchemaInterface
+                && $property->getItems() !== null
+                && $property->getItems()->getEnum() !== null
+            ) {
                 return 'checkboxes';
             }
             return 'collection';

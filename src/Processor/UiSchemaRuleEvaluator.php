@@ -13,11 +13,13 @@ declare(strict_types=1);
 namespace Derafu\Form\Processor;
 
 use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
+use Derafu\Form\Contract\UiSchema\ConditionSchemaInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaCompositeConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
+use LogicException;
 
 /**
  * Evaluates UI schema rules against a data set.
@@ -79,7 +81,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
      * Evaluates a simple (leaf) condition against the data.
      *
      * Extracts the field value identified by the condition scope and tests it
-     * against the condition's JSON Schema fragment.
+     * against the condition's schema fragment.
      *
      * @param UiSchemaConditionInterface $condition The simple condition.
      * @param array $data The data to evaluate the condition against.
@@ -94,15 +96,15 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
     }
 
     /**
-     * Evaluates a JSON Schema fragment against a field value.
+     * Evaluates a ConditionSchemaInterface fragment against a field value.
      *
      * Multiple keywords in the same schema object are combined with an implicit
      * AND (JSON Schema semantics): all must be satisfied for the result to be
-     * true. Returns false when no recognised keyword is found.
+     * true. Returns false when no recognised keyword is present.
      *
      * ## Supported keywords
      *
-     *   - `const`              — strict equality.
+     *   - `const`              — strict equality (including null).
      *   - `enum`               — value must be one of the listed values.
      *   - `contains`           — value must be an array with at least one item
      *                           satisfying the nested schema (multiselect).
@@ -113,29 +115,37 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
      *   - `exclusiveMaximum`   — value <  exclusiveMaximum (numeric, strict).
      *   - `pattern`            — value matches the ECMA regex (string fields).
      *
-     * @param array $schema The JSON Schema fragment from the condition.
-     * @param mixed $value  The field value to test.
+     * @param ConditionSchemaInterface $schema The condition schema fragment.
+     * @param mixed $value The field value to test.
      * @return bool True if the value satisfies all keywords in the fragment.
      */
-    private function evaluateSchema(array $schema, mixed $value): bool
+    private function evaluateSchema(ConditionSchemaInterface $schema, mixed $value): bool
     {
         $checks = [];
 
-        if (array_key_exists('const', $schema)) {
-            $checks[] = $value === $schema['const'];
+        if ($schema->hasConst()) {
+            $checks[] = $value === $schema->getConst();
         }
 
-        if (array_key_exists('enum', $schema)) {
-            $checks[] = in_array($value, (array) $schema['enum'], strict: true);
+        if ($schema->getEnum() !== null) {
+            $enum = $schema->getEnum();
+            // Support both plain arrays (JSON Schema standard: values are valid
+            // values) and key→label arrays (keys are submitted values, values
+            // are display labels).
+            if (array_is_list($enum)) {
+                $checks[] = in_array($value, $enum, strict: true);
+            } else {
+                $checks[] = array_key_exists($value, $enum);
+            }
         }
 
-        if (array_key_exists('contains', $schema)) {
+        if ($schema->getContains() !== null) {
             if (!is_array($value)) {
                 $checks[] = false;
             } else {
                 $found = false;
                 foreach ($value as $item) {
-                    if ($this->evaluateSchema($schema['contains'], $item)) {
+                    if ($this->evaluateSchema($schema->getContains(), $item)) {
                         $found = true;
                         break;
                     }
@@ -144,38 +154,38 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
             }
         }
 
-        if (array_key_exists('not', $schema)) {
-            $checks[] = !$this->evaluateSchema($schema['not'], $value);
+        if ($schema->getNot() !== null) {
+            $checks[] = !$this->evaluateSchema($schema->getNot(), $value);
         }
 
-        if (array_key_exists('minimum', $schema)) {
-            $checks[] = is_numeric($value) && $value >= $schema['minimum'];
+        if ($schema->getMinimum() !== null) {
+            $checks[] = is_numeric($value) && $value >= $schema->getMinimum();
         }
 
-        if (array_key_exists('maximum', $schema)) {
-            $checks[] = is_numeric($value) && $value <= $schema['maximum'];
+        if ($schema->getMaximum() !== null) {
+            $checks[] = is_numeric($value) && $value <= $schema->getMaximum();
         }
 
-        if (array_key_exists('exclusiveMinimum', $schema)) {
-            $checks[] = is_numeric($value) && $value > $schema['exclusiveMinimum'];
+        if ($schema->getExclusiveMinimum() !== null) {
+            $checks[] = is_numeric($value) && $value > $schema->getExclusiveMinimum();
         }
 
-        if (array_key_exists('exclusiveMaximum', $schema)) {
-            $checks[] = is_numeric($value) && $value < $schema['exclusiveMaximum'];
+        if ($schema->getExclusiveMaximum() !== null) {
+            $checks[] = is_numeric($value) && $value < $schema->getExclusiveMaximum();
         }
 
-        if (array_key_exists('pattern', $schema)) {
+        if ($schema->getPattern() !== null) {
             // JSON Schema patterns are ECMA regexes without delimiters.
             // We add '/' delimiters and escape any '/' inside the pattern.
             // An invalid PCRE pattern is a programming error (misconfigured
             // form definition) and must throw immediately rather than silently
             // producing wrong activation behaviour.
-            $regex = '/' . str_replace('/', '\/', (string) $schema['pattern']) . '/';
+            $regex = '/' . str_replace('/', '\/', $schema->getPattern()) . '/';
             $result = @preg_match($regex, (string) $value);
             if ($result === false) {
-                throw new \LogicException(sprintf(
+                throw new LogicException(sprintf(
                     'Invalid PCRE pattern in rule condition: "%s".',
-                    $schema['pattern']
+                    $schema->getPattern()
                 ));
             }
             $checks[] = $result === 1;

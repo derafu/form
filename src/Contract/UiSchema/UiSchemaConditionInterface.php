@@ -25,27 +25,10 @@ use JsonSerializable;
  * { "scope": "#/properties/tipo_contrato", "schema": { "const": "plazo_fijo" } }
  * ```
  *
- * ## Supported schema keywords
+ * The schema fragment is represented as a ConditionSchemaInterface object.
+ * See that interface for the full list of supported keywords.
  *
- * The following JSON Schema keywords are currently evaluated server-side:
- *
- *   - `const`  — the value must equal the constant (strict comparison).
- *   - `enum`   — the value must be one of the listed values.
- *
- * ## Pending schema keywords (add support as needed)
- *
- * The following keywords are valid in JSON Forms conditions but are **not yet
- * evaluated** server-side. They are stored and serialised for the client but
- * will cause the condition to evaluate to `false` on the server until support
- * is added to `FormDataProcessor::evaluateSchema()`:
- *
- *   - `contains`          — array field must contain the given item (multiselect).
- *   - `not`               — negation of a schema fragment.
- *   - `minimum`/`maximum` — numeric range checks.
- *
- * Add a case to `evaluateSchema()` and a corresponding test before using any
- * of the above in a form that requires server-side rule processing.
- *
+ * @see ConditionSchemaInterface
  * @see https://jsonforms.io/docs/uischema/rules
  */
 interface UiSchemaConditionInterface extends JsonSerializable
@@ -58,11 +41,11 @@ interface UiSchemaConditionInterface extends JsonSerializable
     public function getScope(): string;
 
     /**
-     * Returns the JSON Schema fragment used to test the field value.
+     * Returns the condition schema fragment used to test the field value.
      *
-     * Example: `["const" => "plazo_fijo"]`.
+     * Example: `new ConditionSchema(['const' => 'plazo_fijo'])`.
      */
-    public function getSchema(): array;
+    public function getSchema(): ConditionSchemaInterface;
 
     /**
      * Returns the condition as a plain array suitable for serialisation.

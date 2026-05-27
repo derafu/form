@@ -17,7 +17,8 @@ use Derafu\Form\Contract\Type\TypeInterface;
 /**
  * Base implementation of TypeInterface.
  *
- * This class provides common functionality for all type implementations.
+ * This class provides common functionality for all type implementations of
+ * widgets. This is the type used in a control in the uischema.
  */
 abstract class AbstractType implements TypeInterface
 {

@@ -61,7 +61,7 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
      */
     public function getPropertyName(): string
     {
-        $name = $this->getOptions()['name'] ?? null;
+        $name = $this->definition['options']['name'] ?? null;
         if ($name) {
             return $name;
         }
@@ -77,6 +77,14 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
     public function getLabel(): ?string
     {
         return $this->definition['label'] ?? null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getControlType(): ?string
+    {
+        return $this->definition['options']['type'] ?? null;
     }
 
     /**

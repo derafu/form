@@ -52,7 +52,9 @@ use Derafu\Form\Schema\BooleanSchema;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
+use Derafu\Form\Schema\ObjectSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -77,6 +79,7 @@ use Derafu\Form\Type\UuidType;
 use Derafu\Form\Type\WeekType;
 use Derafu\Form\UiSchema\Categorization;
 use Derafu\Form\UiSchema\Category;
+use Derafu\Form\UiSchema\ConditionSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\HorizontalLayout;
@@ -99,6 +102,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FormAttributes::class)]
 #[CoversClass(FormField::class)]
 #[CoversClass(FormSchema::class)]
+#[CoversClass(ObjectSchema::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(AbstractPropertySchema::class)]
 #[CoversClass(ArraySchema::class)]
 #[CoversClass(BooleanSchema::class)]
@@ -165,6 +170,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UiSchemaRule::class)]
 #[CoversClass(UiSchemaRuleEffect::class)]
 #[CoversClass(UiSchemaCondition::class)]
+#[CoversClass(ConditionSchema::class)]
 #[CoversClass(UiSchemaCompositeCondition::class)]
 #[CoversClass(UiSchemaCompositeConditionType::class)]
 #[CoversClass(UiSchemaRuleEvaluator::class)]

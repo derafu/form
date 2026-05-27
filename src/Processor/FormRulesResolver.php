@@ -15,6 +15,12 @@ namespace Derafu\Form\Processor;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
+use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
+use Derafu\Form\Contract\Schema\NumberSchemaInterface;
+use Derafu\Form\Contract\Schema\PropertySchemaInterface;
+use Derafu\Form\Contract\Schema\StringSchemaInterface;
+use Derafu\Form\Contract\UiSchema\ControlInterface;
 
 /**
  * Resolves the complete, merged processing rules for every field in a form.
@@ -28,6 +34,10 @@ use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
  *   - cast:      explicit replaces derived (mutually exclusive).
  *   - sanitize / transform / validate: explicit appended after derived.
  *   - required:  always placed first in validate, deduplicated.
+ *
+ * Note: 'required' is a property of the parent ObjectSchema (getRequired()),
+ * not of a leaf property. It is injected by resolveFormToRules() and must not
+ * be derived from the property object itself.
  */
 final class FormRulesResolver implements FormRulesResolverInterface
 {
@@ -40,40 +50,41 @@ final class FormRulesResolver implements FormRulesResolverInterface
     }
 
     /**
-     * Maps a property schema array to Derafu Data Processor rules.
+     * Maps a property schema object to Derafu Data Processor rules.
      *
-     * This is a pure function — it depends only on the schema array and has no
-     * side effects. Exposed as a public method for direct use and unit testing.
+     * This is a pure function — it depends only on the property object and has
+     * no side effects. Exposed as a public method for direct use and unit testing.
      *
-     * @param array $propertySchema The JSON Schema property definition.
+     * Note: 'required' is not derived here. It lives on the parent ObjectSchema
+     * and is injected at the form level by resolveFormToRules().
+     *
+     * @param PropertySchemaInterface $property The JSON Schema property object.
      * @return array The Data Processor rules array (cast, sanitize, transform, validate).
      */
-    public function mapSchemaToRules(array $propertySchema): array
+    public function mapSchemaToRules(PropertySchemaInterface $property): array
     {
         $rules = [];
 
         // Casting rules (only for supported types).
-        if (
-            isset($propertySchema['type'])
-            && $this->isTypeSupportedForCasting($propertySchema['type'])
-        ) {
-            $rules['cast'] = $this->mapTypeToCastRule($propertySchema['type']);
+        $type = $property->getType();
+        if ($this->isTypeSupportedForCasting($type)) {
+            $rules['cast'] = $this->mapTypeToCastRule($type);
         }
 
         // Sanitization rules.
-        $sanitizeRules = $this->derivesSanitizeRules($propertySchema);
+        $sanitizeRules = $this->derivesSanitizeRules($property);
         if (!empty($sanitizeRules)) {
             $rules['sanitize'] = $sanitizeRules;
         }
 
         // Transformation rules.
-        $transformRules = $this->derivesTransformRules($propertySchema);
+        $transformRules = $this->derivesTransformRules($property);
         if (!empty($transformRules)) {
             $rules['transform'] = $transformRules;
         }
 
         // Validation rules.
-        $validateRules = $this->derivesValidateRules($propertySchema);
+        $validateRules = $this->derivesValidateRules($property);
         if (!empty($validateRules)) {
             $rules['validate'] = $validateRules;
         }
@@ -131,25 +142,25 @@ final class FormRulesResolver implements FormRulesResolverInterface
      */
     private function resolveFieldToRules(FormFieldInterface $field, array $additionalRules = []): array
     {
-        $propertySchema = $field->getProperty()->toArray();
-        $controlOptions = $field->getControl()->getOptions();
+        $property = $field->getProperty();
+        $control = $field->getControl();
 
         // Upload controls (file, image) carry an array value ($_FILES-style or
         // PSR-7 UploadedFileInterface), never a plain string. Applying cast or
         // sanitize rules designed for strings would throw a CastingException.
         // Their only relevant processing is file/image validation.
         $uploadControls = ['file', 'image'];
-        if (in_array($controlOptions['type'] ?? null, $uploadControls, true)) {
-            $uiValidateRules = $this->derivesControlValidateRules($controlOptions);
+        if (in_array($control->getControlType(), $uploadControls, true)) {
+            $uiValidateRules = $this->derivesControlValidateRules($control);
             $rules = empty($uiValidateRules) ? [] : ['validate' => $uiValidateRules];
             return empty($additionalRules) ? $rules : $this->mergeAdditionalRules($rules, $additionalRules);
         }
 
         // Start with schema-based rules.
-        $rules = $this->mapSchemaToRules($propertySchema);
+        $rules = $this->mapSchemaToRules($property);
 
         // Apply UI-specific transformations based on control options.
-        $uiTransformRules = $this->derivesControlTransformRules($controlOptions);
+        $uiTransformRules = $this->derivesControlTransformRules($control);
         if (!empty($uiTransformRules)) {
             $rules['transform'] = array_merge(
                 $rules['transform'] ?? [],
@@ -158,7 +169,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
         }
 
         // Apply UI-specific validations.
-        $uiValidateRules = $this->derivesControlValidateRules($controlOptions);
+        $uiValidateRules = $this->derivesControlValidateRules($control);
         if (!empty($uiValidateRules)) {
             $rules['validate'] = array_merge(
                 $rules['validate'] ?? [],
@@ -244,14 +255,14 @@ final class FormRulesResolver implements FormRulesResolverInterface
     }
 
     /**
-     * @param array $propertySchema
+     * @param PropertySchemaInterface $property
      * @return array
      */
-    private function derivesSanitizeRules(array $propertySchema): array
+    private function derivesSanitizeRules(PropertySchemaInterface $property): array
     {
         $rules = [];
 
-        if (($propertySchema['type'] ?? '') === 'string') {
+        if ($property instanceof StringSchemaInterface) {
             $rules[] = 'trim';
         }
 
@@ -259,93 +270,112 @@ final class FormRulesResolver implements FormRulesResolverInterface
     }
 
     /**
-     * @param array $propertySchema
+     * @param PropertySchemaInterface $property
      * @return array
      */
-    private function derivesTransformRules(array $propertySchema): array
+    private function derivesTransformRules(PropertySchemaInterface $property): array
     {
         $rules = [];
 
-        if (($propertySchema['type'] ?? '') === 'string') {
-            if (($propertySchema['format'] ?? '') === 'email') {
-                $rules[] = 'lowercase';
-            }
+        if ($property instanceof StringSchemaInterface && $property->getFormat() === 'email') {
+            $rules[] = 'lowercase';
         }
 
         return $rules;
     }
 
     /**
-     * @param array $propertySchema
+     * @param PropertySchemaInterface $property
      * @return array
      */
-    private function derivesValidateRules(array $propertySchema): array
+    private function derivesValidateRules(PropertySchemaInterface $property): array
     {
         $rules = [];
 
-        // Required validation.
-        if (
-            isset($propertySchema['required'])
-            && $propertySchema['required'] === true
-        ) {
-            $rules[] = 'required';
-        }
-
         // String validations.
-        if (($propertySchema['type'] ?? '') === 'string') {
-            if (isset($propertySchema['minLength'])) {
-                $rules[] = "min_length:{$propertySchema['minLength']}";
+        if ($property instanceof StringSchemaInterface) {
+            if ($property->getMinLength() !== null) {
+                $rules[] = "min_length:{$property->getMinLength()}";
             }
 
-            if (isset($propertySchema['maxLength'])) {
-                $rules[] = "max_length:{$propertySchema['maxLength']}";
+            if ($property->getMaxLength() !== null) {
+                $rules[] = "max_length:{$property->getMaxLength()}";
             }
 
-            if (isset($propertySchema['format'])) {
-                $rules[] = $this->mapFormatToValidationRule($propertySchema['format']);
+            if ($property->getFormat() !== null) {
+                $rules[] = $this->mapFormatToValidationRule($property->getFormat());
             }
 
-            if (isset($propertySchema['pattern'])) {
+            if ($property->getPattern() !== null) {
                 // JSON Schema patterns are ECMA (no delimiters). The DataProcessor's
                 // RegexRule uses preg_match(), which requires PCRE delimiters.
                 // We add '/' delimiters and escape any literal '/' inside the pattern.
-                $rules[] = 'regex:/' . str_replace('/', '\/', $propertySchema['pattern']) . '/';
+                $rules[] = 'regex:/' . str_replace('/', '\/', $property->getPattern()) . '/';
             }
 
-            if (isset($propertySchema['enum'])) {
-                $enumKeys = implode(',', array_keys($propertySchema['enum']));
-                $rules[] = "in:{$enumKeys}";
-            }
-
-            if (isset($propertySchema['contentMediaType'])) {
-                $rules[] = $this->mapContentMediaTypeToValidationRule($propertySchema['contentMediaType']);
+            if ($property->getContentMediaType() !== null) {
+                $rules[] = $this->mapContentMediaTypeToValidationRule(
+                    $property->getContentMediaType()
+                );
             }
         }
 
-        // Numeric validations.
-        if (in_array($propertySchema['type'] ?? '', ['integer', 'number'])) {
-            $rules[] = ($propertySchema['type'] === 'integer') ? 'int' : 'numeric';
+        // enum validation (any property type can define an enum).
+        if ($property->getEnum() !== null) {
+            $enum = $property->getEnum();
+            // Support both plain list ['a','b'] and associative ['a'=>'Label A'].
+            $allowedValues = array_is_list($enum) ? $enum : array_keys($enum);
+            $rules[] = 'in:' . implode(',', $allowedValues);
+        }
 
-            if (isset($propertySchema['minimum'])) {
-                $rules[] = "gte:{$propertySchema['minimum']}";
+        // oneOf validation: labeled const/title pairs used in JSON Forms selects.
+        if ($property->getOneOf() !== null) {
+            $consts = array_values(array_filter(
+                array_column($property->getOneOf(), 'const'),
+                fn ($c) => $c !== null
+            ));
+            if (!empty($consts)) {
+                $rules[] = 'in:' . implode(',', $consts);
+            }
+        }
+
+        // Integer validations.
+        if ($property instanceof IntegerSchemaInterface) {
+            $rules[] = 'int';
+
+            if ($property->getMinimum() !== null) {
+                $rules[] = "gte:{$property->getMinimum()}";
             }
 
-            if (isset($propertySchema['maximum'])) {
-                $rules[] = "lte:{$propertySchema['maximum']}";
+            if ($property->getMaximum() !== null) {
+                $rules[] = "lte:{$property->getMaximum()}";
+            }
+        }
+
+        // Number (float) validations.
+        if ($property instanceof NumberSchemaInterface) {
+            $rules[] = 'numeric';
+
+            if ($property->getMinimum() !== null) {
+                $rules[] = "gte:{$property->getMinimum()}";
+            }
+
+            if ($property->getMaximum() !== null) {
+                $rules[] = "lte:{$property->getMaximum()}";
             }
         }
 
         // Array validations.
-        if (($propertySchema['type'] ?? '') === 'array') {
-            if (isset($propertySchema['minItems'])) {
-                $rules[] = "min_items:{$propertySchema['minItems']}";
+        if ($property instanceof ArraySchemaInterface) {
+            if ($property->getMinItems() !== null) {
+                $rules[] = "min_items:{$property->getMinItems()}";
             }
 
-            if (isset($propertySchema['maxItems'])) {
-                $rules[] = "max_items:{$propertySchema['maxItems']}";
+            if ($property->getMaxItems() !== null) {
+                $rules[] = "max_items:{$property->getMaxItems()}";
             }
 
-            if (isset($propertySchema['uniqueItems']) && $propertySchema['uniqueItems'] === true) {
+            if ($property->needUniqueItems() === true) {
                 $rules[] = 'unique';
             }
         }
@@ -358,14 +388,14 @@ final class FormRulesResolver implements FormRulesResolverInterface
     // =========================================================================
 
     /**
-     * @param array $controlOptions UI control options.
+     * @param ControlInterface $control The UI control element.
      * @return array
      */
-    private function derivesControlTransformRules(array $controlOptions): array
+    private function derivesControlTransformRules(ControlInterface $control): array
     {
         $rules = [];
 
-        switch ($controlOptions['type'] ?? null) {
+        switch ($control->getControlType()) {
             case 'editor':
                 $rules[] = 'strip_tags';
                 break;
@@ -375,14 +405,14 @@ final class FormRulesResolver implements FormRulesResolverInterface
     }
 
     /**
-     * @param array $controlOptions UI control options.
+     * @param ControlInterface $control The UI control element.
      * @return array
      */
-    private function derivesControlValidateRules(array $controlOptions): array
+    private function derivesControlValidateRules(ControlInterface $control): array
     {
         $rules = [];
 
-        switch ($controlOptions['type'] ?? null) {
+        switch ($control->getControlType()) {
             case 'file':
                 $rules[] = 'file';
                 break;

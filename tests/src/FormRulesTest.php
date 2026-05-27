@@ -25,6 +25,7 @@ use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
@@ -34,6 +35,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Form::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormData::class)]
 #[CoversClass(FormField::class)]
 #[CoversClass(FormRules::class)]

@@ -21,11 +21,13 @@ use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Rules\FormRules;
+use Derafu\Form\Schema\ArraySchema;
 use Derafu\Form\Schema\BooleanSchema;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
@@ -41,6 +43,7 @@ use PHPUnit\Framework\TestCase;
  * Tests use real Form objects built via Form::fromArray() — no mocks.
  */
 #[CoversClass(FormRulesResolver::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(AbstractPropertySchema::class)]
 #[CoversClass(AbstractUiSchemaElement::class)]
@@ -49,6 +52,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Form::class)]
 #[CoversClass(FormField::class)]
 #[CoversClass(FormOptions::class)]
+#[CoversClass(ArraySchema::class)]
 #[CoversClass(BooleanSchema::class)]
 #[CoversClass(FormSchema::class)]
 #[CoversClass(IntegerSchema::class)]
@@ -75,7 +79,10 @@ final class FormRulesResolverTest extends TestCase
     #[DataProvider('stringTypeProvider')]
     public function testStringTypeMapping(array $schema, array $expectedRules): void
     {
-        $this->assertSame($expectedRules, $this->resolver->mapSchemaToRules($schema));
+        $this->assertSame(
+            $expectedRules,
+            $this->resolver->mapSchemaToRules(PropertySchemaFactory::create($schema))
+        );
     }
 
     public static function stringTypeProvider(): array
@@ -93,17 +100,24 @@ final class FormRulesResolverTest extends TestCase
                 ['type' => 'string', 'format' => 'email', 'minLength' => 3, 'maxLength' => 80],
                 ['cast' => 'string', 'sanitize' => ['trim'], 'transform' => ['lowercase'], 'validate' => ['min_length:3', 'max_length:80', 'email']],
             ],
-            'required_string' => [
-                ['type' => 'string', 'required' => true],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['required']],
-            ],
             'string_with_pattern' => [
                 ['type' => 'string', 'pattern' => '^[A-Za-z]+$'],
                 ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['regex:/^[A-Za-z]+$/']],
             ],
             'string_with_enum' => [
-                ['type' => 'string', 'enum' => ['pending' => 'pending', 'approved' => 'approved', 'rejected' => 'rejected']],
+                ['type' => 'string', 'enum' => ['pending', 'approved', 'rejected']],
                 ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['in:pending,approved,rejected']],
+            ],
+            'string_with_oneOf' => [
+                [
+                    'type' => 'string',
+                    'oneOf' => [
+                        ['const' => 'draft', 'title' => 'Draft'],
+                        ['const' => 'active', 'title' => 'Active'],
+                        ['const' => 'archived', 'title' => 'Archived'],
+                    ],
+                ],
+                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['in:draft,active,archived']],
             ],
         ];
     }
@@ -111,7 +125,10 @@ final class FormRulesResolverTest extends TestCase
     #[DataProvider('numericTypeProvider')]
     public function testNumericTypeMapping(array $schema, array $expectedRules): void
     {
-        $this->assertSame($expectedRules, $this->resolver->mapSchemaToRules($schema));
+        $this->assertSame(
+            $expectedRules,
+            $this->resolver->mapSchemaToRules(PropertySchemaFactory::create($schema))
+        );
     }
 
     public static function numericTypeProvider(): array
@@ -139,7 +156,10 @@ final class FormRulesResolverTest extends TestCase
     #[DataProvider('arrayTypeProvider')]
     public function testArrayTypeMapping(array $schema, array $expectedRules): void
     {
-        $this->assertSame($expectedRules, $this->resolver->mapSchemaToRules($schema));
+        $this->assertSame(
+            $expectedRules,
+            $this->resolver->mapSchemaToRules(PropertySchemaFactory::create($schema))
+        );
     }
 
     public static function arrayTypeProvider(): array
@@ -160,7 +180,10 @@ final class FormRulesResolverTest extends TestCase
     #[DataProvider('booleanTypeProvider')]
     public function testBooleanTypeMapping(array $schema, array $expectedRules): void
     {
-        $this->assertSame($expectedRules, $this->resolver->mapSchemaToRules($schema));
+        $this->assertSame(
+            $expectedRules,
+            $this->resolver->mapSchemaToRules(PropertySchemaFactory::create($schema))
+        );
     }
 
     public static function booleanTypeProvider(): array
@@ -173,7 +196,10 @@ final class FormRulesResolverTest extends TestCase
     #[DataProvider('formatMappingProvider')]
     public function testFormatMapping(array $schema, array $expectedRules): void
     {
-        $this->assertSame($expectedRules, $this->resolver->mapSchemaToRules($schema));
+        $this->assertSame(
+            $expectedRules,
+            $this->resolver->mapSchemaToRules(PropertySchemaFactory::create($schema))
+        );
     }
 
     public static function formatMappingProvider(): array
@@ -212,16 +238,6 @@ final class FormRulesResolverTest extends TestCase
                 ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['json']],
             ],
         ];
-    }
-
-    public function testEmptySchemaReturnsEmptyRules(): void
-    {
-        $this->assertSame([], $this->resolver->mapSchemaToRules([]));
-    }
-
-    public function testSchemaWithoutTypeReturnsEmptyRules(): void
-    {
-        $this->assertSame([], $this->resolver->mapSchemaToRules(['title' => 'Test Field']));
     }
 
     // =========================================================================
@@ -600,7 +616,9 @@ final class FormRulesResolverTest extends TestCase
 
         $this->resolver->resolve($form);
         $rules = $form->getRules();
-        $direct = $this->resolver->mapSchemaToRules(['type' => 'integer', 'minimum' => 0]);
+        $direct = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create(['type' => 'integer', 'minimum' => 0])
+        );
 
         $this->assertSame($direct, $rules['stock']);
     }

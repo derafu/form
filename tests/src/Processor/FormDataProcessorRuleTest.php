@@ -27,7 +27,9 @@ use Derafu\Form\Processor\UiSchemaRuleEvaluator;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
+use Derafu\Form\UiSchema\ConditionSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\UiSchemaCompositeCondition;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
@@ -64,6 +66,7 @@ use PHPUnit\Framework\TestCase;
  * as a hidden field is.
  */
 #[CoversClass(FormDataProcessor::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(UiSchemaRuleEvaluator::class)]
 #[CoversClass(FormRulesResolver::class)]
 #[CoversClass(FormRules::class)]
@@ -71,6 +74,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UiSchemaRule::class)]
 #[CoversClass(UiSchemaRuleEffect::class)]
 #[CoversClass(UiSchemaCondition::class)]
+#[CoversClass(ConditionSchema::class)]
 #[CoversClass(UiSchemaCompositeCondition::class)]
 #[CoversClass(UiSchemaCompositeConditionType::class)]
 #[CoversClass(AbstractPropertySchema::class)]

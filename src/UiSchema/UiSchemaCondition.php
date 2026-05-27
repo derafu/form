@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\UiSchema;
 
+use Derafu\Form\Contract\UiSchema\ConditionSchemaInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaConditionInterface;
 use Derafu\Support\JsonSerializer;
 use InvalidArgumentException;
@@ -23,11 +24,11 @@ final class UiSchemaCondition implements UiSchemaConditionInterface
 {
     /**
      * @param string $scope  JSON Pointer scope, e.g. "#/properties/tipo_contrato".
-     * @param array  $schema JSON Schema fragment, e.g. ["const" => "plazo_fijo"].
+     * @param ConditionSchemaInterface $schema Condition schema fragment.
      */
     public function __construct(
         private readonly string $scope,
-        private readonly array $schema,
+        private readonly ConditionSchemaInterface $schema,
     ) {
     }
 
@@ -42,7 +43,7 @@ final class UiSchemaCondition implements UiSchemaConditionInterface
     /**
      * {@inheritDoc}
      */
-    public function getSchema(): array
+    public function getSchema(): ConditionSchemaInterface
     {
         return $this->schema;
     }
@@ -54,7 +55,7 @@ final class UiSchemaCondition implements UiSchemaConditionInterface
     {
         return [
             'scope' => $this->scope,
-            'schema' => $this->schema,
+            'schema' => $this->schema->toArray(),
         ];
     }
 
@@ -91,6 +92,9 @@ final class UiSchemaCondition implements UiSchemaConditionInterface
             );
         }
 
-        return new static($definition['scope'], $definition['schema']);
+        return new static(
+            $definition['scope'],
+            ConditionSchema::fromArray($definition['schema'])
+        );
     }
 }

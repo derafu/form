@@ -80,4 +80,20 @@ interface StringSchemaInterface extends PropertySchemaInterface
      * @return static The current instance.
      */
     public function setPattern(string $pattern): static;
+
+    /**
+     * Gets the media type of the string content.
+     *
+     * @return string|null
+     * @link https://www.learnjsonschema.com/2020-12/content/contentmediatype/
+     */
+    public function getContentMediaType(): ?string;
+
+    /**
+     * Sets the media type of the string content.
+     *
+     * @param string $contentMediaType
+     * @return static The current instance.
+     */
+    public function setContentMediaType(string $contentMediaType): static;
 }

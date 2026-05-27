@@ -15,6 +15,7 @@ namespace Derafu\Form\Renderer\Widget;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
+use Derafu\Form\Contract\Schema\ArraySchemaInterface;
 use InvalidArgumentException;
 
 /**
@@ -71,13 +72,12 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
         $choices = [];
 
         // First try array items enum.
-        $schema = $property->toArray();
         if (
-            isset($schema['type'])
-            && $schema['type'] === 'array'
-            && isset($schema['items']['enum'])
+            $property instanceof ArraySchemaInterface
+            && $property->getItems() !== null
+            && $property->getItems()->getEnum() !== null
         ) {
-            foreach ($schema['items']['enum'] as $enumKey => $enumValue) {
+            foreach ($property->getItems()->getEnum() as $enumKey => $enumValue) {
                 $label = ucfirst(str_replace(['_', '-'], ' ', $enumValue));
                 $choices[$enumKey] = $label;
             }
@@ -112,6 +112,7 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
             'name' => $name,
             'widget_class' => $widgetClass,
             'has_errors' => $hasErrors,
+            'required' => $field->isRequired(),
         ];
 
         // Render the template.

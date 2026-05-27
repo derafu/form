@@ -87,6 +87,10 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
             if ($property->getMaxLength() !== null) {
                 $attrs['maxlength'] = (string)$property->getMaxLength();
             }
+
+            if ($property->getPattern() !== null) {
+                $attrs['pattern'] = $property->getPattern();
+            }
         }
 
         // Add placeholder from control options if available.

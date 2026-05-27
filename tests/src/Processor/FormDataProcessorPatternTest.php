@@ -26,6 +26,7 @@ use Derafu\Form\Processor\ProcessResult;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
@@ -50,6 +51,7 @@ use PHPUnit\Framework\TestCase;
  *     → ValidationException collected as field error
  */
 #[CoversClass(FormDataProcessor::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormRulesResolver::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(ProcessResult::class)]

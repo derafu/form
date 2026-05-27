@@ -15,6 +15,8 @@ namespace Derafu\Form\Renderer\Widget;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
+use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
+use Derafu\Form\Contract\Schema\NumberSchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use InvalidArgumentException;
 
@@ -130,6 +132,20 @@ final class InputWidgetRenderer implements WidgetRendererInterface
             }
         }
 
+        if ($property instanceof IntegerSchemaInterface || $property instanceof NumberSchemaInterface) {
+            if ($property->getMinimum() !== null) {
+                $attrs['min'] = (string)$property->getMinimum();
+            }
+
+            if ($property->getMaximum() !== null) {
+                $attrs['max'] = (string)$property->getMaximum();
+            }
+
+            if ($property->getMultipleOf() !== null) {
+                $attrs['step'] = (string)$property->getMultipleOf();
+            }
+        }
+
         // Add placeholder from control options if available.
         $controlOptions = $control->getOptions();
         if (!empty($controlOptions['placeholder'])) {
@@ -143,7 +159,7 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         }
 
         // Image upload controls restrict accepted MIME types to images.
-        if ($type === 'file' && ($controlOptions['type'] ?? null) === 'image') {
+        if ($type === 'file' && $control->getControlType() === 'image') {
             $attrs['accept'] = 'image/*';
         }
 

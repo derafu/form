@@ -81,7 +81,7 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
     /**
      * Enum values for the property.
      *
-     * @var array|null
+     * @var array<int,int|float|string|bool>|null
      */
     protected ?array $enum = null;
 

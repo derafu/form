@@ -23,11 +23,13 @@ use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Rules\FormRules;
+use Derafu\Form\Schema\ArraySchema;
 use Derafu\Form\Schema\BooleanSchema;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
@@ -44,6 +46,7 @@ use PHPUnit\Framework\TestCase;
  * behave as expected for real form inputs.
  */
 #[CoversClass(FormRulesResolver::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(AbstractPropertySchema::class)]
 #[CoversClass(AbstractUiSchemaElement::class)]
@@ -52,6 +55,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Form::class)]
 #[CoversClass(FormField::class)]
 #[CoversClass(FormOptions::class)]
+#[CoversClass(ArraySchema::class)]
 #[CoversClass(BooleanSchema::class)]
 #[CoversClass(FormSchema::class)]
 #[CoversClass(IntegerSchema::class)]
@@ -80,12 +84,14 @@ final class FormRulesResolverIntegrationTest extends TestCase
 
     public function testEmailFieldTrimsAndLowercases(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'string',
-            'format' => 'email',
-            'minLength' => 3,
-            'maxLength' => 80,
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'format' => 'email',
+                'minLength' => 3,
+                'maxLength' => 80,
+            ])
+        );
 
         $result = $this->processor->process(' TEST@EXAMPLE.COM ', $rules);
         $this->assertSame('test@example.com', $result);
@@ -93,10 +99,12 @@ final class FormRulesResolverIntegrationTest extends TestCase
 
     public function testEmailFieldRejectsInvalidEmail(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'string',
-            'format' => 'email',
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'format' => 'email',
+            ])
+        );
 
         $this->expectException(ValidationException::class);
         $this->processor->process('invalid-email', $rules);
@@ -104,21 +112,25 @@ final class FormRulesResolverIntegrationTest extends TestCase
 
     public function testStringFieldTrimsWhitespace(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'string',
-            'minLength' => 3,
-            'maxLength' => 100,
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'minLength' => 3,
+                'maxLength' => 100,
+            ])
+        );
 
         $this->assertSame('John Doe', $this->processor->process('  John Doe  ', $rules));
     }
 
     public function testStringFieldRejectsTooShortValue(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'string',
-            'minLength' => 3,
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'minLength' => 3,
+            ])
+        );
 
         $this->expectException(ValidationException::class);
         $this->processor->process('Jo', $rules);
@@ -126,21 +138,25 @@ final class FormRulesResolverIntegrationTest extends TestCase
 
     public function testIntegerFieldCastsStringToInt(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'integer',
-            'minimum' => 18,
-            'maximum' => 99,
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'integer',
+                'minimum' => 18,
+                'maximum' => 99,
+            ])
+        );
 
         $this->assertSame(25, $this->processor->process('25', $rules));
     }
 
     public function testIntegerFieldRejectsBelowMinimum(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'integer',
-            'minimum' => 18,
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'integer',
+                'minimum' => 18,
+            ])
+        );
 
         $this->expectException(ValidationException::class);
         $this->processor->process('15', $rules);
@@ -148,12 +164,14 @@ final class FormRulesResolverIntegrationTest extends TestCase
 
     public function testArrayFieldValidatesItemCount(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'array',
-            'minItems' => 1,
-            'maxItems' => 5,
-            'uniqueItems' => true,
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'array',
+                'minItems' => 1,
+                'maxItems' => 5,
+                'uniqueItems' => true,
+            ])
+        );
 
         $result = $this->processor->process(['php', 'form', 'validation'], $rules);
         $this->assertSame(['php', 'form', 'validation'], $result);
@@ -161,10 +179,12 @@ final class FormRulesResolverIntegrationTest extends TestCase
 
     public function testArrayFieldRejectsTooManyItems(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'array',
-            'maxItems' => 5,
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'array',
+                'maxItems' => 5,
+            ])
+        );
 
         $this->expectException(ValidationException::class);
         $this->processor->process(['a', 'b', 'c', 'd', 'e', 'f'], $rules);
@@ -172,20 +192,55 @@ final class FormRulesResolverIntegrationTest extends TestCase
 
     public function testEnumFieldAcceptsValidValue(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'string',
-            'enum' => ['pending' => 'pending', 'approved' => 'approved', 'rejected' => 'rejected'],
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'enum' => ['pending', 'approved', 'rejected'],
+            ])
+        );
 
         $this->assertSame('approved', $this->processor->process('  approved  ', $rules));
     }
 
     public function testEnumFieldRejectsInvalidValue(): void
     {
-        $rules = $this->resolver->mapSchemaToRules([
-            'type' => 'string',
-            'enum' => ['pending' => 'pending', 'approved' => 'approved'],
-        ]);
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'enum' => ['pending', 'approved'],
+            ])
+        );
+
+        $this->expectException(ValidationException::class);
+        $this->processor->process('invalid', $rules);
+    }
+
+    public function testOneOfFieldAcceptsValidConst(): void
+    {
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'oneOf' => [
+                    ['const' => 'draft', 'title' => 'Draft'],
+                    ['const' => 'active', 'title' => 'Active'],
+                ],
+            ])
+        );
+
+        $this->assertSame('active', $this->processor->process('  active  ', $rules));
+    }
+
+    public function testOneOfFieldRejectsValueNotInConsts(): void
+    {
+        $rules = $this->resolver->mapSchemaToRules(
+            PropertySchemaFactory::create([
+                'type' => 'string',
+                'oneOf' => [
+                    ['const' => 'draft', 'title' => 'Draft'],
+                    ['const' => 'active', 'title' => 'Active'],
+                ],
+            ])
+        );
 
         $this->expectException(ValidationException::class);
         $this->processor->process('invalid', $rules);

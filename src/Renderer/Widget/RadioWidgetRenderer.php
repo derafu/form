@@ -15,7 +15,6 @@ namespace Derafu\Form\Renderer\Widget;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
-use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use InvalidArgumentException;
 
 /**
@@ -86,17 +85,6 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             $attrs['required'] = 'required';
         }
 
-        if ($property instanceof StringSchemaInterface) {
-            if ($property->getMinLength() !== null) {
-                $attrs['minlength'] = (string)$property->getMinLength();
-            }
-            if ($property->getMaxLength() !== null) {
-                $attrs['maxlength'] = (string)$property->getMaxLength();
-            }
-            // Note: the HTML `pattern` attribute is only valid for text-type
-            // inputs. Radio buttons do not support it; omitted intentionally.
-        }
-
         $controlOptions = $control->getOptions();
         if (!empty($controlOptions['placeholder'])) {
             $attrs['placeholder'] = $controlOptions['placeholder'];
@@ -108,12 +96,9 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
 
         // Special handling for radio buttons.
         $choices = [];
-        if (
-            method_exists($property, 'getEnum')
-            && $property->getEnum() !== null
-        ) {
-            foreach ($property->getEnum() as $enumValue) {
-                $choices[$enumValue] = $enumValue;
+        if ($property->getEnum() !== null) {
+            foreach ($property->getEnum() as $enumKey => $enumValue) {
+                $choices[$enumKey] = $enumValue;
             }
         }
         if (isset($options['choices']) && is_array($options['choices'])) {

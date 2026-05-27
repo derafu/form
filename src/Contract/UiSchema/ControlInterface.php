@@ -53,4 +53,19 @@ interface ControlInterface extends UiSchemaElementInterface
      * @return string|null The label or `null` if not defined.
      */
     public function getLabel(): ?string;
+
+    /**
+     * Gets the UI control type override, or null when none is set.
+     *
+     * The control type is declared via the `type` key inside the control's
+     * `options` object (e.g. `{ "options": { "type": "radio" } }`) and
+     * overrides the default widget selection that is based on the JSON Schema
+     * property type and format.
+     *
+     * Common values: `"file"`, `"image"`, `"editor"`, `"radio"`,
+     * `"choice"`, `"textarea"`, `"slider"`, `"range"`, `"float"`.
+     *
+     * @return string|null The declared control type, or null when absent.
+     */
+    public function getControlType(): ?string;
 }

@@ -18,6 +18,7 @@ use Derafu\Form\Data\FormData;
 use Derafu\Form\Form;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
+use Derafu\Form\Schema\PropertySchemaFactory;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
@@ -28,6 +29,7 @@ use PHPUnit\Framework\TestCase;
  * Test for form rendering value inconsistency between form_rest() and form_element().
  */
 #[CoversClass(\Derafu\Form\Form::class)]
+#[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(\Derafu\Form\FormField::class)]
 #[CoversClass(\Derafu\Form\Renderer\FormRenderer::class)]
 #[CoversClass(\Derafu\Form\Renderer\Element\ControlRenderer::class)]

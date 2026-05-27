@@ -90,10 +90,7 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
             if ($property->getMaximum() !== null) {
                 $attrs['max'] = (string)$property->getMaximum();
             }
-            if (
-                method_exists($property, 'getMultipleOf')
-                && $property->getMultipleOf() !== null
-            ) {
+            if ($property->getMultipleOf() !== null) {
                 $attrs['step'] = (string)$property->getMultipleOf();
             }
         }

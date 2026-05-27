@@ -14,6 +14,7 @@ namespace Derafu\Form\Schema;
 
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Form\Contract\Schema\PropertySchemaInterface;
 
 /**
  * Implementation of ArraySchemaInterface.
@@ -25,9 +26,9 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
     /**
      * The schema for array items.
      *
-     * @var array
+     * @var PropertySchemaInterface|null
      */
-    protected array $items = [];
+    protected ?PropertySchemaInterface $items = null;
 
     /**
      * The maximum number of items.
@@ -82,7 +83,7 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
     /**
      * {@inheritDoc}
      */
-    public function getItems(): array
+    public function getItems(): ?PropertySchemaInterface
     {
         return $this->items;
     }
@@ -90,7 +91,7 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
     /**
      * {@inheritDoc}
      */
-    public function setItems(array $items): static
+    public function setItems(PropertySchemaInterface $items): static
     {
         $this->items = $items;
         return $this;
@@ -205,8 +206,8 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
     {
         $array = parent::toArray();
 
-        if (!empty($this->items)) {
-            $array['items'] = $this->items;
+        if ($this->items !== null) {
+            $array['items'] = $this->items->toArray();
         }
 
         if ($this->maxItems !== null) {
@@ -293,8 +294,8 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
         }
 
         // Set array-specific properties.
-        if (isset($definition['items'])) {
-            $schema->setItems($definition['items']);
+        if (isset($definition['items']) && is_array($definition['items'])) {
+            $schema->setItems(PropertySchemaFactory::create($definition['items']));
         }
 
         if (isset($definition['maxItems'])) {

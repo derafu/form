@@ -18,19 +18,19 @@ namespace Derafu\Form\Contract\Schema;
 interface ArraySchemaInterface extends PropertySchemaInterface
 {
     /**
-     * Gets all items defined in the schema.
+     * Gets the items schema defined in the array schema.
      *
-     * @return array An array of items.
+     * @return PropertySchemaInterface|null The items schema, or null if not set.
      */
-    public function getItems(): array;
+    public function getItems(): ?PropertySchemaInterface;
 
     /**
-     * Sets the items defined in the schema.
+     * Sets the items schema defined in the array schema.
      *
-     * @param array $items
+     * @param PropertySchemaInterface $items
      * @return static The current instance.
      */
-    public function setItems(array $items): static;
+    public function setItems(PropertySchemaInterface $items): static;
 
     /**
      * Gets the maximum number of items on array properties.

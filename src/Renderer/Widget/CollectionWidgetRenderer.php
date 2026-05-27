@@ -16,7 +16,16 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Form\Contract\Schema\ObjectSchemaInterface;
+use Derafu\Form\Contract\Schema\PropertySchemaInterface;
+use Derafu\Form\Contract\UiSchema\ControlInterface;
+use Derafu\Form\Contract\UiSchema\FormUiSchemaInterface;
+use Derafu\Form\Data\FormData;
+use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Form;
+use Derafu\Form\Schema\FormSchema;
+use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\VerticalLayout;
 use InvalidArgumentException;
 
 /**
@@ -54,8 +63,12 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
 
         $itemsSchema = $property->getItems();
         $controlOptions = $field->getControl()->getOptions();
-        $detailDefinition = $controlOptions['detail']
-            ?? $this->buildDefaultDetail($itemsSchema);
+
+        $detailUiSchema = isset($controlOptions['detail'])
+            ? FormUiSchemaFactory::create($controlOptions['detail'])
+            : ($itemsSchema !== null
+                ? $this->buildDefaultDetail($itemsSchema)
+                : new VerticalLayout());
 
         $rows = $field->getData() ?? [];
         if (!is_array($rows)) {
@@ -63,16 +76,16 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         }
 
         $fieldName = $field->getName();
-        $isSimple = $this->isSimpleDetail($detailDefinition);
+        $isSimple = $this->isSimpleDetail($detailUiSchema);
 
         if ($isSimple) {
-            $headers = $this->extractHeaders($itemsSchema, $detailDefinition);
+            $headers = $this->extractHeaders($itemsSchema, $detailUiSchema);
             $renderedRows = [];
             foreach ($rows as $i => $rowData) {
                 $renderedRows[] = $this->renderSimpleRow(
                     $formRenderer,
                     $itemsSchema,
-                    $detailDefinition,
+                    $detailUiSchema,
                     is_array($rowData) ? $rowData : [],
                     $fieldName,
                     $i
@@ -81,7 +94,7 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
             $templateRow = $this->renderSimpleRow(
                 $formRenderer,
                 $itemsSchema,
-                $detailDefinition,
+                $detailUiSchema,
                 [],
                 $fieldName,
                 '__INDEX__'
@@ -93,7 +106,7 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
                 $renderedRows[] = $this->renderRow(
                     $formRenderer,
                     $itemsSchema,
-                    $detailDefinition,
+                    $detailUiSchema,
                     $rowData,
                     $fieldName,
                     $i
@@ -102,7 +115,7 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
             $templateRow = $this->renderRow(
                 $formRenderer,
                 $itemsSchema,
-                $detailDefinition,
+                $detailUiSchema,
                 [],
                 $fieldName,
                 '__INDEX__'
@@ -124,17 +137,19 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
      * Builds a sub-form for a single row and applies the name pattern.
      */
     private function buildSubForm(
-        array $itemsSchema,
-        array $detailDefinition,
+        ?PropertySchemaInterface $itemsSchema,
+        FormUiSchemaInterface $detailUiSchema,
         array $rowData,
         string $fieldName,
         int|string $index
     ): Form {
-        $subForm = Form::fromArray([
-            'schema' => $itemsSchema,
-            'uischema' => $detailDefinition,
-            'data' => $rowData ?: null,
-        ]);
+        $schema = FormSchema::fromArray($itemsSchema?->toArray() ?? []);
+
+        $subForm = new Form(
+            schema: $schema,
+            uischema: $detailUiSchema,
+            data: $rowData ? FormData::fromArray($rowData) : null,
+        );
 
         $namePattern = $fieldName . '[' . $index . '][%s]';
         foreach ($subForm->getFields() as $subField) {
@@ -149,8 +164,8 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
      */
     private function renderRow(
         FormRendererInterface $formRenderer,
-        array $itemsSchema,
-        array $detailDefinition,
+        ?PropertySchemaInterface $itemsSchema,
+        FormUiSchemaInterface $detailUiSchema,
         mixed $rowData,
         string $fieldName,
         int|string $index
@@ -164,7 +179,7 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
 
         $subForm = $this->buildSubForm(
             $itemsSchema,
-            $detailDefinition,
+            $detailUiSchema,
             $rowData,
             $fieldName,
             $index
@@ -182,15 +197,15 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
      */
     private function renderSimpleRow(
         FormRendererInterface $formRenderer,
-        array $itemsSchema,
-        array $detailDefinition,
+        ?PropertySchemaInterface $itemsSchema,
+        FormUiSchemaInterface $detailUiSchema,
         array $rowData,
         string $fieldName,
         int|string $index
     ): array {
         $subForm = $this->buildSubForm(
             $itemsSchema,
-            $detailDefinition,
+            $detailUiSchema,
             $rowData,
             $fieldName,
             $index
@@ -211,10 +226,10 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
     /**
      * Returns true if all detail elements are direct Controls (no nested layouts).
      */
-    private function isSimpleDetail(array $detailDefinition): bool
+    private function isSimpleDetail(FormUiSchemaInterface $detailUiSchema): bool
     {
-        foreach ($detailDefinition['elements'] ?? [] as $element) {
-            if (($element['type'] ?? '') !== 'Control') {
+        foreach ($detailUiSchema->getElements() as $element) {
+            if (!$element instanceof ControlInterface) {
                 return false;
             }
         }
@@ -225,41 +240,41 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
     /**
      * Extracts header labels from items schema in detail element order.
      */
-    private function extractHeaders(array $itemsSchema, array $detailDefinition): array
-    {
+    private function extractHeaders(
+        ?PropertySchemaInterface $itemsSchema,
+        FormUiSchemaInterface $detailUiSchema
+    ): array {
         $headers = [];
-        foreach ($detailDefinition['elements'] ?? [] as $element) {
-            $propName = $this->scopeToPropertyName($element['scope'] ?? '');
-            $headers[] = $itemsSchema['properties'][$propName]['title']
-                ?? ucfirst($propName);
+        foreach ($detailUiSchema->getElements() as $element) {
+            if (!$element instanceof ControlInterface) {
+                continue;
+            }
+            $propName = $element->getPropertyName();
+            $title = null;
+            if ($itemsSchema instanceof ObjectSchemaInterface) {
+                $title = $itemsSchema->getProperty($propName)?->getTitle();
+            }
+            $headers[] = $title ?? ucfirst($propName);
         }
 
         return $headers;
     }
 
     /**
-     * Extracts the property name from a JSON Forms scope string.
-     */
-    private function scopeToPropertyName(string $scope): string
-    {
-        $parts = explode('/', $scope);
-
-        return end($parts);
-    }
-
-    /**
      * Builds a default VerticalLayout detail from items schema properties.
      */
-    private function buildDefaultDetail(array $itemsSchema): array
+    private function buildDefaultDetail(?PropertySchemaInterface $itemsSchema): FormUiSchemaInterface
     {
-        $elements = [];
-        foreach (array_keys($itemsSchema['properties'] ?? []) as $propName) {
-            $elements[] = [
-                'type' => 'Control',
-                'scope' => '#/properties/' . $propName,
-            ];
+        $layout = new VerticalLayout();
+        if ($itemsSchema instanceof ObjectSchemaInterface) {
+            foreach (array_keys($itemsSchema->getProperties()) as $propName) {
+                $layout->addElement(Control::fromArray([
+                    'type' => 'Control',
+                    'scope' => '#/properties/' . $propName,
+                ]));
+            }
         }
 
-        return ['type' => 'VerticalLayout', 'elements' => $elements];
+        return $layout;
     }
 }

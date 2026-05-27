@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Tests\Processor;
 
 use Derafu\Form\Processor\UiSchemaRuleEvaluator;
+use Derafu\Form\UiSchema\ConditionSchema;
 use Derafu\Form\UiSchema\UiSchemaCompositeCondition;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaCondition;
@@ -35,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UiSchemaCondition::class)]
 #[CoversClass(UiSchemaCompositeCondition::class)]
 #[CoversClass(UiSchemaCompositeConditionType::class)]
+#[CoversClass(ConditionSchema::class)]
 final class UiSchemaRuleEvaluatorTest extends TestCase
 {
     private UiSchemaRuleEvaluator $evaluator;
@@ -58,7 +60,7 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
             $effect,
             new UiSchemaCompositeCondition(
                 UiSchemaCompositeConditionType::AND,
-                [new UiSchemaCondition('#/properties/trigger', $schema)]
+                [new UiSchemaCondition('#/properties/trigger', ConditionSchema::fromArray($schema))]
             )
         );
     }
@@ -156,6 +158,18 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
     {
         $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['enum' => ['a', 'b', 'c']]);
         $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'd']));
+    }
+
+    public function testEnumKeyLabelFormatMatchesOnKey(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['enum' => ['draft' => 'Draft', 'active' => 'Active']]);
+        $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => 'draft']));
+    }
+
+    public function testEnumKeyLabelFormatNoMatchOnLabel(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['enum' => ['draft' => 'Draft', 'active' => 'Active']]);
+        $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'Draft']));
     }
 
     // =========================================================================
@@ -257,8 +271,8 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
             new UiSchemaCompositeCondition(
                 UiSchemaCompositeConditionType::AND,
                 [
-                    new UiSchemaCondition('#/properties/a', ['const' => '1']),
-                    new UiSchemaCondition('#/properties/b', ['const' => '2']),
+                    new UiSchemaCondition('#/properties/a', ConditionSchema::fromArray(['const' => '1'])),
+                    new UiSchemaCondition('#/properties/b', ConditionSchema::fromArray(['const' => '2'])),
                 ]
             )
         );
@@ -276,8 +290,8 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
             new UiSchemaCompositeCondition(
                 UiSchemaCompositeConditionType::OR,
                 [
-                    new UiSchemaCondition('#/properties/a', ['const' => '1']),
-                    new UiSchemaCondition('#/properties/b', ['const' => '2']),
+                    new UiSchemaCondition('#/properties/a', ConditionSchema::fromArray(['const' => '1'])),
+                    new UiSchemaCondition('#/properties/b', ConditionSchema::fromArray(['const' => '2'])),
                 ]
             )
         );
@@ -299,11 +313,11 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
                     new UiSchemaCompositeCondition(
                         UiSchemaCompositeConditionType::AND,
                         [
-                            new UiSchemaCondition('#/properties/a', ['const' => '1']),
-                            new UiSchemaCondition('#/properties/b', ['const' => '2']),
+                            new UiSchemaCondition('#/properties/a', ConditionSchema::fromArray(['const' => '1'])),
+                            new UiSchemaCondition('#/properties/b', ConditionSchema::fromArray(['const' => '2'])),
                         ]
                     ),
-                    new UiSchemaCondition('#/properties/c', ['const' => '3']),
+                    new UiSchemaCondition('#/properties/c', ConditionSchema::fromArray(['const' => '3'])),
                 ]
             )
         );
@@ -324,7 +338,7 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
             UiSchemaRuleEffect::SHOW,
             new UiSchemaCompositeCondition(
                 UiSchemaCompositeConditionType::AND,
-                [new UiSchemaCondition('#/properties/address/properties/city', ['const' => 'Santiago'])]
+                [new UiSchemaCondition('#/properties/address/properties/city', ConditionSchema::fromArray(['const' => 'Santiago']))]
             )
         );
 

@@ -218,6 +218,24 @@ final class FormFactory implements FormFactoryInterface
                 $this->applyChoicesFromElements($element['elements'], $properties);
             }
 
+            // Recurse into the detail elements of array Controls, using the
+            // array property's items.properties as the nested property scope.
+            if (($element['type'] ?? null) === 'Control'
+                && isset($element['options']['detail']['elements'])
+                && is_array($element['options']['detail']['elements'])
+            ) {
+                $scope = $element['scope'] ?? '';
+                if (preg_match('/^#\/properties\/([^\/]+)$/', $scope, $m)
+                    && isset($properties[$m[1]]['items']['properties'])
+                    && is_array($properties[$m[1]]['items']['properties'])
+                ) {
+                    $this->applyChoicesFromElements(
+                        $element['options']['detail']['elements'],
+                        $properties[$m[1]]['items']['properties']
+                    );
+                }
+            }
+
             // Only process Control elements that carry options.choices.
             if (($element['type'] ?? null) !== 'Control') {
                 continue;

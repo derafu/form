@@ -85,9 +85,9 @@ interface FormAttributesInterface extends JsonSerializable
     /**
      * Get the ID of the form.
      *
-     * @return string|null The ID of the form.
+     * @return string The ID of the form.
      */
-    public function getId(): ?string;
+    public function getId(): string;
 
     /**
      * Set the ID of the form.

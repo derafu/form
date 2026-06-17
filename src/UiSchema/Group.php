@@ -43,10 +43,11 @@ final class Group extends AbstractUiSchemaElement implements GroupInterface
      *
      * @param string $label The label text.
      * @param array<UiSchemaElementInterface> $elements The elements of the group.
+     * @param array<string, mixed> $options The options of the group.
      */
-    public function __construct(string $label, array $elements = [])
+    public function __construct(string $label, array $elements = [], array $options = [])
     {
-        parent::__construct([]);
+        parent::__construct($options ? ['options' => $options] : []);
 
         $this->label = $label;
         $this->elements = $elements;
@@ -91,7 +92,7 @@ final class Group extends AbstractUiSchemaElement implements GroupInterface
      */
     public function toArray(): array
     {
-        return [
+        $array = [
             'type' => $this->getType(),
             'label' => $this->label,
             'elements' => array_map(
@@ -99,6 +100,13 @@ final class Group extends AbstractUiSchemaElement implements GroupInterface
                 $this->elements
             ),
         ];
+
+        $options = $this->getOptions();
+        if ($options) {
+            $array['options'] = $options;
+        }
+
+        return $array;
     }
 
     /**
@@ -111,6 +119,6 @@ final class Group extends AbstractUiSchemaElement implements GroupInterface
             $elements[] = UiSchemaElementFactory::create($element);
         }
 
-        return new static($definition['label'], $elements);
+        return new static($definition['label'], $elements, $definition['options'] ?? []);
     }
 }

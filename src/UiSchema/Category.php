@@ -52,10 +52,15 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
      * @param string $label The label text.
      * @param array<UiSchemaElementInterface> $elements The elements of the category.
      * @param UiSchemaRuleInterface|null $rule The rule for the category.
+     * @param array<string, mixed> $options The options of the category.
      */
-    public function __construct(string $label, array $elements = [], ?UiSchemaRuleInterface $rule = null)
-    {
-        parent::__construct([]);
+    public function __construct(
+        string $label,
+        array $elements = [],
+        ?UiSchemaRuleInterface $rule = null,
+        array $options = [],
+    ) {
+        parent::__construct($options ? ['options' => $options] : []);
 
         $this->label = $label;
         $this->elements = $elements;
@@ -122,6 +127,11 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
             $array['rule'] = $this->rule->toArray();
         }
 
+        $options = $this->getOptions();
+        if ($options) {
+            $array['options'] = $options;
+        }
+
         return $array;
     }
 
@@ -139,6 +149,7 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
             $definition['label'],
             $elements,
             isset($definition['rule']) ? UiSchemaRule::fromArray($definition['rule']) : null,
+            $definition['options'] ?? [],
         );
     }
 }

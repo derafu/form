@@ -17,8 +17,8 @@
 {# Get attributes for collapse options. #}
 {% set collapsible = options.collapsible|default(false) %}
 {% set collapsed = options.collapsed|default(false) %}
-{% set card_id = 'card_' ~ random() %}
-{% set collapse_id = 'collapse_' ~ random() %}
+{% set card_id = element.getId() ~ '-card' %}
+{% set collapse_id = element.getId() ~ '-collapse' %}
 
 <div class="{{ group_class }}" id="{{ card_id }}">
     {% if element.getLabel is defined and element.getLabel %}

@@ -26,12 +26,32 @@ use Derafu\Support\JsonSerializer;
 abstract class AbstractUiSchemaElement implements UiSchemaElementInterface
 {
     /**
+     * Cached generated id for instances without an explicit options['id'].
+     *
+     * @var string|null
+     */
+    private ?string $generatedId = null;
+
+    /**
      * Creates a new Control UI Element from its definition.
      *
      * @param array $definition
      */
     public function __construct(protected readonly array $definition)
     {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getId(): string
+    {
+        if (isset($this->definition['options']['id'])) {
+            return $this->definition['options']['id'];
+        }
+
+        return $this->generatedId
+            ??= uniqid(strtolower($this->getType()) . '-');
     }
 
     /**

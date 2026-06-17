@@ -7,7 +7,6 @@
 {% set categorization_class = 'mb-4' %}
 {% set tab_style = options.tab_style|default('horizontal') %}
 {% set vertical_col_width = options.vertical_col_width|default(3) %}
-{% set tab_id_prefix = 'tab_' ~ random() %}
 {% set categories = element.getCategories() %}
 
 {% if categorization_attr.class is defined %}
@@ -18,13 +17,12 @@
     {% if tab_style == 'vertical' %}
         {# Vertical tabs. #}
         <div class="d-flex align-items-start">
-            <div class="nav flex-column nav-pills me-3 col-md-{{ vertical_col_width }}" id="{{ tab_id_prefix }}_tabs" role="tablist">
+            <div class="nav flex-column nav-pills me-3 col-md-{{ vertical_col_width }}" id="{{ element.getId() }}-tabs" role="tablist">
                 {% for i, category in categories %}
                     {% set active = i == 0 ? ' active' : '' %}
-                    {% set tab_id = tab_id_prefix ~ '_' ~ i %}
-                    <button class="nav-link{{ active }}" id="{{ tab_id }}_tab" data-bs-toggle="pill"
-                            data-bs-target="#{{ tab_id }}_content" type="button" role="tab"
-                            aria-controls="{{ tab_id }}_content" aria-selected="{{ i == 0 ? 'true' : 'false' }}">
+                    <button class="nav-link{{ active }}" id="{{ category.getId() }}-tab" data-bs-toggle="pill"
+                            data-bs-target="#{{ category.getId() }}" type="button" role="tab"
+                            aria-controls="{{ category.getId() }}" aria-selected="{{ i == 0 ? 'true' : 'false' }}">
                         {% if category.getIcon is defined and category.getIcon %}
                             <i class="{{ category.getIcon }} me-2"></i>
                         {% endif %}
@@ -35,9 +33,8 @@
             <div class="tab-content col-md-{{ 12 - vertical_col_width }}">
                 {% for i, category in categories %}
                     {% set active = i == 0 ? ' show active' : '' %}
-                    {% set tab_id = tab_id_prefix ~ '_' ~ i %}
-                    <div class="tab-pane fade{{ active }}" id="{{ tab_id }}_content" role="tabpanel"
-                         aria-labelledby="{{ tab_id }}_tab">
+                    <div class="tab-pane fade{{ active }}" id="{{ category.getId() }}" role="tabpanel"
+                         aria-labelledby="{{ category.getId() }}-tab">
                         {{ categories_html[i]|default('')|raw }}
                     </div>
                 {% endfor %}
@@ -45,14 +42,13 @@
         </div>
     {% else %}
         {# Horizontal tabs (by default). #}
-        <ul class="nav nav-tabs" id="{{ tab_id_prefix }}_tabs" role="tablist">
+        <ul class="nav nav-tabs" id="{{ element.getId() }}-tabs" role="tablist">
             {% for i, category in categories %}
                 {% set active = i == 0 ? ' active' : '' %}
-                {% set tab_id = tab_id_prefix ~ '_' ~ i %}
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link{{ active }}" id="{{ tab_id }}_tab" data-bs-toggle="tab"
-                            data-bs-target="#{{ tab_id }}_content" type="button" role="tab"
-                            aria-controls="{{ tab_id }}_content" aria-selected="{{ i == 0 ? 'true' : 'false' }}">
+                    <button class="nav-link{{ active }}" id="{{ category.getId() }}-tab" data-bs-toggle="tab"
+                            data-bs-target="#{{ category.getId() }}" type="button" role="tab"
+                            aria-controls="{{ category.getId() }}" aria-selected="{{ i == 0 ? 'true' : 'false' }}">
                         {% if category.getIcon is defined and category.getIcon %}
                             <i class="{{ category.getIcon }} me-2"></i>
                         {% endif %}
@@ -64,9 +60,8 @@
         <div class="tab-content pt-3">
             {% for i, category in categories %}
                 {% set active = i == 0 ? ' show active' : '' %}
-                {% set tab_id = tab_id_prefix ~ '_' ~ i %}
-                <div class="tab-pane fade{{ active }}" id="{{ tab_id }}_content" role="tabpanel"
-                     aria-labelledby="{{ tab_id }}_tab">
+                <div class="tab-pane fade{{ active }}" id="{{ category.getId() }}" role="tabpanel"
+                     aria-labelledby="{{ category.getId() }}-tab">
                     {{ categories_html[i]|default('')|raw }}
                 </div>
             {% endfor %}

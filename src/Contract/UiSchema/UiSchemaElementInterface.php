@@ -30,6 +30,16 @@ interface UiSchemaElementInterface extends JsonSerializable
     public function getType(): string;
 
     /**
+     * Gets the HTML id for this element.
+     *
+     * Returns options['id'] if set, otherwise generates a stable unique string
+     * using the element type as prefix. Always returns a non-empty string.
+     *
+     * @return string The element id.
+     */
+    public function getId(): string;
+
+    /**
      * Gets the rule that conditionally controls the behavior of this element.
      *
      * A rule defines whether this element is shown, hidden, enabled, or

@@ -32,13 +32,6 @@ final class Categorization extends AbstractUiSchemaElement implements Categoriza
     private array $categories;
 
     /**
-     * The options of the categorization.
-     *
-     * @var array<string, mixed>
-     */
-    private array $options;
-
-    /**
      * Constructor.
      *
      * @param array<CategoryInterface> $categories The categories of the categorization.
@@ -46,10 +39,9 @@ final class Categorization extends AbstractUiSchemaElement implements Categoriza
      */
     public function __construct(array $categories = [], array $options = [])
     {
-        parent::__construct([]);
+        parent::__construct($options ? ['options' => $options] : []);
 
         $this->categories = $categories;
-        $this->options = $options;
     }
 
     /**
@@ -106,24 +98,22 @@ final class Categorization extends AbstractUiSchemaElement implements Categoriza
     /**
      * {@inheritDoc}
      */
-    public function getOptions(): array
-    {
-        return $this->options;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function toArray(): array
     {
-        return [
+        $array = [
             'type' => $this->getType(),
             'elements' => array_map(
                 fn (CategoryInterface $category) => $category->toArray(),
                 $this->categories
             ),
-            'options' => $this->options,
         ];
+
+        $options = $this->getOptions();
+        if ($options) {
+            $array['options'] = $options;
+        }
+
+        return $array;
     }
 
     /**

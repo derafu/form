@@ -35,10 +35,11 @@ final class HorizontalLayout extends AbstractUiSchemaElement implements Horizont
      * Constructor.
      *
      * @param array<UiSchemaElementInterface> $elements
+     * @param array<string, mixed> $options The options of the layout.
      */
-    public function __construct(array $elements = [])
+    public function __construct(array $elements = [], array $options = [])
     {
-        parent::__construct([]);
+        parent::__construct($options ? ['options' => $options] : []);
 
         $this->elements = $elements;
     }
@@ -74,13 +75,20 @@ final class HorizontalLayout extends AbstractUiSchemaElement implements Horizont
      */
     public function toArray(): array
     {
-        return [
+        $array = [
             'type' => $this->getType(),
             'elements' => array_map(
                 fn (UiSchemaElementInterface $element) => $element->toArray(),
                 $this->elements
             ),
         ];
+
+        $options = $this->getOptions();
+        if ($options) {
+            $array['options'] = $options;
+        }
+
+        return $array;
     }
 
     /**
@@ -93,6 +101,6 @@ final class HorizontalLayout extends AbstractUiSchemaElement implements Horizont
             $elements[] = UiSchemaElementFactory::create($element);
         }
 
-        return new static($elements);
+        return new static($elements, $definition['options'] ?? []);
     }
 }

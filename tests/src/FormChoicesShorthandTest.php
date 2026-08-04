@@ -56,6 +56,7 @@ use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -80,7 +81,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FormOptions::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(FormSchema::class)]
-#[CoversClass(ObjectSchemaTrait::class)]
+#[CoversTrait(ObjectSchemaTrait::class)]
 #[CoversClass(StringSchema::class)]
 #[CoversClass(ArraySchema::class)]
 #[CoversClass(Control::class)]

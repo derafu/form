@@ -198,7 +198,6 @@ final class UiSchemaElementOptionsTest extends TestCase
 
         $id = $group->getId();
 
-        $this->assertIsString($id);
         $this->assertNotEmpty($id);
     }
 

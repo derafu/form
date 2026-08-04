@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Tests\Renderer;
 
-use Derafu\Form\Contract\FormInterface;
-use Derafu\Form\Contract\Renderer\FormRendererInterface;
+use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Data\FormData;
+use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Form;
 use Derafu\Form\Rules\FormRules;
@@ -23,6 +23,8 @@ use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,13 +40,22 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(\Derafu\Form\Data\FormData::class)]
 #[CoversClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
 #[CoversClass(\Derafu\Form\Schema\FormSchema::class)]
-#[CoversClass(\Derafu\Form\Schema\ObjectSchemaTrait::class)]
+#[CoversTrait(\Derafu\Form\Schema\ObjectSchemaTrait::class)]
 #[CoversClass(\Derafu\Form\Schema\StringSchema::class)]
 #[CoversClass(\Derafu\Form\UiSchema\Control::class)]
 #[CoversClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
 #[CoversClass(WidgetFactory::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(FormRules::class)]
+#[CoversClass(FormRendererFactory::class)]
+#[UsesClass(\Derafu\Form\Renderer\ElementRendererProvider::class)]
+#[UsesClass(\Derafu\Form\Renderer\ElementRendererRegistry::class)]
+#[UsesClass(\Derafu\Form\Renderer\FormTwigExtension::class)]
+#[UsesClass(\Derafu\Form\Renderer\WidgetRendererProvider::class)]
+#[UsesClass(\Derafu\Form\Renderer\WidgetRendererRegistry::class)]
+#[UsesClass(\Derafu\Form\Renderer\Widget\InputWidgetRenderer::class)]
+#[UsesClass(\Derafu\Form\Renderer\Widget\RadioWidgetRenderer::class)]
+#[UsesClass(\Derafu\Form\Renderer\Widget\SliderWidgetRenderer::class)]
 final class FormRendererValueInconsistencyTest extends TestCase
 {
     /**
@@ -94,51 +105,57 @@ final class FormRendererValueInconsistencyTest extends TestCase
 
         $form = new Form($schema, $uiSchema, data: $data);
 
-        // Mock the form renderer to capture what values are being used
-        $mockRenderer = $this->createMock(FormRendererInterface::class);
+        // Use the real, fully wired renderer (Twig + widget/element registries)
+        // instead of a mock, so the test exercises the actual rendering pipeline.
+        $renderer = FormRendererFactory::create();
 
-        // Capture the values used in renderRest (form_rest())
-        $restValues = [];
-        $mockRenderer->method('renderRest')
-            ->willReturnCallback(function (FormInterface $form) use (&$restValues) {
-                $fields = $form->getFields();
-                foreach ($fields as $field) {
-                    $restValues[$field->getProperty()->getName()] = $field->getData();
-                }
-                return 'rest_html';
-            });
+        // form_rest() behavior: renders every field not yet individually rendered.
+        $restHtml = $renderer->renderRest($form);
 
-        // Capture the values used in renderElement (form_element())
+        // form_element() behavior: renders each element on demand.
         $elementValues = [];
-        $mockRenderer->method('renderElement')
-            ->willReturnCallback(function ($element, FormInterface $form) use (&$elementValues) {
-                $scope = $element->getScope();
-                $propertyName = str_replace('#/properties/', '', $scope);
-                $elementValues[$propertyName] = $form->getData()?->get($propertyName);
-                return 'element_html';
-            });
-
-        // Simulate form_rest() behavior
-        $mockRenderer->renderRest($form);
-
-        // Simulate form_element() behavior for each element
         foreach ($uiSchema->getElements() as $element) {
-            $mockRenderer->renderElement($element, $form);
+            assert($element instanceof ControlInterface);
+            $elementHtml = $renderer->renderElement($element, $form);
+            $propertyName = $element->getPropertyName();
+            $elementValues[$propertyName] = $this->extractInputValue($elementHtml, $propertyName);
         }
 
-        // Now both should use the same data source and have the same values
+        $restValues = [
+            'name' => $this->extractInputValue($restHtml, 'name'),
+            'email' => $this->extractInputValue($restHtml, 'email'),
+        ];
+
+        // Now both should use the same data source and have the same values.
         $this->assertSame(
             $elementValues,
             $restValues,
             'form_rest() and form_element() should use the same data source and have the same values'
         );
 
-        // Both should contain the correct default values
+        // Both should contain the correct default values.
         $this->assertSame('John Doe', $elementValues['name']);
         $this->assertSame('john@example.com', $elementValues['email']);
 
         $this->assertSame('John Doe', $restValues['name']);
         $this->assertSame('john@example.com', $restValues['email']);
+    }
+
+    /**
+     * Extracts the `value` attribute of the `<input id="{name}_field" ...>`
+     * tag rendered for a given property, out of a chunk of rendered HTML.
+     */
+    private function extractInputValue(string $html, string $propertyName): ?string
+    {
+        if (!preg_match('/<input\b[^>]*\bid="' . preg_quote($propertyName, '/') . '_field"[^>]*>/', $html, $tag)) {
+            return null;
+        }
+
+        if (!preg_match('/\bvalue="([^"]*)"/', $tag[0], $value)) {
+            return null;
+        }
+
+        return html_entity_decode($value[1], ENT_QUOTES | ENT_HTML5);
     }
 
     /**

@@ -93,6 +93,7 @@ use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -122,10 +123,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(FormData::class)]
 #[CoversClass(FormRules::class)]
-#[CoversClass(ObjectSchemaTrait::class)]
+#[CoversTrait(ObjectSchemaTrait::class)]
 #[CoversClass(FormRendererFactory::class)]
 #[CoversClass(FormRenderer::class)]
-#[CoversClass(FormRendererFactory::class)]
 #[CoversClass(ElementRendererRegistry::class)]
 #[CoversClass(WidgetRendererRegistry::class)]
 #[CoversClass(ElementRendererProvider::class)]

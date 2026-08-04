@@ -101,7 +101,6 @@ final class TypePatternTest extends TestCase
     public function testGetJsonSchemaExposesPatternKey(AbstractType $type): void
     {
         $schema = $type->getJsonSchema();
-        $this->assertIsArray($schema);
         $this->assertArrayHasKey('type', $schema);
         if (isset($schema['pattern'])) {
             $this->assertSame($type::PATTERN, $schema['pattern']);
@@ -305,7 +304,6 @@ final class TypePatternTest extends TestCase
             }
         };
 
-        $this->assertNull($type::PATTERN);
         $this->assertNull($type->getRegex());
     }
 }

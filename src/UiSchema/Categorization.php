@@ -64,9 +64,6 @@ final class Categorization extends AbstractUiSchemaElement implements Categoriza
 
     /**
      * {@inheritDoc}
-     *
-     * @param CategoryInterface $element
-     * @return self
      */
     public function addElement(UiSchemaElementInterface $element): static
     {

@@ -39,6 +39,7 @@ use Derafu\Form\Renderer\ElementRendererProvider;
 use Derafu\Form\Renderer\ElementRendererRegistry;
 use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Renderer\FormTwigExtension;
+use Derafu\Form\Renderer\Support\InputActionResolver;
 use Derafu\Form\Renderer\Widget\CheckboxWidgetRenderer;
 use Derafu\Form\Renderer\Widget\CollectionWidgetRenderer;
 use Derafu\Form\Renderer\Widget\InputWidgetRenderer;
@@ -160,6 +161,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WidgetRendererProvider::class)]
 #[CoversClass(CategorizationRenderer::class)]
 #[CoversClass(ControlRenderer::class)]
+#[CoversClass(InputActionResolver::class)]
 #[CoversClass(GroupRenderer::class)]
 #[CoversClass(HorizontalLayoutRenderer::class)]
 #[CoversClass(LabelRenderer::class)]

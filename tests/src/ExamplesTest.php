@@ -38,6 +38,7 @@ use Derafu\Form\Renderer\ElementRendererProvider;
 use Derafu\Form\Renderer\ElementRendererRegistry;
 use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Renderer\FormTwigExtension;
+use Derafu\Form\Renderer\Support\InputActionResolver;
 use Derafu\Form\Renderer\Widget\CheckboxWidgetRenderer;
 use Derafu\Form\Renderer\Widget\CollectionWidgetRenderer;
 use Derafu\Form\Renderer\Widget\InputWidgetRenderer;
@@ -131,6 +132,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ElementRendererProvider::class)]
 #[CoversClass(CategorizationRenderer::class)]
 #[CoversClass(ControlRenderer::class)]
+#[CoversClass(InputActionResolver::class)]
 #[CoversClass(GroupRenderer::class)]
 #[CoversClass(HorizontalLayoutRenderer::class)]
 #[CoversClass(LabelRenderer::class)]
@@ -212,5 +214,14 @@ final class ExamplesTest extends TestCase
         }
 
         return $examples;
+    }
+
+    public function testPasswordWidgetTypeOptionRendersToggleButton(): void
+    {
+        $example = Example::find('signin');
+        $html = $this->renderer->render($example->getForm());
+
+        $this->assertStringContainsString('type="password"', $html);
+        $this->assertStringContainsString('FormFields.showPassword', $html);
     }
 }

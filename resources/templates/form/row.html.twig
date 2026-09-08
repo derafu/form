@@ -11,7 +11,9 @@
 {% set widget_type = field.widget.type %}
 {% set is_checkbox = widget_type == 'checkbox' %}
 {% set is_choice_multiple = widget_type in ['checkboxes', 'radio'] %}
-{% set is_password = widget_type == 'password' %}
+
+{# Buttons rendered inside the input-group (e.g. toggle password, copy). #}
+{% set actions = options.actions|default([]) %}
 
 {# Get options for row and layout. #}
 {% set row_attr = options.row_attr|default({}) %}
@@ -40,7 +42,8 @@
     or input_group_prepend is not null
     or input_group_append_text is not null
     or input_group_append_icon is not null
-    or input_group_append is not null %}
+    or input_group_append is not null
+    or actions is not empty %}
 
 <div class="{{ row_class }}"
     {% if options.rule is defined and options.rule is not null %}
@@ -83,7 +86,7 @@
 
     {% else %}
         {# Regular fields (non-checkbox) - original logic #}
-        {% if has_input_group or is_password %}
+        {% if has_input_group %}
             <div class="input-group{% if has_errors %} has-validation{% endif %}">
                 {% if input_group_prepend or input_group_prepend_icon or input_group_prepend_text %}
                     {% if input_group_prepend %}
@@ -106,12 +109,16 @@
                     {{ widget|raw }}
                 {% endif %}
 
-                {% if is_password %}
-                    {# Add show/hide password button #}
-                    <button class="btn btn-secondary" type="button" onclick="FormFields.showPassword(this)">
-                        <i class="fa-regular fa-eye fa-fw"></i>
-                    </button>
-                {% endif %}
+                {% for action in actions %}
+                    <a
+                        class="input-group-text"
+                        style="cursor:pointer;text-decoration:none"
+                        onclick="{{ action.onclick }}"
+                        {% if action.label %}aria-label="{{ action.label }}" title="{{ action.label }}"{% endif %}
+                    >
+                        <i class="{{ action.icon }}"></i>
+                    </a>
+                {% endfor %}
 
                 {% if input_group_append or input_group_append_icon or input_group_append_text %}
                     {% if input_group_append %}

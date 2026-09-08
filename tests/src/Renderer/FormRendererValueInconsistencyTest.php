@@ -35,6 +35,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(\Derafu\Form\FormField::class)]
 #[CoversClass(\Derafu\Form\Renderer\FormRenderer::class)]
 #[CoversClass(\Derafu\Form\Renderer\Element\ControlRenderer::class)]
+#[CoversClass(\Derafu\Form\Renderer\Support\InputActionResolver::class)]
 #[CoversClass(\Derafu\Form\Abstract\AbstractPropertySchema::class)]
 #[CoversClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
 #[CoversClass(\Derafu\Form\Data\FormData::class)]

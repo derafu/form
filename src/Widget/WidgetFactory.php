@@ -69,7 +69,7 @@ final class WidgetFactory implements WidgetFactoryInterface
                 return 'week';
             } elseif ($format === 'month') {
                 return 'month';
-            } elseif ($format === 'password') {
+            } elseif ($format === 'password' || ($options['type'] ?? null) === 'password') {
                 return 'password';
             } elseif ($format === 'time') {
                 return 'time';

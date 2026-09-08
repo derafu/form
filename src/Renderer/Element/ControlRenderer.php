@@ -18,6 +18,7 @@ use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
+use Derafu\Form\Renderer\Support\InputActionResolver;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
 use InvalidArgumentException;
 
@@ -38,15 +39,22 @@ use InvalidArgumentException;
  */
 final class ControlRenderer implements ElementRendererInterface
 {
+    private readonly InputActionResolver $actionResolver;
+
     /**
      * @param UiSchemaRuleEvaluatorInterface|null $ruleEvaluator Optional
      * evaluator for computing initial render state from UI schema rules.
      * When null the renderer skips rule evaluation entirely (backwards
      * compatible with code that instantiates ControlRenderer directly).
+     * @param InputActionResolver|null $actionResolver Optional resolver for
+     * the `options.actions` input-group buttons (e.g. toggle password,
+     * copy). When null a default instance is created.
      */
     public function __construct(
         private readonly ?UiSchemaRuleEvaluatorInterface $ruleEvaluator = null,
+        ?InputActionResolver $actionResolver = null,
     ) {
+        $this->actionResolver = $actionResolver ?? new InputActionResolver();
     }
 
     /**
@@ -118,6 +126,22 @@ final class ControlRenderer implements ElementRendererInterface
                 $fieldOptions['attr']['disabled'] = true;
             }
         }
+
+        // A password widget gets a show/hide toggle by default, unless the
+        // control already declares its own `actions`.
+        if (
+            !isset($fieldOptions['actions'])
+            && $field->getWidget()->getType() === 'password'
+        ) {
+            $fieldOptions['actions'] = ['toggle-password'];
+        }
+
+        // Resolve `actions` (if any) into ready-to-render button definitions
+        // (icon, accessible label and onclick handler).
+        $fieldOptions['actions'] = $this->actionResolver->resolve(
+            $fieldOptions['actions'] ?? [],
+            $field
+        );
 
         // Determine if we need to render a full field or just the widget.
         $renderMode = $options['render_mode'] ?? 'row';

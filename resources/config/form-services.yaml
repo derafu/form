@@ -1,9 +1,27 @@
 services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
 
     Derafu\Form\Renderer\FormTwigExtension: ~
 
+    Derafu\Form\Renderer\Support\InputActionResolver: ~
+
+    Derafu\Form\Renderer\ElementRendererProvider: ~
+
+    # Feeds resources/translations into the consuming app's Translator (the
+    # app must pass $resourceProviders: !tagged_iterator
+    # derafu_translation.resource_provider to TranslatorFactory::create(),
+    # see derafu/translation's translation-services.yaml). The tag is
+    # explicit because _instanceof does not propagate across imported files.
+    Derafu\Form\Translation\FormTranslationResourceProvider:
+        tags: ['derafu_translation.resource_provider']
+
     Derafu\Form\Contract\Renderer\FormRendererInterface:
         factory: ['Derafu\Form\Factory\FormRendererFactory', 'create']
+        arguments:
+            $options:
+                element_renderers: '@Derafu\Form\Renderer\ElementRendererProvider'
 
     Derafu\Form\Contract\Factory\FormFactoryInterface:
         class: Derafu\Form\Factory\FormFactory

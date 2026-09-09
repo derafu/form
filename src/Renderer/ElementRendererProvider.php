@@ -20,6 +20,7 @@ use Derafu\Form\Renderer\Element\GroupRenderer;
 use Derafu\Form\Renderer\Element\HorizontalLayoutRenderer;
 use Derafu\Form\Renderer\Element\LabelRenderer;
 use Derafu\Form\Renderer\Element\VerticalLayoutRenderer;
+use Derafu\Form\Renderer\Support\InputActionResolver;
 
 /**
  * Element renderer provider.
@@ -30,9 +31,14 @@ final class ElementRendererProvider implements ElementRendererProviderInterface
      * @param UiSchemaRuleEvaluatorInterface|null $ruleEvaluator Optional
      * evaluator forwarded to ControlRenderer for initial render-state
      * computation. When null, rule evaluation is skipped (backwards compatible).
+     * @param InputActionResolver|null $actionResolver Optional resolver
+     * forwarded to ControlRenderer for the `options.actions` input-group
+     * buttons. When null, ControlRenderer creates its own default instance
+     * (untranslated, backwards compatible).
      */
     public function __construct(
         private readonly ?UiSchemaRuleEvaluatorInterface $ruleEvaluator = null,
+        private readonly ?InputActionResolver $actionResolver = null,
     ) {
     }
 
@@ -42,7 +48,7 @@ final class ElementRendererProvider implements ElementRendererProviderInterface
     public function getRenderers(): array
     {
         return [
-            'Control' => new ControlRenderer($this->ruleEvaluator),
+            'Control' => new ControlRenderer($this->ruleEvaluator, $this->actionResolver),
             'Categorization' => new CategorizationRenderer(),
             'Group' => new GroupRenderer(),
             'HorizontalLayout' => new HorizontalLayoutRenderer(),

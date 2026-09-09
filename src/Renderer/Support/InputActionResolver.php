@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Derafu\Form\Renderer\Support;
 
 use Derafu\Form\Contract\FormFieldInterface;
+use Derafu\Translation\TranslatableMessage;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Resolves the `options.actions` UI schema option into ready-to-render
@@ -32,9 +34,19 @@ use Derafu\Form\Contract\FormFieldInterface;
  * The JavaScript referenced by the built-in actions (`FormFields.*`,
  * `UI.copy`) is provided by the `derafu-js` package and is not bundled here,
  * consistently with the rest of this package's client-side integrations.
+ *
+ * The built-in labels and the default `copy` confirmation message are
+ * translated (domain `form+intl-icu`) when a translator is provided. An
+ * explicit `label`/`message` override passed in `options.actions` is used
+ * as-is and never translated, since that's the caller's own text.
  */
 final class InputActionResolver
 {
+    /**
+     * Translation domain for this resolver's own UI strings.
+     */
+    private const DOMAIN = 'form+intl-icu';
+
     /**
      * Known action types and their defaults.
      *
@@ -54,6 +66,21 @@ final class InputActionResolver
             'label' => 'Copy value',
         ],
     ];
+
+    /**
+     * @param TranslatorInterface|null $translator Optional translator used
+     * to translate the built-in action labels and the default `copy`
+     * confirmation message. When null, the untranslated (English) text is
+     * used, same as before this parameter existed.
+     * @param string|null $locale The locale to translate to. Only used when
+     * $translator is provided; null defers to the translator's own current
+     * locale at the time each action is resolved.
+     */
+    public function __construct(
+        private readonly ?TranslatorInterface $translator = null,
+        private readonly ?string $locale = null,
+    ) {
+    }
 
     /**
      * Resolves the raw `options.actions` value into a list of renderable
@@ -119,9 +146,17 @@ final class InputActionResolver
             return null;
         }
 
+        // Only translate the built-in default label when it will actually
+        // be used; an explicit override is the caller's own text and is
+        // never translated (nor is trans() called needlessly for it).
+        $label = $action['label'] ?? $defaults['label'] ?? '';
+        if (!isset($action['label']) && $label !== '') {
+            $label = $this->trans($label);
+        }
+
         return [
             'icon' => $action['icon'] ?? $defaults['icon'] ?? '',
-            'label' => $action['label'] ?? $defaults['label'] ?? '',
+            'label' => $label,
             'onclick' => $onclick,
         ];
     }
@@ -161,6 +196,28 @@ final class InputActionResolver
         $property = $field->getProperty();
         $title = $property->getTitle() ?? $property->getName();
 
-        return sprintf('Value from field "%s" copied.', $title);
+        return $this->trans('Value from field "{title}" copied.', ['title' => $title]);
+    }
+
+    /**
+     * Translates one of this resolver's own UI strings.
+     *
+     * Uses the injected translator when available, falling back to eager
+     * ICU formatting of the raw message (still substituting $parameters)
+     * when no translator was provided.
+     *
+     * @param string $message The message, in ICU MessageFormat syntax.
+     * @param array<string, mixed> $parameters ICU placeholder values.
+     * @return string
+     */
+    private function trans(string $message, array $parameters = []): string
+    {
+        $translatable = new TranslatableMessage($message, $parameters, self::DOMAIN, $this->locale);
+
+        if ($this->translator === null) {
+            return (string) $translatable;
+        }
+
+        return $translatable->trans($this->translator, $this->locale);
     }
 }

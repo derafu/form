@@ -16,7 +16,6 @@ use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Data\FormData;
-use Derafu\Form\Exception\ValidationException;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
@@ -40,13 +39,14 @@ use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Translation\Loader\ArrayLoader;
+use Symfony\Component\Translation\Translator;
 
 #[CoversClass(FormDataProcessor::class)]
 #[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormRulesResolver::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(ProcessResult::class)]
-#[CoversClass(ValidationException::class)]
 #[CoversClass(FormData::class)]
 #[CoversClass(AbstractPropertySchema::class)]
 #[CoversClass(AbstractUiSchemaElement::class)]
@@ -307,5 +307,47 @@ final class FormDataProcessorTest extends TestCase
         $data = $result->getProcessedData();
         $this->assertSame(3, $data['sort_order']);
         $this->assertSame('WBH-001-BLK', $data['sku']);
+    }
+
+    public function testValidationErrorsUseEnglishMessageByDefault(): void
+    {
+        $form = $this->simpleForm(required: ['name', 'email']);
+
+        $result = $this->processor->process($form, [
+            'name' => 'John Doe',
+            'email' => 'invalid-email',
+        ]);
+
+        $this->assertFalse($result->isValid());
+        $this->assertSame(['Invalid email format.'], $result->getErrors()['email']);
+    }
+
+    public function testValidationErrorsAreTranslatedWhenTranslatorProvided(): void
+    {
+        $translator = new Translator('es');
+        $translator->addLoader('array', new ArrayLoader());
+        $translator->addResource('array', [
+            'Invalid email format.' => 'Formato de correo electrónico inválido.',
+        ], 'es', 'errors+intl-icu');
+
+        $processor = new FormDataProcessor(
+            new FormRulesResolver(),
+            ProcessorFactory::create(),
+            translator: $translator,
+            locale: 'es',
+        );
+
+        $form = $this->simpleForm(required: ['name', 'email']);
+
+        $result = $processor->process($form, [
+            'name' => 'John Doe',
+            'email' => 'invalid-email',
+        ]);
+
+        $this->assertFalse($result->isValid());
+        $this->assertSame(
+            ['Formato de correo electrónico inválido.'],
+            $result->getErrors()['email']
+        );
     }
 }

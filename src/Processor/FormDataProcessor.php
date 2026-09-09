@@ -18,7 +18,8 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
 use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
-use Derafu\Form\Exception\ValidationException;
+use Derafu\Translation\Contract\TranslatableInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 
 /**
@@ -38,11 +39,20 @@ final class FormDataProcessor implements FormDataProcessorInterface
      * field's UI schema rule. Defaults to a plain UiSchemaRuleEvaluator so
      * that existing call sites that instantiate FormDataProcessor directly
      * (e.g., tests) do not need to change.
+     * @param TranslatorInterface|null $translator Optional translator used to
+     * translate processing errors that implement TranslatableInterface (e.g.
+     * Derafu\DataProcessor's ValidationException). When null, the untranslated
+     * (English) exception message is used, same as before this parameter
+     * existed.
+     * @param string|null $locale The locale to translate error messages to.
+     * Only used when $translator is provided.
      */
     public function __construct(
         private readonly FormRulesResolverInterface $resolver,
         private readonly ProcessorInterface $processor,
         private readonly UiSchemaRuleEvaluatorInterface $evaluator = new UiSchemaRuleEvaluator(),
+        private readonly ?TranslatorInterface $translator = null,
+        private readonly ?string $locale = null,
     ) {
     }
 
@@ -92,16 +102,11 @@ final class FormDataProcessor implements FormDataProcessorInterface
                     $fieldRules
                 );
                 $processedData[$fieldName] = $processedValue;
-            } catch (ValidationException $e) {
-                // Collect validation errors.
-                $errors[$fieldName] = [$e->getMessage()];
+            } catch (Throwable $e) {
+                // Collect validation and other processing errors.
+                $errors[$fieldName] = [$this->resolveErrorMessage($e)];
                 $isValid = false;
                 // Keep original value for invalid fields.
-                $processedData[$fieldName] = $fieldValue;
-            } catch (Throwable $e) {
-                // Handle other processing errors.
-                $errors[$fieldName] = [$e->getMessage()];
-                $isValid = false;
                 $processedData[$fieldName] = $fieldValue;
             }
         }
@@ -115,6 +120,25 @@ final class FormDataProcessor implements FormDataProcessorInterface
         }
 
         return new ProcessResult($form, $processedData, $errors, $isValid);
+    }
+
+    /**
+     * Resolves the display message for a processing error.
+     *
+     * Translates the exception's message when a translator was provided and
+     * the exception supports translation. Otherwise falls back to the
+     * exception's own (English by default) message.
+     *
+     * @param Throwable $e The exception raised while processing a field.
+     * @return string
+     */
+    private function resolveErrorMessage(Throwable $e): string
+    {
+        if ($this->translator !== null && $e instanceof TranslatableInterface) {
+            return $e->trans($this->translator, $this->locale);
+        }
+
+        return $e->getMessage();
     }
 
     // =========================================================================

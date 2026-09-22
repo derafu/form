@@ -918,8 +918,8 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     public function testPatternCorporateEmailMatchFieldIsProcessed(): void
     {
         $result = $this->processor->process(
-            $this->formWithPatternRule('@derafu\\.dev$'),
-            ['trigger' => 'esteban@derafu.dev', 'dependent' => 'value']
+            $this->formWithPatternRule('@example\\.com$'),
+            ['trigger' => 'derafu@example.com', 'dependent' => 'value']
         );
 
         $this->assertTrue($result->isValid());
@@ -932,8 +932,8 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     public function testPatternCorporateEmailNoMatchFieldIsSkipped(): void
     {
         $result = $this->processor->process(
-            $this->formWithPatternRule('@derafu\\.dev$'),
-            ['trigger' => 'esteban@gmail.com', 'dependent' => 'value']
+            $this->formWithPatternRule('@example\\.com$'),
+            ['trigger' => 'example@gmail.com', 'dependent' => 'value']
         );
 
         $this->assertTrue($result->isValid());

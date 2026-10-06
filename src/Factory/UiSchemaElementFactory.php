@@ -21,7 +21,7 @@ use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\HorizontalLayout;
 use Derafu\Form\UiSchema\Label;
 use Derafu\Form\UiSchema\VerticalLayout;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Factory class for creating UiSchemaElement instances.
@@ -51,11 +51,11 @@ final class UiSchemaElementFactory implements UiSchemaElementFactoryInterface
         $type = $definition['type'] ?? 'Control';
 
         if (!isset(self::VALID_TYPES[$type])) {
-            throw new InvalidArgumentException(sprintf(
-                'Invalid UI schema element type: %s. Valid types are: %s.',
-                $type,
-                implode(', ', self::VALID_TYPES)
-            ));
+            throw new InvalidArgumentException([
+                'Invalid UI schema element type: {type}. Valid types are: {types}.',
+                'type' => $type,
+                'types' => implode(', ', self::VALID_TYPES),
+            ]);
         }
 
         $class = self::VALID_TYPES[$type];

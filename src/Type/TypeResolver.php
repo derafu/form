@@ -16,7 +16,7 @@ use DateTimeInterface;
 use Derafu\Form\Contract\Type\TypeInterface;
 use Derafu\Form\Contract\Type\TypeRegistryInterface;
 use Derafu\Form\Contract\Type\TypeResolverInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Resolves the type of a value.
@@ -62,10 +62,10 @@ final class TypeResolver implements TypeResolverInterface
             is_bool($value) => $this->typeRegistry->get(BooleanType::class),
             is_array($value) => $this->typeRegistry->get(ArrayType::class),
             is_object($value) => $this->typeRegistry->get(ObjectType::class),
-            default => throw new InvalidArgumentException(sprintf(
-                'Cannot guess type for value of type %s.',
-                get_debug_type($value)
-            )),
+            default => throw new InvalidArgumentException([
+                'Cannot guess type for value of type {type}.',
+                'type' => get_debug_type($value),
+            ]),
         };
     }
 

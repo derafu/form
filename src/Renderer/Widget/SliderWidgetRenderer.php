@@ -17,7 +17,7 @@ use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for range slider input widgets.
@@ -43,8 +43,7 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
-                'The "renderer" option in SliderWidgetRenderer must be an '
-                . 'instance of FormRendererInterface.'
+                'The "renderer" option in SliderWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
 

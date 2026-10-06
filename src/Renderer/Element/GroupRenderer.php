@@ -17,7 +17,7 @@ use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\GroupInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\FormRenderer;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for group elements.
@@ -34,11 +34,11 @@ final class GroupRenderer implements ElementRendererInterface
     ): string {
         // Check if the element is a GroupInterface.
         if (!$element instanceof GroupInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'Element must be an instance of %s in GroupRenderer, %s given.',
-                GroupInterface::class,
-                get_class($element)
-            ));
+            throw new InvalidArgumentException([
+                'Element must be an instance of {expected} in GroupRenderer, {given} given.',
+                'expected' => GroupInterface::class,
+                'given' => get_class($element),
+            ]);
         }
 
         // Get the main form renderer from options.

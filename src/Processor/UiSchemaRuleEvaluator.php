@@ -19,7 +19,7 @@ use Derafu\Form\Contract\UiSchema\UiSchemaConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
-use LogicException;
+use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 
 /**
  * Evaluates UI schema rules against a data set.
@@ -175,10 +175,10 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
             $regex = '/' . str_replace('/', '\/', $schema->getPattern()) . '/';
             $result = @preg_match($regex, (string) $value);
             if ($result === false) {
-                throw new LogicException(sprintf(
-                    'Invalid PCRE pattern in rule condition: "%s".',
-                    $schema->getPattern()
-                ));
+                throw new LogicException([
+                    'Invalid PCRE pattern in rule condition: "{pattern}".',
+                    'pattern' => $schema->getPattern(),
+                ]);
             }
             $checks[] = $result === 1;
         }

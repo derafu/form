@@ -16,7 +16,7 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\LabelInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for label elements.
@@ -35,11 +35,11 @@ final class LabelRenderer implements ElementRendererInterface
     ): string {
         // Check if the element is a LabelInterface.
         if (!$element instanceof LabelInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'Element must be an instance of %s in LabelRenderer, %s given.',
-                LabelInterface::class,
-                get_class($element)
-            ));
+            throw new InvalidArgumentException([
+                'Element must be an instance of {expected} in LabelRenderer, {given} given.',
+                'expected' => LabelInterface::class,
+                'given' => get_class($element),
+            ]);
         }
 
         // Merge options.

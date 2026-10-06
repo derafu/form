@@ -20,7 +20,7 @@ use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\Support\InputActionResolver;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for control elements.
@@ -67,11 +67,11 @@ final class ControlRenderer implements ElementRendererInterface
     ): string {
         // Check if the element is a control.
         if (!$element instanceof ControlInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'Element must be an instance of %s in ControlRenderer, %s given.',
-                ControlInterface::class,
-                get_class($element)
-            ));
+            throw new InvalidArgumentException([
+                'Element must be an instance of {expected} in ControlRenderer, {given} given.',
+                'expected' => ControlInterface::class,
+                'given' => get_class($element),
+            ]);
         }
 
         // Get the main form renderer from options.
@@ -87,10 +87,10 @@ final class ControlRenderer implements ElementRendererInterface
         $field = $form->getField($propertyName);
 
         if (!$field) {
-            throw new InvalidArgumentException(sprintf(
-                'Field with property name "%s" not found in form.',
-                $propertyName
-            ));
+            throw new InvalidArgumentException([
+                'Field with property name "{name}" not found in form.',
+                'name' => $propertyName,
+            ]);
         }
 
         // Merge control options with passed options.

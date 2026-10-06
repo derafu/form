@@ -15,7 +15,7 @@ namespace Derafu\Form\Loader;
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
-use RuntimeException;
+use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -46,8 +46,7 @@ class YamlFormLoader extends AbstractFileFormLoader
     {
         if (!class_exists(Yaml::class)) {
             throw new RuntimeException(
-                'YamlFormLoader requires "symfony/yaml". '
-                . 'Run: composer require symfony/yaml'
+                'YamlFormLoader requires "symfony/yaml". Run: composer require symfony/yaml'
             );
         }
 
@@ -67,19 +66,19 @@ class YamlFormLoader extends AbstractFileFormLoader
         try {
             $definition = Yaml::parseFile($file);
         } catch (ParseException $e) {
-            throw new RuntimeException(sprintf(
-                'Failed to parse YAML form file "%s": %s',
-                $file,
-                $e->getMessage(),
-            ), 0, $e);
+            throw new RuntimeException([
+                'Failed to parse YAML form file "{file}": {error}',
+                'file' => $file,
+                'error' => $e->getMessage(),
+            ], 0, $e);
         }
 
         if (!is_array($definition)) {
-            throw new RuntimeException(sprintf(
-                'Form file "%s" must parse to an array, got %s.',
-                $file,
-                get_debug_type($definition),
-            ));
+            throw new RuntimeException([
+                'Form file "{file}" must parse to an array, got {type}.',
+                'file' => $file,
+                'type' => get_debug_type($definition),
+            ]);
         }
 
         if ($data !== []) {

@@ -16,8 +16,8 @@ use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Type\TypeResolverInterface;
 use Derafu\Form\Form;
-use InvalidArgumentException;
-use LogicException;
+use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Factory class for creating form instances with automatic schema generation.
@@ -250,23 +250,21 @@ final class FormFactory implements FormFactoryInterface
 
             // Reject nested scopes — not supported in v1.
             if (!preg_match('/^#\/properties\/([^\/]+)$/', $scope, $m)) {
-                throw new LogicException(sprintf(
-                    'choices shorthand does not support nested scopes: "%s". '
-                    . 'Use oneOf directly in the schema for nested properties.',
-                    $scope
-                ));
+                throw new LogicException([
+                    'choices shorthand does not support nested scopes: "{scope}". Use oneOf directly in the schema for nested properties.',
+                    'scope' => $scope,
+                ]);
             }
 
             $name = $m[1];
 
             // The property must exist in the schema.
             if (!array_key_exists($name, $properties)) {
-                throw new LogicException(sprintf(
-                    'choices shorthand: property "%s" not found in schema '
-                    . '(referenced by scope "%s").',
-                    $name,
-                    $scope
-                ));
+                throw new LogicException([
+                    'choices shorthand: property "{name}" not found in schema (referenced by scope "{scope}").',
+                    'name' => $name,
+                    'scope' => $scope,
+                ]);
             }
 
             $prop = &$properties[$name];
@@ -277,12 +275,11 @@ final class FormFactory implements FormFactoryInterface
             // are always strings), producing wrong validation. Use oneOf
             // directly in the schema instead.
             if ($type === 'integer' || $type === 'number') {
-                throw new LogicException(sprintf(
-                    'choices shorthand is not supported for type "%s" (property "%s"). '
-                    . 'Use oneOf directly in the schema to preserve numeric const values.',
-                    $type,
-                    $name
-                ));
+                throw new LogicException([
+                    'choices shorthand is not supported for type "{type}" (property "{name}"). Use oneOf directly in the schema to preserve numeric const values.',
+                    'type' => $type,
+                    'name' => $name,
+                ]);
             }
 
             // Build the oneOf array from the choices dict.
@@ -298,22 +295,20 @@ final class FormFactory implements FormFactoryInterface
                 }
 
                 if (isset($prop['items']['oneOf'])) {
-                    throw new LogicException(sprintf(
-                        'choices shorthand: property "%s" items already has oneOf defined. '
-                        . 'Remove either the choices shorthand or the items.oneOf.',
-                        $name
-                    ));
+                    throw new LogicException([
+                        'choices shorthand: property "{name}" items already has oneOf defined. Remove either the choices shorthand or the items.oneOf.',
+                        'name' => $name,
+                    ]);
                 }
 
                 $prop['items']['oneOf'] = $oneOf;
             } else {
                 // String (and any other scalar type).
                 if (isset($prop['oneOf'])) {
-                    throw new LogicException(sprintf(
-                        'choices shorthand: property "%s" already has oneOf defined. '
-                        . 'Remove either the choices shorthand or the schema oneOf.',
-                        $name
-                    ));
+                    throw new LogicException([
+                        'choices shorthand: property "{name}" already has oneOf defined. Remove either the choices shorthand or the schema oneOf.',
+                        'name' => $name,
+                    ]);
                 }
 
                 $prop['oneOf'] = $oneOf;

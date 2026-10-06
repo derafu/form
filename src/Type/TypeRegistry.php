@@ -15,7 +15,7 @@ namespace Derafu\Form\Type;
 use Derafu\Form\Contract\Type\TypeInterface;
 use Derafu\Form\Contract\Type\TypeProviderInterface;
 use Derafu\Form\Contract\Type\TypeRegistryInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Registry of types.
@@ -73,11 +73,11 @@ final class TypeRegistry implements TypeRegistryInterface
     public function get(string $type): TypeInterface
     {
         if (!$this->has($type)) {
-            throw new InvalidArgumentException(sprintf(
-                "Type '%s' not found in registry. Available types: %s.",
-                $type,
-                implode(', ', array_keys($this->types))
-            ));
+            throw new InvalidArgumentException([
+                "Type ''{type}'' not found in registry. Available types: {types}.",
+                'type' => $type,
+                'types' => implode(', ', array_keys($this->types)),
+            ]);
         }
 
         return $this->types[$type];

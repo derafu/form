@@ -16,7 +16,7 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for multiple checkboxes.
@@ -37,8 +37,7 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
-                'The "renderer" option in CheckboxWidgetRenderer must be an '
-                . 'instance of FormRendererInterface.'
+                'The "renderer" option in CheckboxWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
 
@@ -77,10 +76,10 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
             : ($property->getChoices() ?? []);
 
         if (empty($choices)) {
-            throw new InvalidArgumentException(
-                'CheckboxWidgetRenderer: No choices found for multiple '
-                . 'checkbox field "' . $name . '"'
-            );
+            throw new InvalidArgumentException([
+                'CheckboxWidgetRenderer: No choices found for multiple checkbox field "{name}"',
+                'name' => $name,
+            ]);
         }
 
         // Prepare context for template.

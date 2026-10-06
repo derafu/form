@@ -18,7 +18,7 @@ use Derafu\Form\UiSchema\Categorization;
 use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\HorizontalLayout;
 use Derafu\Form\UiSchema\VerticalLayout;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Factory class for creating FormUiSchema instances.
@@ -45,11 +45,11 @@ final class FormUiSchemaFactory implements FormUiSchemaFactoryInterface
         $type = $definition['type'] ?? 'VerticalLayout';
 
         if (!isset(self::VALID_TYPES[$type])) {
-            throw new InvalidArgumentException(sprintf(
-                'Invalid UI schema type: %s. Valid types are: %s.',
-                $type,
-                implode(', ', self::VALID_TYPES)
-            ));
+            throw new InvalidArgumentException([
+                'Invalid UI schema type: {type}. Valid types are: {types}.',
+                'type' => $type,
+                'types' => implode(', ', self::VALID_TYPES),
+            ]);
         }
 
         $class = self::VALID_TYPES[$type];

@@ -16,7 +16,7 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for textarea input widgets.
@@ -34,8 +34,7 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
-                'The "renderer" option in TextareaWidgetRenderer must be an '
-                . 'instance of FormRendererInterface.'
+                'The "renderer" option in TextareaWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
 

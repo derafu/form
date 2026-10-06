@@ -14,7 +14,7 @@ namespace Derafu\Form\UiSchema;
 
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Represents a control in a UI Schema.
@@ -50,10 +50,10 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
             return $matches[1];
         }
 
-        throw new InvalidArgumentException(sprintf(
-            'Invalid scope format: %s. Expected format: #/properties/path/to/property',
-            $this->getScope()
-        ));
+        throw new InvalidArgumentException([
+            'Invalid scope format: {scope}. Expected format: #/properties/path/to/property',
+            'scope' => $this->getScope(),
+        ]);
     }
 
     /**

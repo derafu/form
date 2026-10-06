@@ -15,6 +15,7 @@ namespace Derafu\Form\Rules;
 use BadMethodCallException;
 use Derafu\Form\Contract\Rules\FormRulesInterface;
 use Derafu\Support\JsonSerializer;
+use Derafu\Translation\Exception\Logic\TranslatableBadMethodCallException;
 
 /**
  * Per-field processing rules for a form.
@@ -100,7 +101,7 @@ final class FormRules implements FormRulesInterface
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        throw new BadMethodCallException('FormRules does not support offsetSet(). Use fill() to populate resolved rules.');
+        throw new TranslatableBadMethodCallException('FormRules does not support offsetSet(). Use fill() to populate resolved rules.');
     }
 
     /**
@@ -110,7 +111,7 @@ final class FormRules implements FormRulesInterface
      */
     public function offsetUnset(mixed $offset): void
     {
-        throw new BadMethodCallException('FormRules does not support offsetUnset().');
+        throw new TranslatableBadMethodCallException('FormRules does not support offsetUnset().');
     }
 
     /**

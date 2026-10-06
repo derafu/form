@@ -15,7 +15,7 @@ namespace Derafu\Form\Loader;
 use Closure;
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\FormInterface;
-use RuntimeException;
+use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
 
 /**
  * Loads form definitions from `.form.php` files.
@@ -56,11 +56,11 @@ class PhpFormLoader extends AbstractFileFormLoader
         } elseif (is_array($result)) {
             $definition = $result;
         } else {
-            throw new RuntimeException(sprintf(
-                'Form file "%s" must return a Closure or an array, got %s.',
-                $file,
-                get_debug_type($result),
-            ));
+            throw new RuntimeException([
+                'Form file "{file}" must return a Closure or an array, got {type}.',
+                'file' => $file,
+                'type' => get_debug_type($result),
+            ]);
         }
 
         if ($data !== []) {

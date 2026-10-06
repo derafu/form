@@ -15,7 +15,7 @@ namespace Derafu\Form\UiSchema;
 use Derafu\Form\Contract\UiSchema\UiSchemaCompositeConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaConditionInterface;
 use Derafu\Support\JsonSerializer;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Composite (branch) condition combining child conditions with AND / OR.

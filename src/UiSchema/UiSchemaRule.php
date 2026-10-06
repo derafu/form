@@ -15,7 +15,7 @@ namespace Derafu\Form\UiSchema;
 use Derafu\Form\Contract\UiSchema\UiSchemaCompositeConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Support\JsonSerializer;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Represents a rule in a UI Schema element.

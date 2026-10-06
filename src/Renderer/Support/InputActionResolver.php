@@ -48,23 +48,14 @@ final class InputActionResolver
     private const DOMAIN = 'form+intl-icu';
 
     /**
-     * Known action types and their defaults.
+     * Known action types and the default icon of each one.
      *
-     * @var array<string, array{icon: string, label: string}>
+     * @var array<string, array{icon: string}>
      */
     private const ACTIONS = [
-        'toggle-password' => [
-            'icon' => 'fa-regular fa-eye fa-fw',
-            'label' => 'Toggle password visibility',
-        ],
-        'generate-password' => [
-            'icon' => 'fa-solid fa-arrows-rotate fa-fw',
-            'label' => 'Generate a random password',
-        ],
-        'copy' => [
-            'icon' => 'fa-regular fa-copy fa-fw',
-            'label' => 'Copy value',
-        ],
+        'toggle-password' => ['icon' => 'fa-regular fa-eye fa-fw'],
+        'generate-password' => ['icon' => 'fa-solid fa-arrows-rotate fa-fw'],
+        'copy' => ['icon' => 'fa-regular fa-copy fa-fw'],
     ];
 
     /**
@@ -149,10 +140,7 @@ final class InputActionResolver
         // Only translate the built-in default label when it will actually
         // be used; an explicit override is the caller's own text and is
         // never translated (nor is trans() called needlessly for it).
-        $label = $action['label'] ?? $defaults['label'] ?? '';
-        if (!isset($action['label']) && $label !== '') {
-            $label = $this->trans($label);
-        }
+        $label = $action['label'] ?? $this->defaultLabel($type);
 
         return [
             'icon' => $action['icon'] ?? $defaults['icon'] ?? '',
@@ -197,6 +185,22 @@ final class InputActionResolver
         $title = $property->getTitle() ?? $property->getName();
 
         return $this->trans('Value from field "{title}" copied.', ['title' => $title]);
+    }
+
+    /**
+     * The translated default label of a known action type.
+     *
+     * @param string|null $type The type of the action.
+     * @return string The label, or an empty string if the type has no default.
+     */
+    private function defaultLabel(?string $type): string
+    {
+        return match ($type) {
+            'toggle-password' => $this->trans('Toggle password visibility'),
+            'generate-password' => $this->trans('Generate a random password'),
+            'copy' => $this->trans('Copy value'),
+            default => '',
+        };
     }
 
     /**

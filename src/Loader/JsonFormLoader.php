@@ -14,8 +14,8 @@ namespace Derafu\Form\Loader;
 
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\FormInterface;
+use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
 use JsonException;
-use RuntimeException;
 
 /**
  * Loads form definitions from `.form.json` files.
@@ -39,19 +39,19 @@ class JsonFormLoader extends AbstractFileFormLoader
         try {
             $definition = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw new RuntimeException(sprintf(
-                'Failed to parse JSON form file "%s": %s',
-                $file,
-                $e->getMessage(),
-            ), 0, $e);
+            throw new RuntimeException([
+                'Failed to parse JSON form file "{file}": {error}',
+                'file' => $file,
+                'error' => $e->getMessage(),
+            ], 0, $e);
         }
 
         if (!is_array($definition)) {
-            throw new RuntimeException(sprintf(
-                'Form file "%s" must decode to an array, got %s.',
-                $file,
-                get_debug_type($definition),
-            ));
+            throw new RuntimeException([
+                'Form file "{file}" must decode to an array, got {type}.',
+                'file' => $file,
+                'type' => get_debug_type($definition),
+            ]);
         }
 
         if ($data !== []) {

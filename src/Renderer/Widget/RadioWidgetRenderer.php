@@ -15,7 +15,7 @@ namespace Derafu\Form\Renderer\Widget;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for radio widgets.
@@ -41,8 +41,7 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
-                'The "renderer" option in RadioWidgetRenderer must be an '
-                . 'instance of FormRendererInterface.'
+                'The "renderer" option in RadioWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
 

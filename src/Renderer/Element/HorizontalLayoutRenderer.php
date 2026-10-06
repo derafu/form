@@ -17,7 +17,7 @@ use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\HorizontalLayoutInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\FormRenderer;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for horizontal layout elements.
@@ -34,11 +34,11 @@ final class HorizontalLayoutRenderer implements ElementRendererInterface
     ): string {
         // Check if the element is a HorizontalLayoutInterface.
         if (!$element instanceof HorizontalLayoutInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'Element must be an instance of %s in HorizontalLayoutRenderer, %s given.',
-                HorizontalLayoutInterface::class,
-                get_class($element)
-            ));
+            throw new InvalidArgumentException([
+                'Element must be an instance of {expected} in HorizontalLayoutRenderer, {given} given.',
+                'expected' => HorizontalLayoutInterface::class,
+                'given' => get_class($element),
+            ]);
         }
 
         // Get the main form renderer from options.

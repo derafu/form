@@ -15,7 +15,7 @@ namespace Derafu\Form\Renderer;
 use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererProviderInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererRegistryInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Registry for element renderers.

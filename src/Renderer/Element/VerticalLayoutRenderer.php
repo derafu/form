@@ -17,7 +17,7 @@ use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Contract\UiSchema\VerticalLayoutInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for vertical layout elements.
@@ -34,11 +34,11 @@ final class VerticalLayoutRenderer implements ElementRendererInterface
     ): string {
         // Check if the element is a VerticalLayoutInterface.
         if (!$element instanceof VerticalLayoutInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'Element must be an instance of %s in VerticalLayoutRenderer, %s given.',
-                VerticalLayoutInterface::class,
-                get_class($element)
-            ));
+            throw new InvalidArgumentException([
+                'Element must be an instance of {expected} in VerticalLayoutRenderer, {given} given.',
+                'expected' => VerticalLayoutInterface::class,
+                'given' => get_class($element),
+            ]);
         }
 
         // Get the main form renderer from options.

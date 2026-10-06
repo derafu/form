@@ -15,7 +15,7 @@ namespace Derafu\Form\UiSchema;
 use Derafu\Form\Contract\UiSchema\ConditionSchemaInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaConditionInterface;
 use Derafu\Support\JsonSerializer;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Simple (leaf) condition targeting a single field.

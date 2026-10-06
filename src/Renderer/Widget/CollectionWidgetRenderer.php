@@ -26,7 +26,7 @@ use Derafu\Form\Form;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for collection widgets (array of objects).
@@ -49,8 +49,7 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
-                'The "renderer" option in CollectionWidgetRenderer must be an '
-                . 'instance of FormRendererInterface.'
+                'The "renderer" option in CollectionWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
 

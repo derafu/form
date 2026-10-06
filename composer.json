@@ -35,14 +35,16 @@
         "ext-xdebug": "*",
         "friendsofphp/php-cs-fixer": "^3.95",
         "phpstan/phpstan": "^2.2",
-        "phpunit/phpunit": "^13.2",
+        "phpunit/phpunit": "^13.4",
         "symfony/form": "^8.1",
         "symfony/validator": "^8.1",
         "symfony/yaml": "^8.1",
-        "derafu/data-processor": "dev-main"
+        "derafu/data-processor": "dev-main",
+        "nikic/php-parser": "^5.9"
     },
     "suggest": {
-        "symfony/yaml": "Required to use Derafu\\Form\\Loader\\YamlFormLoader for loading form definitions from .form.yaml files."
+        "symfony/yaml": "Required to use Derafu\\Form\\Loader\\YamlFormLoader for loading form definitions from .form.yaml files.",
+        "nikic/php-parser": "Required by the tests of the messages of the package (Derafu\\Translation\\Lint reads the code)."
     },
     "scripts": {
         "docs": "php tools/phpdocumentor run --config=phpdoc.xml",

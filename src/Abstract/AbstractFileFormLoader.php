@@ -14,8 +14,8 @@ namespace Derafu\Form\Abstract;
 
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\Loader\FormLoaderInterface;
-use InvalidArgumentException;
-use RuntimeException;
+use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Base class for loaders that read form definitions from files.
@@ -82,10 +82,10 @@ abstract class AbstractFileFormLoader implements FormLoaderInterface
     protected function resolve(string $name): string
     {
         if ($name === '' || str_contains($name, '..')) {
-            throw new InvalidArgumentException(sprintf(
-                'Invalid form name "%s".',
-                $name,
-            ));
+            throw new InvalidArgumentException([
+                'Invalid form name "{name}".',
+                'name' => $name,
+            ]);
         }
 
         $relativePath = $name . static::EXTENSION;
@@ -97,11 +97,11 @@ abstract class AbstractFileFormLoader implements FormLoaderInterface
             }
         }
 
-        throw new RuntimeException(sprintf(
-            'Form definition "%s" not found (extension "%s"). Searched in: %s',
-            $name,
-            static::EXTENSION,
-            implode(', ', $this->paths) ?: '(no paths registered)',
-        ));
+        throw new RuntimeException([
+            'Form definition "{name}" not found (extension "{extension}"). Searched in: {paths}',
+            'name' => $name,
+            'extension' => static::EXTENSION,
+            'paths' => implode(', ', $this->paths) ?: '(no paths registered)',
+        ]);
     }
 }

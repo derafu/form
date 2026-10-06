@@ -15,7 +15,7 @@ namespace Derafu\Form\Renderer;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererProviderInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererRegistryInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Registry for widget renderers.

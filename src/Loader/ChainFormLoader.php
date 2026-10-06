@@ -14,7 +14,7 @@ namespace Derafu\Form\Loader;
 
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Loader\FormLoaderInterface;
-use RuntimeException;
+use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
 use Throwable;
 
 /**
@@ -65,10 +65,10 @@ final class ChainFormLoader implements FormLoaderInterface
             );
         }
 
-        throw new RuntimeException(sprintf(
-            'No loader could resolve form "%s". Attempts: %s',
-            $name,
-            implode(' | ', $errors),
-        ));
+        throw new RuntimeException([
+            'No loader could resolve form "{name}". Attempts: {attempts}',
+            'name' => $name,
+            'attempts' => implode(' | ', $errors),
+        ]);
     }
 }

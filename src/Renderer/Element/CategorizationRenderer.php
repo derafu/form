@@ -17,7 +17,7 @@ use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\CategorizationInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\FormRenderer;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for categorization elements (tabs).
@@ -34,11 +34,11 @@ final class CategorizationRenderer implements ElementRendererInterface
     ): string {
         // Check if the element is a CategorizationInterface.
         if (!$element instanceof CategorizationInterface) {
-            throw new InvalidArgumentException(sprintf(
-                'Element must be an instance of %s in CategorizationRenderer, %s given.',
-                CategorizationInterface::class,
-                get_class($element)
-            ));
+            throw new InvalidArgumentException([
+                'Element must be an instance of {expected} in CategorizationRenderer, {given} given.',
+                'expected' => CategorizationInterface::class,
+                'given' => get_class($element),
+            ]);
         }
 
         // Get the main form renderer from options.

@@ -18,7 +18,7 @@ use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
-use InvalidArgumentException;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Renderer for input widgets.
@@ -45,8 +45,7 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         $formRenderer = $options['renderer'] ?? null;
         if (!$formRenderer instanceof FormRendererInterface) {
             throw new InvalidArgumentException(
-                'The "renderer" option in InputWidgetRenderer must be an '
-                . 'instance of FormRendererInterface.'
+                'The "renderer" option in InputWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
 

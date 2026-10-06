@@ -180,6 +180,7 @@ final class FormRenderer implements FormRendererInterface
                 $options
             ),
             'errors' => $this->renderErrors($field, $options),
+            'has_errors' => !$field->isValid(),
             'widget' => $this->renderWidget($field, $options),
             'help' => $this->renderHelp($field, $options),
             'options' => $options,

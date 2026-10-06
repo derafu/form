@@ -2,10 +2,8 @@
    This template renders a complete field: label, widget, errors and help text.
    It assumes that the 'field' variable is available and contains field information.
    The widget, label, errors and help variables already contain the rendered HTML for each component.
+   The has_errors variable says whether the field has errors: it is the field that says it, not the HTML of its errors (which is never empty, it has a line break even when there is nothing to show).
 #}
-
-{# Determine if the field has errors to apply the appropriate classes. #}
-{% set has_errors = errors is not empty %}
 
 {# Determine field kind from widget type. #}
 {% set widget_type = field.widget.type %}

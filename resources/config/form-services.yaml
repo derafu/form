@@ -26,6 +26,27 @@ services:
     Derafu\Form\Contract\Factory\FormFactoryInterface:
         class: Derafu\Form\Factory\FormFactory
 
+    # Translates the texts of the definitions that have `translationDomain`, in
+    # the language of the translator (see Derafu\Form\Translation\FormTexts).
+    # It needs the translator of derafu/translation-services.yaml.
+    Derafu\Form\Factory\TranslatingFormFactory:
+        decorates: Derafu\Form\Contract\Factory\FormFactoryInterface
+        arguments:
+            $inner: '@.inner'
+
+    # Loaders of the definitions in `resources/forms` of the application
+    # (`<name>.form.php` and `<name>.form.yaml`). They are private, so an
+    # application that does not use them does not have them in its container.
+    # `FormLoaderInterface` is not set: which loader it is, or a chain of them,
+    # is a decision of each application.
+    Derafu\Form\Loader\PhpFormLoader:
+        arguments:
+            $paths: ['%kernel.project_dir%/resources/forms']
+
+    Derafu\Form\Loader\YamlFormLoader:
+        arguments:
+            $paths: ['%kernel.project_dir%/resources/forms']
+
     Derafu\Form\Contract\Type\TypeResolverInterface:
         class: Derafu\Form\Type\TypeResolver
 

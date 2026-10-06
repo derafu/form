@@ -1,0 +1,43 @@
+translationDomain: contact
+schema:
+    title: Contact us
+    description: We will answer you soon
+    type: object
+    required: [name]
+    properties:
+        name:
+            type: string
+            title: Your name
+            description: As in your ID
+            default: Your name
+        kind:
+            type: string
+            title: Kind
+        tags:
+            type: array
+            title: Tags
+            items:
+                type: string
+                oneOf:
+                    - { const: a, title: Option A }
+                    - { const: b, title: Option B }
+uischema:
+    type: VerticalLayout
+    elements:
+        - type: Control
+          scope: '#/properties/name'
+          options:
+              placeholder: Type here
+              help: Help text
+              input_group_append_text: days
+        - type: Group
+          label: Details
+          elements:
+              - type: Control
+                scope: '#/properties/kind'
+                options:
+                    choices:
+                        sales: Sales
+                        support: Support
+        - type: Control
+          scope: '#/properties/tags'

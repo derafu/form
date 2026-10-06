@@ -35,10 +35,13 @@ use Twig\TwigFunction;
  * when it is shown.
  *
  * `InputActionResolver::trans()` is declared here as a method of messages of the
- * domain `form`, so what its callers write is audited. Two calls can not have a
+ * domain `form`, so what its callers write is audited. Four calls can not have a
  * literal, by nature, and they are fixed here by their whole call, so any other
  * message that is not a literal makes this test fail:
  *
+ *   - `TranslatingFormFactory` and the function `_t` of `PhpFormLoader` translate
+ *     the text that the author of a form wrote: it is audited where it is
+ *     written, by `Derafu\Form\Lint\FormTranslationAudit`.
  *   - The message of the exception of a field that is not valid is translated
  *     as it is: it is audited where the exception is thrown.
  *   - `InputActionResolver::trans()` translates the message that it is given: it
@@ -91,6 +94,10 @@ final class FormMessagesTest extends TestCase
 
         $this->assertSame(
             [
+                'Derafu\\Form\\Factory\\TranslatingFormFactory::create::{closure}: '
+                    . '$this->translator->trans($text, [], $domain)',
+                'Derafu\\Form\\Loader\\PhpFormLoader::load::{closure}: '
+                    . '$translator->trans($id, $parameters, $domain)',
                 'Derafu\\Form\\Processor\\FormDataProcessor::resolveErrorMessage: '
                     . '$e->trans($this->translator, $this->locale)',
                 'Derafu\\Form\\Renderer\\Support\\InputActionResolver::trans: '

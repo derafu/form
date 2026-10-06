@@ -126,4 +126,10 @@ return [
         'FormRules no soporta offsetSet(). Usa fill() para entregar las reglas resueltas.',
     'FormRules does not support offsetUnset().' =>
         'FormRules no soporta offsetUnset().',
+    'The directory "{directory}" does not exist.' =>
+        'El directorio "{directory}" no existe.',
+    'The file "{file}" does not exist.' =>
+        'El archivo "{file}" no existe.',
+    'The file "{file}" is not a form definition (YAML, JSON or PHP).' =>
+        'El archivo "{file}" no es una definición de formulario (YAML, JSON o PHP).',
 ];

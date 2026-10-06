@@ -1,0 +1,8 @@
+translationDomain: contact
+schema:
+    type: object
+    title: Contact us
+    properties:
+        name:
+            type: string
+            title: Your name

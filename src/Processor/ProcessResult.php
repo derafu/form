@@ -31,12 +31,15 @@ final class ProcessResult implements ProcessResultInterface
      * @param mixed $processedData The processed data after applying all rules.
      * @param array<string, string[]> $errors Validation errors by field name.
      * @param bool $isValid Whether the data passed all validations.
+     * @param string[] $formErrors Errors of the form as a whole, the ones that
+     * do not belong to a field.
      */
     public function __construct(
         private readonly FormInterface $originalForm,
         private readonly mixed $processedData,
         private readonly array $errors = [],
-        private readonly bool $isValid = true
+        private readonly bool $isValid = true,
+        private readonly array $formErrors = []
     ) {
     }
 
@@ -73,7 +76,17 @@ final class ProcessResult implements ProcessResultInterface
      */
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return !empty($this->errors) || !empty($this->formErrors);
+    }
+
+    /**
+     * Get the errors of the form as a whole.
+     *
+     * @return string[]
+     */
+    public function getFormErrors(): array
+    {
+        return $this->formErrors;
     }
 
     /**
@@ -83,7 +96,7 @@ final class ProcessResult implements ProcessResultInterface
      */
     public function getAllErrors(): array
     {
-        $allErrors = [];
+        $allErrors = $this->formErrors;
         foreach ($this->errors as $fieldErrors) {
             $allErrors = array_merge($allErrors, $fieldErrors);
         }
@@ -124,7 +137,7 @@ final class ProcessResult implements ProcessResultInterface
     {
         if (!isset($this->newForm)) {
             $formData = FormData::fromArray($this->processedData);
-            $this->newForm = $this->originalForm->withData($formData, $this->errors);
+            $this->newForm = $this->originalForm->withData($formData, $this->errors, $this->formErrors);
         }
         return $this->newForm;
     }

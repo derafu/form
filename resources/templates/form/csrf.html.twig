@@ -1,2 +1,5 @@
-{# TODO: Implement CSRF token generation. #}
-<input type="hidden" name="_token" value="ABC123">
+{#
+   This template renders the CSRF token of a form.
+   The variables 'name' and 'token' have the name of the field and its value.
+#}
+<input type="hidden" name="{{ name }}" value="{{ token }}">

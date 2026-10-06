@@ -22,6 +22,9 @@ services:
         arguments:
             $options:
                 element_renderers: '@Derafu\Form\Renderer\ElementRendererProvider'
+                # Optional: without it a form that is protected can not be
+                # rendered, nor its data processed (see CsrfTokenManagerInterface).
+                csrf_token_manager: '@?Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface'
 
     Derafu\Form\Contract\Factory\FormFactoryInterface:
         class: Derafu\Form\Factory\FormFactory

@@ -95,6 +95,7 @@ final class FormDataProcessorPatternTest extends TestCase
     private function formWithPattern(string $pattern, bool $required = false): Form
     {
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [

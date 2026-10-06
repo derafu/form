@@ -99,6 +99,7 @@ final class FormDataProcessorTest extends TestCase
         }
 
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => $schema,
             'uischema' => ['type' => 'VerticalLayout', 'elements' => $elements],
         ]);
@@ -243,6 +244,7 @@ final class FormDataProcessorTest extends TestCase
     public function testCastIsAppliedToValidValues(): void
     {
         $form = Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -277,6 +279,7 @@ final class FormDataProcessorTest extends TestCase
     public function testExplicitRulesFromRulesSectionAreApplied(): void
     {
         $form = Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [

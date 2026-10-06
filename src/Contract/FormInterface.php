@@ -32,6 +32,11 @@ use JsonSerializable;
 interface FormInterface extends JsonSerializable
 {
     /**
+     * Name of the field that carries the CSRF token.
+     */
+    public const CSRF_FIELD = '_token';
+
+    /**
      * Gets the schema that defines the data structure and validation rules.
      *
      * @return FormSchemaInterface The form's schema.
@@ -92,6 +97,30 @@ interface FormInterface extends JsonSerializable
     public function getField(string $name): ?FormFieldInterface;
 
     /**
+     * Gets the errors of the form as a whole: the ones that do not belong to
+     * any of its fields (for example a CSRF token that is not valid).
+     *
+     * @return array<string> The error messages.
+     */
+    public function getErrors(): array;
+
+    /**
+     * Whether the form is protected with a CSRF token.
+     *
+     * It is a option of the form (`csrf_protection`) and it is on unless the
+     * form turns it off, so what renders the form and what processes its data
+     * always agree.
+     */
+    public function isCsrfProtected(): bool;
+
+    /**
+     * Gets the id that the CSRF token of the form is asked for.
+     *
+     * It is the name of the schema of the form, or `form` if it has none.
+     */
+    public function getCsrfTokenId(): string;
+
+    /**
      * Creates a new instance of the form with the provided data and optional errors.
      *
      * This method follows the immutability principle, returning a new instance
@@ -99,9 +128,14 @@ interface FormInterface extends JsonSerializable
      *
      * @param FormDataInterface $data The data to use for the new form instance.
      * @param array<string, array>|null $errors Optional errors for each field (by name)
+     * @param array<string>|null $formErrors Optional errors of the form as a whole.
      * @return static A new form instance with the updated data and errors.
      */
-    public function withData(FormDataInterface $data, ?array $errors = null): static;
+    public function withData(
+        FormDataInterface $data,
+        ?array $errors = null,
+        ?array $formErrors = null
+    ): static;
 
     /**
      * Converts the Form to an array representation.

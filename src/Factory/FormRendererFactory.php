@@ -59,7 +59,8 @@ final class FormRendererFactory implements FormRendererFactoryInterface
         $formRenderer = new FormRenderer(
             $renderer,
             $elementRendererRegistry,
-            $widgetRendererRegistry
+            $widgetRendererRegistry,
+            $options['csrf_token_manager'] ?? null
         );
 
         $twigService->getTwig()->addExtension(new FormTwigExtension($formRenderer));

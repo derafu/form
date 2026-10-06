@@ -67,6 +67,7 @@ final class FormTwigExtension extends AbstractExtension
             new TwigFunction($this->prefix . 'form_element', [$this, 'renderElement']),
             new TwigFunction($this->prefix . 'form_elements', [$this, 'renderElements']),
             new TwigFunction($this->prefix . 'form_csrf', [$this, 'renderCsrf']),
+            new TwigFunction($this->prefix . 'form_global_errors', [$this, 'renderGlobalErrors']),
         ];
     }
 
@@ -289,5 +290,20 @@ final class FormTwigExtension extends AbstractExtension
     public function renderCsrf(FormInterface $form): Markup
     {
         return new Markup($this->renderer->renderCsrf($form), $this->charset);
+    }
+
+    /**
+     * Renders the errors of the form as a whole.
+     *
+     * @param FormInterface $form The form to render the errors for.
+     * @param array $options Additional options for rendering.
+     * @return Markup The rendered errors HTML.
+     */
+    public function renderGlobalErrors(FormInterface $form, array $options = []): Markup
+    {
+        return new Markup(
+            $this->renderer->renderGlobalErrors($form, $options),
+            $this->charset
+        );
     }
 }

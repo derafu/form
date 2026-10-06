@@ -93,6 +93,7 @@ use Derafu\Form\UiSchema\UiSchemaRuleEffect;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -182,7 +183,7 @@ final class ExamplesTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->renderer = FormRendererFactory::create();
+        $this->renderer = FormRendererFactory::create(['csrf_token_manager' => new InMemoryCsrfTokenManager()]);
 
         Example::setFormFactory(
             new FormFactory(

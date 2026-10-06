@@ -128,6 +128,7 @@ final class FormDataProcessorStringCastTest extends TestCase
     {
         // Create a simple form with one string field
         $formDefinition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -163,6 +164,7 @@ final class FormDataProcessorStringCastTest extends TestCase
     {
         // Create a simple form with one string field
         $formDefinition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -199,6 +201,7 @@ final class FormDataProcessorStringCastTest extends TestCase
     {
         // Create a simple form with one string field
         $formDefinition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -235,6 +238,7 @@ final class FormDataProcessorStringCastTest extends TestCase
     {
         // Create a simple form with one string field
         $formDefinition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -272,6 +276,7 @@ final class FormDataProcessorStringCastTest extends TestCase
     {
         // Create a simple form with one optional string field
         $formDefinition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [

@@ -13,12 +13,15 @@ declare(strict_types=1);
 namespace Derafu\Form\Processor;
 
 use Derafu\DataProcessor\Contract\ProcessorInterface;
+use Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
 use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
 use Derafu\Translation\Contract\TranslatableInterface;
+use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
+use Derafu\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 
@@ -46,6 +49,9 @@ final class FormDataProcessor implements FormDataProcessorInterface
      * existed.
      * @param string|null $locale The locale to translate error messages to.
      * Only used when $translator is provided.
+     * @param CsrfTokenManagerInterface|null $csrfTokenManager Checks the CSRF
+     * token of the forms that are protected (see FormInterface::isCsrfProtected()).
+     * A form that is protected can not be processed without it.
      */
     public function __construct(
         private readonly FormRulesResolverInterface $resolver,
@@ -53,6 +59,7 @@ final class FormDataProcessor implements FormDataProcessorInterface
         private readonly UiSchemaRuleEvaluatorInterface $evaluator = new UiSchemaRuleEvaluator(),
         private readonly ?TranslatorInterface $translator = null,
         private readonly ?string $locale = null,
+        private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
     ) {
     }
 
@@ -72,7 +79,25 @@ final class FormDataProcessor implements FormDataProcessorInterface
 
         $processedData = [];
         $errors = [];
+        $formErrors = [];
         $isValid = true;
+
+        // The CSRF token is not data of the form: it is checked and it is not
+        // part of what is processed.
+        if ($form->isCsrfProtected()) {
+            $csrfTokenManager = $this->csrfTokenManager ?? throw new LogicException([
+                'The form "{form}" is protected with a CSRF token, but there is no CSRF token manager. Register one, or turn the protection off with the option "csrf_protection" of the form.',
+                'form' => $form->getCsrfTokenId(),
+            ]);
+
+            $token = $data[FormInterface::CSRF_FIELD] ?? null;
+            unset($data[FormInterface::CSRF_FIELD]);
+
+            if (!is_string($token) || !$csrfTokenManager->isValid($form->getCsrfTokenId(), $token)) {
+                $formErrors[] = $this->csrfErrorMessage();
+                $isValid = false;
+            }
+        }
 
         // Tracks field names that were intentionally skipped due to an
         // inactive UiSchema rule. These must not be re-added by the
@@ -119,7 +144,25 @@ final class FormDataProcessor implements FormDataProcessorInterface
             }
         }
 
-        return new ProcessResult($form, $processedData, $errors, $isValid);
+        return new ProcessResult($form, $processedData, $errors, $isValid, $formErrors);
+    }
+
+    /**
+     * The message of a CSRF token that is missing or is not valid, translated
+     * when there is a translator.
+     */
+    private function csrfErrorMessage(): string
+    {
+        $message = new TranslatableMessage(
+            'The form is not valid or has expired. Reload the page and try again.',
+            [],
+            'errors'
+        );
+
+        return $this->translator !== null
+            ? $message->trans($this->translator, $this->locale)
+            : (string) $message
+        ;
     }
 
     /**

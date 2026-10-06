@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer;
 
+use Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererRegistryInterface;
@@ -19,6 +20,7 @@ use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererRegistryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Renderer\Contract\RendererInterface;
+use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 
 /**
  * Form renderer implementation.
@@ -28,7 +30,8 @@ final class FormRenderer implements FormRendererInterface
     public function __construct(
         private readonly RendererInterface $renderer,
         private readonly ElementRendererRegistryInterface $elementRendererRegistry,
-        private readonly WidgetRendererRegistryInterface $widgetRendererRegistry
+        private readonly WidgetRendererRegistryInterface $widgetRendererRegistry,
+        private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null
     ) {
     }
 
@@ -196,12 +199,9 @@ final class FormRenderer implements FormRendererInterface
         FormInterface $form,
         array $options = []
     ): string {
-        $html = $this->renderElement($form->getUiSchema(), $form, $options);
-
-        $csrfProtection = $options['csrf_protection'] ?? true;
-        if ($csrfProtection) {
-            $html .= $this->renderCsrf($form);
-        }
+        $html = $this->renderGlobalErrors($form, $options);
+        $html .= $this->renderElement($form->getUiSchema(), $form, $options);
+        $html .= $this->renderCsrf($form);
 
         return $html;
     }
@@ -280,11 +280,42 @@ final class FormRenderer implements FormRendererInterface
      */
     public function renderCsrf(FormInterface $form): string
     {
+        if (!$form->isCsrfProtected()) {
+            return '';
+        }
+
+        $csrfTokenManager = $this->csrfTokenManager ?? throw new LogicException([
+            'The form "{form}" is protected with a CSRF token, but there is no CSRF token manager. Register one, or turn the protection off with the option "csrf_protection" of the form.',
+            'form' => $form->getCsrfTokenId(),
+        ]);
+
         $context = [
             'form' => $form,
+            'name' => FormInterface::CSRF_FIELD,
+            'token' => $csrfTokenManager->getToken($form->getCsrfTokenId()),
         ];
 
         return $this->renderer->render('form/csrf', $context);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function renderGlobalErrors(
+        FormInterface $form,
+        array $options = []
+    ): string {
+        if (empty($form->getErrors())) {
+            return '';
+        }
+
+        $context = [
+            'form' => $form,
+            'errors' => $form->getErrors(),
+            'options' => $options,
+        ];
+
+        return $this->renderer->render('form/global_errors', $context);
     }
 
     /**

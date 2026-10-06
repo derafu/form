@@ -191,10 +191,26 @@ interface FormRendererInterface
     /**
      * Renders the CSRF token for a form.
      *
+     * It is nothing when the form is not protected (see
+     * FormInterface::isCsrfProtected()).
+     *
      * @param FormInterface $form The form to render the CSRF token for.
      * @return string The rendered CSRF token HTML.
      */
     public function renderCsrf(FormInterface $form): string;
+
+    /**
+     * Renders the errors of the form as a whole, the ones that do not belong to
+     * any field (see FormInterface::getErrors()).
+     *
+     * @param FormInterface $form The form to render the errors for.
+     * @param array $options Additional options for the rendering.
+     * @return string The rendered errors HTML, nothing if there are none.
+     */
+    public function renderGlobalErrors(
+        FormInterface $form,
+        array $options = []
+    ): string;
 
     /**
      * Gets the renderer.

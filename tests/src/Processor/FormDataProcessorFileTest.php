@@ -196,6 +196,7 @@ final class FormDataProcessorFileTest extends TestCase
     private function createFormWithFileField(bool $required = false): \Derafu\Form\Contract\FormInterface
     {
         $definition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -231,6 +232,7 @@ final class FormDataProcessorFileTest extends TestCase
     private function createFormWithImageField(bool $required = false): \Derafu\Form\Contract\FormInterface
     {
         $definition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -382,6 +384,7 @@ final class FormDataProcessorFileTest extends TestCase
     public function testStringFieldStillProcessesNormally(): void
     {
         $definition = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [

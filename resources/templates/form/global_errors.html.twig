@@ -1,0 +1,12 @@
+{#
+   This template renders the errors of the form as a whole.
+   The 'errors' variable must contain an array of error messages.
+#}
+
+{% if errors|length > 0 %}
+    <ul class="list-unstyled mb-3 text-danger">
+        {% for error in errors %}
+            <li><i class="fa-solid fa-exclamation-circle"></i> {{ error }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}

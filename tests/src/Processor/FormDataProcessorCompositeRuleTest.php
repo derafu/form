@@ -125,6 +125,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     private function formWithCompositeRule(array $rule): Form
     {
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -463,6 +464,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     private function formWithArrayTrigger(string $containsValue): Form
     {
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -569,6 +571,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     private function formWithNotRule(string $notValue): Form
     {
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -639,6 +642,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     private function formWithNumericRule(array $conditionSchema): Form
     {
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -852,6 +856,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     private function formWithPatternRule(string $pattern): Form
     {
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [

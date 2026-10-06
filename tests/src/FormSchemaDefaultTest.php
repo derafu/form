@@ -207,6 +207,7 @@ final class FormSchemaDefaultTest extends TestCase
         }
 
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [$name => $property],
@@ -235,6 +236,7 @@ final class FormSchemaDefaultTest extends TestCase
         }
 
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [$name => $property],
@@ -263,6 +265,7 @@ final class FormSchemaDefaultTest extends TestCase
         }
 
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [$name => $property],
@@ -333,6 +336,7 @@ final class FormSchemaDefaultTest extends TestCase
     public function testMultipleFields_OnlyFieldsWithDefaultArePreFilled(): void
     {
         $form = $this->formFactory->create([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -412,6 +416,7 @@ final class FormSchemaDefaultTest extends TestCase
         // null → false. Re-render must show false (unchecked), not the default.
 
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -446,6 +451,7 @@ final class FormSchemaDefaultTest extends TestCase
         // and submits empty string. Re-render must show '', not 'John'.
 
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -475,6 +481,7 @@ final class FormSchemaDefaultTest extends TestCase
     public function testStringFieldSubmittedValueWinsOverDefault(): void
     {
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -501,6 +508,7 @@ final class FormSchemaDefaultTest extends TestCase
         // Comprehensive re-render test: mix of fields with/without defaults,
         // boolean checkbox unchecked, string submitted, integer submitted.
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -567,6 +575,7 @@ final class FormSchemaDefaultTest extends TestCase
     public function testSelectRendersWithDefaultOptionSelected(): void
     {
         $form = $this->formFactory->create([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -597,6 +606,7 @@ final class FormSchemaDefaultTest extends TestCase
         // Regression: checkbox with default=true must render unchecked after
         // user unchecks it and the form re-renders (e.g. with validation errors).
         $def = [
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [

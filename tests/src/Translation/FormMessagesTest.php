@@ -65,7 +65,7 @@ final class FormMessagesTest extends TestCase
                         'form', 'form_body', 'form_start', 'form_end', 'form_label',
                         'form_errors', 'form_widget', 'form_help', 'form_row',
                         'form_rest', 'form_enctype', 'form_element', 'form_elements',
-                        'form_csrf',
+                        'form_csrf', 'form_global_errors',
                     ]
                 );
             }
@@ -98,6 +98,8 @@ final class FormMessagesTest extends TestCase
                     . '$this->translator->trans($text, [], $domain)',
                 'Derafu\\Form\\Loader\\PhpFormLoader::load::{closure}: '
                     . '$translator->trans($id, $parameters, $domain)',
+                'Derafu\\Form\\Processor\\FormDataProcessor::csrfErrorMessage: '
+                    . '$message->trans($this->translator, $this->locale)',
                 'Derafu\\Form\\Processor\\FormDataProcessor::resolveErrorMessage: '
                     . '$e->trans($this->translator, $this->locale)',
                 'Derafu\\Form\\Renderer\\Support\\InputActionResolver::trans: '

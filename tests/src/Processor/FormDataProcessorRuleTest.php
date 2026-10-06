@@ -127,6 +127,7 @@ final class FormDataProcessorRuleTest extends TestCase
         }
 
         return Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [
@@ -399,6 +400,7 @@ final class FormDataProcessorRuleTest extends TestCase
     public function testFieldWithoutRuleIsAlwaysProcessed(): void
     {
         $form = Form::fromArray([
+            'options' => ['csrf_protection' => false],
             'schema' => [
                 'type' => 'object',
                 'properties' => [

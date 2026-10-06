@@ -6,12 +6,13 @@
 {# Render the form starting with the start, then the content according to the ui schema, and finally the end. #}
 {{ form_start(form, options) }}
 
+    {# Render the errors of the form as a whole, if it has any. #}
+    {{ form_global_errors(form, options) }}
+
     {# Render elements according to the root UI schema type. #}
     {{ form_element(form.getUiSchema(), form, options) }}
 
-    {# Add CSRF token if enabled. #}
-    {% if options.csrf_protection|default(true) %}
-        {{ form_csrf(form) }}
-    {% endif %}
+    {# Add the CSRF token, if the form is protected (the option csrf_protection of the form). #}
+    {{ form_csrf(form) }}
 
 {{ form_end(form, options) }}

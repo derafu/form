@@ -52,6 +52,14 @@ interface ProcessResultInterface
     public function hasErrors(): bool;
 
     /**
+     * Get the errors of the form as a whole: the ones that do not belong to a
+     * field (for example a CSRF token that is not valid).
+     *
+     * @return string[]
+     */
+    public function getFormErrors(): array;
+
+    /**
      * Get all error messages as a flat array.
      *
      * @return string[] All error messages from all fields

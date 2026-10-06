@@ -60,6 +60,7 @@ final class Form implements FormInterface
      * @param FormOptionsInterface|null $options
      * @param array<string, array>|null $errors Optional errors for each field (by name)
      * @param WidgetFactoryInterface|null $widgetFactory Optional widget factory.
+     * @param array<string>|null $formErrors Optional errors of the form as a whole.
      */
     public function __construct(
         private readonly FormSchemaInterface $schema,
@@ -69,6 +70,7 @@ final class Form implements FormInterface
         private readonly ?FormOptionsInterface $options = null,
         private readonly ?array $errors = null,
         private ?WidgetFactoryInterface $widgetFactory = null,
+        private readonly ?array $formErrors = null,
     ) {
         if ($this->widgetFactory === null) {
             $this->widgetFactory = new WidgetFactory();
@@ -190,9 +192,47 @@ final class Form implements FormInterface
     /**
      * {@inheritDoc}
      */
-    public function withData(FormDataInterface $data, ?array $errors = null): static
+    public function getErrors(): array
     {
-        return new static($this->schema, $this->uischema, $this->rules, $data, $this->options, $errors);
+        return $this->formErrors ?? [];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isCsrfProtected(): bool
+    {
+        return (bool) ($this->options?->get('csrf_protection', true) ?? true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCsrfTokenId(): string
+    {
+        $name = $this->schema->getName();
+
+        return $name !== '' ? $name : 'form';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function withData(
+        FormDataInterface $data,
+        ?array $errors = null,
+        ?array $formErrors = null
+    ): static {
+        return new static(
+            $this->schema,
+            $this->uischema,
+            $this->rules,
+            $data,
+            $this->options,
+            $errors,
+            null,
+            $formErrors
+        );
     }
 
     /**

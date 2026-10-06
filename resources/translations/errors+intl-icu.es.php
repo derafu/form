@@ -35,6 +35,12 @@ return [
     'Form file "{file}" must parse to an array, got {type}.' =>
         'El archivo de formulario "{file}" debe interpretarse como un arreglo, se obtuvo {type}.',
 
+    // CSRF protection.
+    'The form "{form}" is protected with a CSRF token, but there is no CSRF token manager. Register one, or turn the protection off with the option "csrf_protection" of the form.' =>
+        'El formulario "{form}" está protegido con un token CSRF, pero no hay un gestor de tokens CSRF. Registra uno, o desactiva la protección con la opción "csrf_protection" del formulario.',
+    'The form is not valid or has expired. Reload the page and try again.' =>
+        'El formulario no es válido o ha expirado. Recarga la página e inténtalo de nuevo.',
+
     // Choices shorthand.
     'choices shorthand does not support nested scopes: "{scope}". Use oneOf directly in the schema for nested properties.' =>
         'El atajo choices no soporta scopes anidados: "{scope}". Usa oneOf directamente en el esquema para propiedades anidadas.',

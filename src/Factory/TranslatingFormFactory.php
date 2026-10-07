@@ -22,12 +22,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *
  * It decorates the form factory, which is where every form ends: the loaders
  * (PHP, YAML and JSON) and whoever builds a definition by hand call
- * `create()`. A definition that has the key `translationDomain` gets its texts
+ * `create()`. A definition that has the option `translation_domain` (in its
+ * `options`) gets its texts
  * (the ones of `FormTexts`) translated, in that domain and in the language of
  * the translator when the form is created: the text in English is the id, and a
  * text without an entry in the catalogue stays as it was written.
  *
- * A definition without `translationDomain` is not touched: each form says in
+ * A definition without `translation_domain` is not touched: each form says in
  * which domain its texts are.
  */
 final class TranslatingFormFactory implements FormFactoryInterface
@@ -51,7 +52,8 @@ final class TranslatingFormFactory implements FormFactoryInterface
      */
     public function create(array $definition): FormInterface
     {
-        $domain = $definition['translationDomain'] ?? null;
+        $options = $definition['options'] ?? null;
+        $domain = is_array($options) ? ($options['translation_domain'] ?? null) : null;
 
         if (is_string($domain) && $domain !== '') {
             $definition = $this->texts->map(

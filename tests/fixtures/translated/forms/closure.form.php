@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return fn (array $context = []): array => [
-        'translationDomain' => 'contact',
+        'options' => ['translation_domain' => 'contact'],
         'schema' => [
             'type' => 'object',
             'properties' => [

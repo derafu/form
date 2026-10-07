@@ -29,7 +29,7 @@ use Symfony\Component\Yaml\Yaml;
  * Finds the texts of the form definitions of a directory, by reading them.
  *
  * It reads YAML, JSON and PHP files and takes from each definition the texts of
- * `FormTexts`, in the domain of its `translationDomain`. It never runs the code:
+ * `FormTexts`, in the domain of its `options.translation_domain`. It never runs the code:
  *
  *   - A PHP file is read when its definition is an array written in the file
  *     (returned by the file or by the closure that it returns). A text that is
@@ -142,7 +142,8 @@ final class FormDefinitionScanner
             return [];
         }
 
-        $domain = $definition['translationDomain'] ?? null;
+        $options = $definition['options'] ?? null;
+        $domain = is_array($options) ? ($options['translation_domain'] ?? null) : null;
         $domain = is_string($domain) && $domain !== '' ? $domain : null;
 
         $texts = [];

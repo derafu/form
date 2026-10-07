@@ -35,7 +35,7 @@ final readonly class FormTranslationAuditReport
      * example `$t('Name')` with a local function), so they can not be checked
      * by reading the definition.
      * @param list<FormText> $withoutDomain Texts of definitions that have no
-     * `translationDomain`: they are not translated when the form is created.
+     * `translation_domain`: they are not translated when the form is created.
      * @param list<FormText> $missingTranslations Texts that have no entry in the
      * catalogues, in their domain.
      * @param list<array{domain: string, id: string}> $notUsedBySources Entries

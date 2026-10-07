@@ -29,7 +29,7 @@ services:
     Derafu\Form\Contract\Factory\FormFactoryInterface:
         class: Derafu\Form\Factory\FormFactory
 
-    # Translates the texts of the definitions that have `translationDomain`, in
+    # Translates the texts of the definitions that have `options.translation_domain`, in
     # the language of the translator (see Derafu\Form\Translation\FormTexts).
     # It needs the translator of derafu/translation-services.yaml.
     Derafu\Form\Factory\TranslatingFormFactory:

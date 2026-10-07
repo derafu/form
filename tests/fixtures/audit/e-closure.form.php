@@ -7,7 +7,7 @@ return function (array $context = []): array {
     $id = $context['id'];
 
     return [
-        'translationDomain' => 'contact',
+        'options' => ['translation_domain' => 'contact'],
         'schema' => [
             'type' => 'object',
             'properties' => [

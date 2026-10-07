@@ -1,4 +1,5 @@
-translationDomain: contact
+options:
+  translation_domain: contact
 schema:
     title: Contact us
     description: We will answer you soon

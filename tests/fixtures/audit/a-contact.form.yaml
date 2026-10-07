@@ -1,4 +1,5 @@
-translationDomain: contact
+options:
+  translation_domain: contact
 schema:
     type: object
     title: Contact us

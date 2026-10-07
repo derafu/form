@@ -25,7 +25,7 @@ final readonly class FormText
      * @param string|null $id The text (its translation id), or `null` when it
      * is not a literal and so it is only known when the code runs.
      * @param string|null $domain The translation domain of the definition (its
-     * `translationDomain`), or the one of the call that translates the text. `null`
+     * `options.translation_domain`), or the one of the call that translates the text. `null`
      * when the definition has none (its texts are not translated) or when it is
      * not a literal.
      * @param string $file The file of the definition.

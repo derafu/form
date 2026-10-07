@@ -1,5 +1,5 @@
 {
-    "translationDomain": "contact",
+    "options": {"translation_domain": "contact"},
     "schema": {
         "type": "object",
         "properties": {

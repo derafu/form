@@ -33,7 +33,7 @@ final class FormTextsTest extends TestCase
     private function definition(): array
     {
         return [
-            'translationDomain' => 'Text',
+            'options' => ['translation_domain' => 'Text'],
             'schema' => [
                 'title' => 'Text',
                 'description' => 'Text',
@@ -190,6 +190,6 @@ final class FormTextsTest extends TestCase
     #[Test]
     public function aDefinitionWithoutSchemaOrUiSchemaHasNoTexts(): void
     {
-        $this->assertSame([], (new FormTexts())->collect(['data' => ['name' => 'Text'], 'translationDomain' => 'x']));
+        $this->assertSame([], (new FormTexts())->collect(['data' => ['name' => 'Text'], 'options' => ['translation_domain' => 'x']]));
     }
 }

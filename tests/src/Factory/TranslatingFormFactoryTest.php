@@ -159,7 +159,7 @@ final class TranslatingFormFactoryTest extends TestCase
     public function translatesADefinitionThatIsGivenAsAnArray(): void
     {
         $form = $this->factory()->create([
-            'translationDomain' => 'contact',
+            'options' => ['translation_domain' => 'contact'],
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Your name']]],
         ])->toArray();
 
@@ -178,7 +178,7 @@ final class TranslatingFormFactoryTest extends TestCase
     public function aTextWithoutAnEntryStaysAsItWasWritten(): void
     {
         $form = $this->factory()->create([
-            'translationDomain' => 'contact',
+            'options' => ['translation_domain' => 'contact'],
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Not in the catalogue']]],
         ])->toArray();
 
@@ -189,7 +189,7 @@ final class TranslatingFormFactoryTest extends TestCase
     public function aDomainWithoutACatalogueLeavesTheTextsAsTheyWere(): void
     {
         $form = $this->factory()->create([
-            'translationDomain' => 'another-domain',
+            'options' => ['translation_domain' => 'another-domain'],
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Your name']]],
         ])->toArray();
 
@@ -293,7 +293,7 @@ final class TranslatingFormFactoryTest extends TestCase
 
         $this->assertInstanceOf(TranslatingFormFactory::class, $factory);
         $form = $factory->create([
-            'translationDomain' => 'contact',
+            'options' => ['translation_domain' => 'contact'],
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Your name']]],
         ])->toArray();
         $this->assertSame('Tu nombre', $form['schema']['properties']['name']['title']);

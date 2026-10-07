@@ -73,6 +73,18 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         $attrs['rows'] = (string)$rows;
         $attrs['cols'] = (string)$cols;
 
+        // Bootstrap fixes the height of a control with a floating label to one
+        // line (`height` and `min-height`) and ignores `rows`, so the height
+        // is set from the rows: each row has the line height of the control
+        // (1.25rem), plus its padding (1.625rem above and 0.625rem below) and
+        // its border. A `style` in the `attr` option replaces it.
+        if (!empty($options['floating_labels'])) {
+            $attrs['style'] = sprintf(
+                'height: calc(%d * 1.25rem + 2.25rem + 2px)',
+                max(1, (int)$rows)
+            );
+        }
+
         // Add validation attributes from property.
         if ($field->isRequired()) {
             $attrs['required'] = 'required';

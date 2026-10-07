@@ -55,8 +55,9 @@ final class FormDataProcessor implements FormDataProcessorInterface
      * token of the forms that are protected (see FormInterface::isCsrfProtected()).
      * A form that is protected can not be processed without it.
      * @param CaptchaProviderInterface|null $captchaProvider Checks the captcha
-     * of the forms that ask for it (see FormInterface::usesCaptcha()). Without
-     * it, or when it is not available, the forms are processed without captcha.
+     * of the forms that are protected with it (see
+     * FormInterface::isCaptchaProtected()). A form that is protected can not be
+     * processed without it, unless the application decided not to have one.
      */
     public function __construct(
         private readonly FormRulesResolverInterface $resolver,
@@ -113,12 +114,17 @@ final class FormDataProcessor implements FormDataProcessorInterface
         // it is taken out here (the raw data is what was sent) and it is checked
         // at the end, when the rest is valid, so the service is not asked about
         // a form that is not going to be accepted.
-        $captchaProvider = $form->usesCaptcha() && $this->captchaProvider?->isAvailable()
-            ? $this->captchaProvider
-            : null
-        ;
+        $captchaProvider = null;
         $captchaResponse = null;
-        if ($captchaProvider !== null) {
+        if ($form->isCaptchaProtected() && !$this->captchaProvider?->isDisabled()) {
+            $captchaProvider = $this->captchaProvider;
+            if ($captchaProvider === null || !$captchaProvider->isAvailable()) {
+                throw new LogicException([
+                    'The form "{form}" is protected with a captcha, but the application has none. Configure one (derafu/captcha has them: for example CAPTCHA_PROVIDER=altcha with CAPTCHA_SECRET_KEY, which needs no account), or turn the protection off with the option "captcha_protection" of the form.',
+                    'form' => $form->getId(),
+                ]);
+            }
+
             $captchaField = $captchaProvider->getResponseField();
             $captchaResponse = $data[$captchaField] ?? null;
             unset($data[$captchaField]);

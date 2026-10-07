@@ -18,17 +18,19 @@ use Derafu\Form\Contract\Captcha\CaptchaProviderInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Form;
+use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Twig\Error\RuntimeError;
 
 /**
  * The captcha provider of an application reaches the renderer and the processor
  * of the forms through the services of the package, and it is optional: without
- * it a form that asks for the captcha has none.
+ * it a form that is protected with the captcha fails.
  */
 #[CoversNothing]
 final class CaptchaServicesTest extends TestCase
@@ -67,7 +69,7 @@ final class CaptchaServicesTest extends TestCase
                 'type' => 'VerticalLayout',
                 'elements' => [['type' => 'Control', 'scope' => '#/properties/email']],
             ],
-            'options' => ['captcha' => true, 'csrf_protection' => false],
+            'options' => ['captcha_protection' => true, 'csrf_protection' => false],
         ]);
     }
 
@@ -85,12 +87,18 @@ final class CaptchaServicesTest extends TestCase
     }
 
     #[Test]
-    public function withoutAProviderAFormThatAsksForTheCaptchaHasNone(): void
+    public function withoutAProviderAFormThatIsProtectedFails(): void
     {
         $container = $this->container(withProvider: false);
 
-        $html = $container->get(FormRendererInterface::class)->render($this->form());
-        $this->assertStringNotContainsString('test-captcha', $html);
-        $this->assertTrue($container->get(FormDataProcessorInterface::class)->process($this->form(), ['email' => 'a@b.cl'])->isValid());
+        try {
+            $container->get(FormRendererInterface::class)->render($this->form());
+            $this->fail('A protected form was rendered without a captcha.');
+        } catch (RuntimeError $e) {
+            $this->assertInstanceOf(TranslatableLogicException::class, $e->getPrevious());
+        }
+
+        $this->expectException(TranslatableLogicException::class);
+        $container->get(FormDataProcessorInterface::class)->process($this->form(), ['email' => 'a@b.cl']);
     }
 }

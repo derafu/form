@@ -127,13 +127,14 @@ interface FormInterface extends JsonSerializable
     public function getCsrfTokenId(): string;
 
     /**
-     * Whether the form asks for the captcha of the application.
+     * Whether the form is protected with the captcha of the application.
      *
-     * It is a option of the form (`captcha`) and it is off unless the form turns
-     * it on. With it on, the form has the captcha only if the application has
-     * one: see CaptchaProviderInterface::isAvailable().
+     * It is a option of the form (`captcha_protection`) and it is off unless
+     * the form turns it on. A form that is protected can not be rendered nor
+     * processed if the application did not configure a captcha (unless it
+     * decided on purpose not to have one): see CaptchaProviderInterface.
      */
-    public function usesCaptcha(): bool;
+    public function isCaptchaProtected(): bool;
 
     /**
      * Creates a new instance of the form with the provided data and optional errors.

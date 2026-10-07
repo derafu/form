@@ -19,11 +19,13 @@ use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Renderer\FormTwigExtension;
 use Derafu\TestsForm\Captcha\InMemoryCaptchaProvider;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
+use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use Twig\Error\RuntimeError;
 
 /**
  * The captcha of a form is rendered when the form asks for it and the
@@ -81,12 +83,12 @@ final class FormCaptchaRenderingTest extends TestCase
                 'type' => 'VerticalLayout',
                 'elements' => [['type' => 'Control', 'scope' => '#/properties/email']],
             ],
-            'options' => ['captcha' => $captcha],
+            'options' => ['captcha_protection' => $captcha],
         ]);
     }
 
     #[Test]
-    public function aFormThatAsksForTheCaptchaHasItWithItsId(): void
+    public function aFormThatIsProtectedWithTheCaptchaHasItWithItsId(): void
     {
         $html = $this->renderer(new InMemoryCaptchaProvider())->render($this->form('contact'));
 
@@ -112,7 +114,7 @@ final class FormCaptchaRenderingTest extends TestCase
     }
 
     #[Test]
-    public function aFormThatDoesNotAskForTheCaptchaHasNoneEvenIfTheApplicationHasOne(): void
+    public function aFormThatIsNotProtectedHasNoneEvenIfTheApplicationHasOne(): void
     {
         $renderer = $this->renderer(new InMemoryCaptchaProvider());
 
@@ -121,15 +123,58 @@ final class FormCaptchaRenderingTest extends TestCase
     }
 
     #[Test]
-    public function withoutACaptchaInTheApplicationAFormThatAsksForItHasNoneAndNoError(): void
+    public function aFormThatIsProtectedCanNotBeRenderedWithoutACaptchaInTheApplication(): void
     {
-        $this->assertSame('', $this->renderer(null)->renderCaptcha($this->form()));
-        $this->assertStringNotContainsString('test-captcha', $this->renderer(null)->render($this->form()));
+        $this->expectException(TranslatableLogicException::class);
+        $this->expectExceptionMessage('The form "contact" is protected with a captcha, but the application has none.');
+
+        $this->renderer(null)->renderCaptcha($this->form('contact'));
     }
 
     #[Test]
-    public function aCaptchaThatIsNotAvailableIsNotRendered(): void
+    public function theErrorSaysWhatToConfigure(): void
     {
-        $this->assertSame('', $this->renderer(new InMemoryCaptchaProvider(available: false))->renderCaptcha($this->form()));
+        try {
+            $this->renderer(null)->renderCaptcha($this->form('contact'));
+            $this->fail('A protected form was rendered without a captcha.');
+        } catch (TranslatableLogicException $e) {
+            $this->assertStringContainsString('CAPTCHA_PROVIDER=altcha', $e->getMessage());
+            $this->assertStringContainsString('"captcha_protection"', $e->getMessage());
+        }
+    }
+
+    #[Test]
+    public function aCaptchaThatIsNotAvailableIsTheSameAsNone(): void
+    {
+        $this->expectException(TranslatableLogicException::class);
+
+        $this->renderer(new InMemoryCaptchaProvider(available: false))->renderCaptcha($this->form());
+    }
+
+    #[Test]
+    public function theTemplateOfTheFormFailsWithTheSameExceptionWhenThereIsNoCaptcha(): void
+    {
+        try {
+            $this->renderer(null)->render($this->form('contact'));
+            $this->fail('A protected form was rendered without a captcha.');
+        } catch (RuntimeError $e) {
+            $this->assertInstanceOf(TranslatableLogicException::class, $e->getPrevious());
+        }
+    }
+
+    #[Test]
+    public function anApplicationThatDecidedNotToHaveACaptchaRendersNothingAndThereIsNoError(): void
+    {
+        $renderer = $this->renderer(new InMemoryCaptchaProvider(available: false, disabled: true));
+
+        $this->assertSame('', $renderer->renderCaptcha($this->form()));
+        $this->assertStringNotContainsString('test-captcha', $renderer->render($this->form()));
+    }
+
+    #[Test]
+    public function aFormThatIsNotProtectedNeedsNoCaptchaInTheApplication(): void
+    {
+        $this->assertSame('', $this->renderer(null)->renderCaptcha($this->form(captcha: false)));
+        $this->assertStringNotContainsString('test-captcha', $this->renderer(null)->render($this->form(captcha: false)));
     }
 }

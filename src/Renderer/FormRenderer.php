@@ -306,15 +306,19 @@ final class FormRenderer implements FormRendererInterface
      */
     public function renderCaptcha(FormInterface $form): string
     {
-        if (
-            !$form->usesCaptcha()
-            || $this->captchaProvider === null
-            || !$this->captchaProvider->isAvailable()
-        ) {
+        if (!$form->isCaptchaProtected() || $this->captchaProvider?->isDisabled()) {
             return '';
         }
 
-        return $this->captchaProvider->getWidget($form->getId());
+        $captchaProvider = $this->captchaProvider;
+        if ($captchaProvider === null || !$captchaProvider->isAvailable()) {
+            throw new LogicException([
+                'The form "{form}" is protected with a captcha, but the application has none. Configure one (derafu/captcha has them: for example CAPTCHA_PROVIDER=altcha with CAPTCHA_SECRET_KEY, which needs no account), or turn the protection off with the option "captcha_protection" of the form.',
+                'form' => $form->getId(),
+            ]);
+        }
+
+        return $captchaProvider->getWidget($form->getId());
     }
 
     /**

@@ -202,9 +202,10 @@ interface FormRendererInterface
     /**
      * Renders the captcha for a form.
      *
-     * It is nothing when the form does not ask for the captcha (see
-     * FormInterface::usesCaptcha()) or when the application has none (see
-     * CaptchaProviderInterface::isAvailable()).
+     * It is nothing when the form is not protected with the captcha (see
+     * FormInterface::isCaptchaProtected()) or when the application decided not
+     * to have one (see CaptchaProviderInterface::isDisabled()). A form that is
+     * protected and an application that did not configure a captcha is an error.
      *
      * @param FormInterface $form The form to render the captcha for.
      * @return string The rendered captcha HTML.

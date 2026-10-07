@@ -42,6 +42,8 @@ return [
         'El formulario no es válido o ha expirado. Recarga la página e inténtalo de nuevo.',
 
     // Captcha.
+    'The form "{form}" is protected with a captcha, but the application has none. Configure one (derafu/captcha has them: for example CAPTCHA_PROVIDER=altcha with CAPTCHA_SECRET_KEY, which needs no account), or turn the protection off with the option "captcha_protection" of the form.' =>
+        'El formulario "{form}" está protegido con un captcha, pero la aplicación no tiene uno. Configura uno (derafu/captcha los tiene: por ejemplo CAPTCHA_PROVIDER=altcha con CAPTCHA_SECRET_KEY, que no necesita cuenta), o desactiva la protección con la opción "captcha_protection" del formulario.',
     'The captcha is not valid. Try again.' =>
         'El captcha no es válido. Inténtalo de nuevo.',
     'The captcha could not be verified. Try again in a moment.' =>

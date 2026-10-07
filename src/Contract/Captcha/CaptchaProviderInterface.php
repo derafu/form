@@ -19,17 +19,26 @@ use Derafu\Form\Exception\CaptchaUnavailableException;
  *
  * The forms do not know which captcha service it is, nor its keys, nor how it
  * talks to it: that is what each implementation knows (hCaptcha, Turnstile,
- * reCAPTCHA...). A form asks for the captcha with its option `captcha`.
+ * reCAPTCHA...). A form asks for the captcha with its option `captcha_protection`.
+ *
+ * An application is in one of three states: it has a captcha (`isAvailable()`),
+ * it decided on purpose not to have one (`isDisabled()`), or it did not
+ * configure anything. A form that is protected with a captcha has it in the first
+ * case, has none in the second, and in the third is an error: it is never left
+ * open because nobody configured the captcha.
  */
 interface CaptchaProviderInterface
 {
     /**
      * Whether there is a captcha to use: the application has configured one.
-     *
-     * A form that asks for the captcha does not have it when this is `false`:
-     * nothing is rendered and nothing is checked.
      */
     public function isAvailable(): bool;
+
+    /**
+     * Whether the application decided, on purpose, not to have a captcha: the
+     * forms that ask for it have none, and it is not an error.
+     */
+    public function isDisabled(): bool;
 
     /**
      * Gets the name of the field that carries what the visitor solved (the

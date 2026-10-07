@@ -63,21 +63,21 @@ final class FormCaptchaOptionTest extends TestCase
     }
 
     #[Test]
-    public function aFormHasNoCaptchaUnlessItTurnsItOn(): void
+    public function aFormIsNotProtectedWithTheCaptchaUnlessItTurnsItOn(): void
     {
-        $this->assertFalse($this->form()->usesCaptcha());
-        $this->assertFalse($this->form(options: [])->usesCaptcha());
-        $this->assertFalse($this->form(options: ['captcha' => false])->usesCaptcha());
-        $this->assertTrue($this->form(options: ['captcha' => true])->usesCaptcha());
+        $this->assertFalse($this->form()->isCaptchaProtected());
+        $this->assertFalse($this->form(options: [])->isCaptchaProtected());
+        $this->assertFalse($this->form(options: ['captcha_protection' => false])->isCaptchaProtected());
+        $this->assertTrue($this->form(options: ['captcha_protection' => true])->isCaptchaProtected());
     }
 
     #[Test]
-    public function aFormWithoutOptionsHasNoCaptcha(): void
+    public function aFormWithoutOptionsIsNotProtectedWithTheCaptcha(): void
     {
         $form = new Form($this->form()->getSchema(), $this->form()->getUiSchema());
 
         $this->assertNull($form->getOptions());
-        $this->assertFalse($form->usesCaptcha());
+        $this->assertFalse($form->isCaptchaProtected());
     }
 
     #[Test]

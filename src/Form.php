@@ -226,9 +226,9 @@ final class Form implements FormInterface
     /**
      * {@inheritDoc}
      */
-    public function usesCaptcha(): bool
+    public function isCaptchaProtected(): bool
     {
-        return (bool) ($this->options?->get('captcha', false) ?? false);
+        return (bool) ($this->options?->get('captcha_protection', false) ?? false);
     }
 
     /**

@@ -18,7 +18,8 @@ use Derafu\Form\Exception\CaptchaUnavailableException;
 /**
  * A captcha provider that needs no service: what solves a form is the text
  * `solved-<id of the form>`, and the text `unavailable` is a service that does
- * not answer. It keeps what it was asked to verify.
+ * not answer. It can also be not available (nothing configured) or disabled (on
+ * purpose). It keeps what it was asked to verify.
  */
 final class InMemoryCaptchaProvider implements CaptchaProviderInterface
 {
@@ -29,13 +30,20 @@ final class InMemoryCaptchaProvider implements CaptchaProviderInterface
      */
     public array $verified = [];
 
-    public function __construct(private readonly bool $available = true)
-    {
+    public function __construct(
+        private readonly bool $available = true,
+        private readonly bool $disabled = false
+    ) {
     }
 
     public function isAvailable(): bool
     {
         return $this->available;
+    }
+
+    public function isDisabled(): bool
+    {
+        return $this->disabled;
     }
 
     public function getResponseField(): string

@@ -19,6 +19,7 @@ use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Processor\ProcessResult;
 use Derafu\TestsForm\Captcha\InMemoryCaptchaProvider;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
+use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -82,7 +83,7 @@ final class FormDataProcessorCaptchaTest extends TestCase
     /**
      * @param array<string, mixed> $options
      */
-    private function form(array $options = ['captcha' => true]): Form
+    private function form(array $options = ['captcha_protection' => true]): Form
     {
         return Form::fromArray([
             'schema' => [
@@ -179,7 +180,7 @@ final class FormDataProcessorCaptchaTest extends TestCase
     #[Test]
     public function theServiceIsNotAskedWhenTheCsrfTokenIsNotValid(): void
     {
-        $result = $this->processor($this->captcha)->process($this->form(['captcha' => true, 'csrf_protection' => true]), [
+        $result = $this->processor($this->captcha)->process($this->form(['captcha_protection' => true, 'csrf_protection' => true]), [
             'email' => 'ana@example.com',
             'test-captcha-response' => 'solved-contact',
         ]);
@@ -194,7 +195,7 @@ final class FormDataProcessorCaptchaTest extends TestCase
     {
         $token = $this->csrf->getToken('contact');
 
-        $result = $this->processor($this->captcha)->process($this->form(['captcha' => true, 'csrf_protection' => true]), [
+        $result = $this->processor($this->captcha)->process($this->form(['captcha_protection' => true, 'csrf_protection' => true]), [
             'email' => 'ana@example.com',
             '_token' => $token,
             'test-captcha-response' => 'solved-contact',
@@ -205,31 +206,54 @@ final class FormDataProcessorCaptchaTest extends TestCase
     }
 
     #[Test]
-    public function aFormThatDoesNotAskForTheCaptchaIsProcessedWithoutIt(): void
+    public function aFormThatIsNotProtectedWithTheCaptchaIsProcessedWithoutIt(): void
     {
-        $result = $this->processor($this->captcha)->process($this->form(['captcha' => false]), ['email' => 'ana@example.com']);
+        $result = $this->processor($this->captcha)->process($this->form(['captcha_protection' => false]), ['email' => 'ana@example.com']);
 
         $this->assertTrue($result->isValid());
         $this->assertSame([], $this->captcha->verified);
     }
 
     #[Test]
-    public function withoutACaptchaInTheApplicationAFormThatAsksForItIsProcessedWithoutIt(): void
+    public function aFormThatIsProtectedCanNotBeProcessedWithoutACaptchaInTheApplication(): void
     {
-        $result = $this->processor(null)->process($this->form(), ['email' => 'ana@example.com']);
+        $this->expectException(TranslatableLogicException::class);
+        $this->expectExceptionMessage('The form "contact" is protected with a captcha, but the application has none.');
 
-        $this->assertTrue($result->isValid());
+        $this->processor(null)->process($this->form(), ['email' => 'ana@example.com']);
     }
 
     #[Test]
-    public function aCaptchaThatIsNotAvailableIsNotChecked(): void
+    public function aCaptchaThatIsNotAvailableIsTheSameAsNone(): void
     {
         $captcha = new InMemoryCaptchaProvider(available: false);
+
+        try {
+            $this->processor($captcha)->process($this->form(), ['email' => 'ana@example.com']);
+            $this->fail('A protected form was processed without a captcha.');
+        } catch (TranslatableLogicException) {
+            $this->assertSame([], $captcha->verified);
+        }
+    }
+
+    #[Test]
+    public function anApplicationThatDecidedNotToHaveACaptchaProcessesTheFormWithoutIt(): void
+    {
+        $captcha = new InMemoryCaptchaProvider(available: false, disabled: true);
 
         $result = $this->processor($captcha)->process($this->form(), ['email' => 'ana@example.com']);
 
         $this->assertTrue($result->isValid());
+        $this->assertSame([], $result->getFormErrors());
         $this->assertSame([], $captcha->verified);
+    }
+
+    #[Test]
+    public function aFormThatIsNotProtectedNeedsNoCaptchaInTheApplication(): void
+    {
+        $result = $this->processor(null)->process($this->form(['captcha_protection' => false]), ['email' => 'ana@example.com']);
+
+        $this->assertTrue($result->isValid());
     }
 
     #[Test]

@@ -25,6 +25,9 @@ services:
                 # Optional: without it a form that is protected can not be
                 # rendered, nor its data processed (see CsrfTokenManagerInterface).
                 csrf_token_manager: '@?Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface'
+                # Optional: without it a form that asks for the captcha has none
+                # (see CaptchaProviderInterface).
+                captcha_provider: '@?Derafu\Form\Contract\Captcha\CaptchaProviderInterface'
 
     Derafu\Form\Contract\Factory\FormFactoryInterface:
         class: Derafu\Form\Factory\FormFactory

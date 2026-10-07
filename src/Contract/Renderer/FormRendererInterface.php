@@ -200,6 +200,18 @@ interface FormRendererInterface
     public function renderCsrf(FormInterface $form): string;
 
     /**
+     * Renders the captcha for a form.
+     *
+     * It is nothing when the form does not ask for the captcha (see
+     * FormInterface::usesCaptcha()) or when the application has none (see
+     * CaptchaProviderInterface::isAvailable()).
+     *
+     * @param FormInterface $form The form to render the captcha for.
+     * @return string The rendered captcha HTML.
+     */
+    public function renderCaptcha(FormInterface $form): string;
+
+    /**
      * Renders the errors of the form as a whole, the ones that do not belong to
      * any field (see FormInterface::getErrors()).
      *

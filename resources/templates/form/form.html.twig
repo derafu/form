@@ -12,6 +12,9 @@
     {# Render elements according to the root UI schema type. #}
     {{ form_element(form.getUiSchema(), form, options) }}
 
+    {# Add the captcha, if the form asks for it and the application has one (the option captcha of the form). #}
+    {{ form_captcha(form) }}
+
     {# Add the CSRF token, if the form is protected (the option csrf_protection of the form). #}
     {{ form_csrf(form) }}
 

@@ -41,6 +41,12 @@ return [
     'The form is not valid or has expired. Reload the page and try again.' =>
         'El formulario no es válido o ha expirado. Recarga la página e inténtalo de nuevo.',
 
+    // Captcha.
+    'The captcha is not valid. Try again.' =>
+        'El captcha no es válido. Inténtalo de nuevo.',
+    'The captcha could not be verified. Try again in a moment.' =>
+        'No se pudo verificar el captcha. Inténtalo de nuevo en un momento.',
+
     // Choices shorthand.
     'choices shorthand does not support nested scopes: "{scope}". Use oneOf directly in the schema for nested properties.' =>
         'El atajo choices no soporta scopes anidados: "{scope}". Usa oneOf directamente en el esquema para propiedades anidadas.',

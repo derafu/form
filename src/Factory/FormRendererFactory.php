@@ -60,7 +60,8 @@ final class FormRendererFactory implements FormRendererFactoryInterface
             $renderer,
             $elementRendererRegistry,
             $widgetRendererRegistry,
-            $options['csrf_token_manager'] ?? null
+            $options['csrf_token_manager'] ?? null,
+            $options['captcha_provider'] ?? null
         );
 
         $twigService->getTwig()->addExtension(new FormTwigExtension($formRenderer));

@@ -13,12 +13,14 @@ declare(strict_types=1);
 namespace Derafu\Form\Processor;
 
 use Derafu\DataProcessor\Contract\ProcessorInterface;
+use Derafu\Form\Contract\Captcha\CaptchaProviderInterface;
 use Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
 use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
+use Derafu\Form\Exception\CaptchaUnavailableException;
 use Derafu\Translation\Contract\TranslatableInterface;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 use Derafu\Translation\TranslatableMessage;
@@ -52,6 +54,9 @@ final class FormDataProcessor implements FormDataProcessorInterface
      * @param CsrfTokenManagerInterface|null $csrfTokenManager Checks the CSRF
      * token of the forms that are protected (see FormInterface::isCsrfProtected()).
      * A form that is protected can not be processed without it.
+     * @param CaptchaProviderInterface|null $captchaProvider Checks the captcha
+     * of the forms that ask for it (see FormInterface::usesCaptcha()). Without
+     * it, or when it is not available, the forms are processed without captcha.
      */
     public function __construct(
         private readonly FormRulesResolverInterface $resolver,
@@ -60,6 +65,7 @@ final class FormDataProcessor implements FormDataProcessorInterface
         private readonly ?TranslatorInterface $translator = null,
         private readonly ?string $locale = null,
         private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
+        private readonly ?CaptchaProviderInterface $captchaProvider = null,
     ) {
     }
 
@@ -94,9 +100,28 @@ final class FormDataProcessor implements FormDataProcessorInterface
             unset($data[FormInterface::CSRF_FIELD]);
 
             if (!is_string($token) || !$csrfTokenManager->isValid($form->getCsrfTokenId(), $token)) {
-                $formErrors[] = $this->csrfErrorMessage();
+                $formErrors[] = $this->translated(new TranslatableMessage(
+                    'The form is not valid or has expired. Reload the page and try again.',
+                    [],
+                    'errors'
+                ));
                 $isValid = false;
             }
+        }
+
+        // What the visitor solved of the captcha is not data of the form either:
+        // it is taken out here (the raw data is what was sent) and it is checked
+        // at the end, when the rest is valid, so the service is not asked about
+        // a form that is not going to be accepted.
+        $captchaProvider = $form->usesCaptcha() && $this->captchaProvider?->isAvailable()
+            ? $this->captchaProvider
+            : null
+        ;
+        $captchaResponse = null;
+        if ($captchaProvider !== null) {
+            $captchaField = $captchaProvider->getResponseField();
+            $captchaResponse = $data[$captchaField] ?? null;
+            unset($data[$captchaField]);
         }
 
         // Tracks field names that were intentionally skipped due to an
@@ -144,21 +169,51 @@ final class FormDataProcessor implements FormDataProcessorInterface
             }
         }
 
+        if ($captchaProvider !== null && $isValid) {
+            $captchaError = $this->checkCaptcha($captchaProvider, $captchaResponse, $form->getId());
+            if ($captchaError !== null) {
+                $formErrors[] = $captchaError;
+                $isValid = false;
+            }
+        }
+
         return new ProcessResult($form, $processedData, $errors, $isValid, $formErrors);
     }
 
     /**
-     * The message of a CSRF token that is missing or is not valid, translated
-     * when there is a translator.
+     * Checks what the visitor solved of the captcha.
+     *
+     * @param mixed $response What came in the field of the response.
+     * @param string $formId The id of the form.
+     * @return string|null The message of the error, or `null` if it is valid.
      */
-    private function csrfErrorMessage(): string
+    private function checkCaptcha(CaptchaProviderInterface $provider, mixed $response, string $formId): ?string
     {
-        $message = new TranslatableMessage(
-            'The form is not valid or has expired. Reload the page and try again.',
+        try {
+            $valid = is_string($response)
+                && $response !== ''
+                && $provider->verify($response, $formId)
+            ;
+        } catch (CaptchaUnavailableException) {
+            return $this->translated(new TranslatableMessage(
+                'The captcha could not be verified. Try again in a moment.',
+                [],
+                'errors'
+            ));
+        }
+
+        return $valid ? null : $this->translated(new TranslatableMessage(
+            'The captcha is not valid. Try again.',
             [],
             'errors'
-        );
+        ));
+    }
 
+    /**
+     * A message of the processing, translated when there is a translator.
+     */
+    private function translated(TranslatableMessage $message): string
+    {
         return $this->translator !== null
             ? $message->trans($this->translator, $this->locale)
             : (string) $message

@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer;
 
+use Derafu\Form\Contract\Captcha\CaptchaProviderInterface;
 use Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
@@ -31,7 +32,8 @@ final class FormRenderer implements FormRendererInterface
         private readonly RendererInterface $renderer,
         private readonly ElementRendererRegistryInterface $elementRendererRegistry,
         private readonly WidgetRendererRegistryInterface $widgetRendererRegistry,
-        private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null
+        private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
+        private readonly ?CaptchaProviderInterface $captchaProvider = null
     ) {
     }
 
@@ -201,6 +203,7 @@ final class FormRenderer implements FormRendererInterface
     ): string {
         $html = $this->renderGlobalErrors($form, $options);
         $html .= $this->renderElement($form->getUiSchema(), $form, $options);
+        $html .= $this->renderCaptcha($form);
         $html .= $this->renderCsrf($form);
 
         return $html;
@@ -296,6 +299,22 @@ final class FormRenderer implements FormRendererInterface
         ];
 
         return $this->renderer->render('form/csrf', $context);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function renderCaptcha(FormInterface $form): string
+    {
+        if (
+            !$form->usesCaptcha()
+            || $this->captchaProvider === null
+            || !$this->captchaProvider->isAvailable()
+        ) {
+            return '';
+        }
+
+        return $this->captchaProvider->getWidget($form->getId());
     }
 
     /**

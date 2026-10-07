@@ -67,6 +67,7 @@ final class FormTwigExtension extends AbstractExtension
             new TwigFunction($this->prefix . 'form_element', [$this, 'renderElement']),
             new TwigFunction($this->prefix . 'form_elements', [$this, 'renderElements']),
             new TwigFunction($this->prefix . 'form_csrf', [$this, 'renderCsrf']),
+            new TwigFunction($this->prefix . 'form_captcha', [$this, 'renderCaptcha']),
             new TwigFunction($this->prefix . 'form_global_errors', [$this, 'renderGlobalErrors']),
         ];
     }
@@ -290,6 +291,18 @@ final class FormTwigExtension extends AbstractExtension
     public function renderCsrf(FormInterface $form): Markup
     {
         return new Markup($this->renderer->renderCsrf($form), $this->charset);
+    }
+
+    /**
+     * Renders the captcha of the form, if it asks for it and the application
+     * has one.
+     *
+     * @param FormInterface $form The form to render the captcha for.
+     * @return Markup The rendered captcha HTML.
+     */
+    public function renderCaptcha(FormInterface $form): Markup
+    {
+        return new Markup($this->renderer->renderCaptcha($form), $this->charset);
     }
 
     /**

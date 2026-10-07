@@ -208,11 +208,27 @@ final class Form implements FormInterface
     /**
      * {@inheritDoc}
      */
-    public function getCsrfTokenId(): string
+    public function getId(): string
     {
         $name = $this->schema->getName();
 
         return $name !== '' ? $name : 'form';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCsrfTokenId(): string
+    {
+        return $this->getId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function usesCaptcha(): bool
+    {
+        return (bool) ($this->options?->get('captcha', false) ?? false);
     }
 
     /**

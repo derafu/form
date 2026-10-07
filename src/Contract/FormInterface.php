@@ -114,11 +114,26 @@ interface FormInterface extends JsonSerializable
     public function isCsrfProtected(): bool;
 
     /**
-     * Gets the id that the CSRF token of the form is asked for.
+     * Gets the id of the form: the name of its schema, or `form` if it has none.
      *
-     * It is the name of the schema of the form, or `form` if it has none.
+     * It is what identifies the form for what is asked for it, like its CSRF
+     * token and its captcha.
+     */
+    public function getId(): string;
+
+    /**
+     * Gets the id that the CSRF token of the form is asked for (its id).
      */
     public function getCsrfTokenId(): string;
+
+    /**
+     * Whether the form asks for the captcha of the application.
+     *
+     * It is a option of the form (`captcha`) and it is off unless the form turns
+     * it on. With it on, the form has the captcha only if the application has
+     * one: see CaptchaProviderInterface::isAvailable().
+     */
+    public function usesCaptcha(): bool;
 
     /**
      * Creates a new instance of the form with the provided data and optional errors.

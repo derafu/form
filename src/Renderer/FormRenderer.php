@@ -20,6 +20,7 @@ use Derafu\Form\Contract\Renderer\ElementRendererRegistryInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererRegistryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
+use Derafu\Form\Renderer\Support\RequiredField;
 use Derafu\Renderer\Contract\RendererInterface;
 use Derafu\Support\ArrayReader;
 use Derafu\Support\ArrayType;
@@ -112,6 +113,8 @@ final class FormRenderer implements FormRendererInterface
                 ?? $field->getProperty()->getName()
             ,
             'options' => $options,
+            'is_required' => RequiredField::isMarked($field),
+            'hide_required_asterisk' => ($options['hide_required_asterisk'] ?? $field->isRequiredAsteriskHidden()) === true,
         ];
 
         return $this->renderer->render('form/label', $context);

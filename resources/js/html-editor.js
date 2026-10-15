@@ -65,6 +65,13 @@ function initHtmlEditor(selector, options) {
         }
     }
 
+    // Summernote hides the original control, and a hidden control can not be
+    // focused: with `required` the browser would block the submit and show
+    // nothing. The server asks for the value.
+    document.querySelectorAll(selector).forEach(function(element) {
+        element.required = false;
+    });
+
     // Initialize the editor.
     // Summernote is a jQuery plugin and requires $ for initialization.
     $(selector).summernote(options);

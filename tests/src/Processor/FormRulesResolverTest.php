@@ -71,6 +71,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(PropertyDefinition::class)]
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
 final class FormRulesResolverTest extends TestCase
 {
     private FormRulesResolver $resolver;
@@ -226,6 +227,11 @@ final class FormRulesResolverTest extends TestCase
     {
         return [
             'boolean_type' => [['type' => 'boolean'], ['cast' => 'boolean']],
+            'boolean_const_true' => [['type' => 'boolean', 'const' => true], ['cast' => 'boolean', 'validate' => ['accepted']]],
+            'boolean_enum_true' => [['type' => 'boolean', 'enum' => [true]], ['cast' => 'boolean', 'validate' => ['accepted']]],
+            'boolean_const_false' => [['type' => 'boolean', 'const' => false], ['cast' => 'boolean', 'validate' => ['declined']]],
+            'boolean_enum_false' => [['type' => 'boolean', 'enum' => [false]], ['cast' => 'boolean', 'validate' => ['declined']]],
+            'boolean_enum_both' => [['type' => 'boolean', 'enum' => [true, false]], ['cast' => 'boolean']],
         ];
     }
 

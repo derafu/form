@@ -18,6 +18,7 @@ use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
+use Derafu\Form\Renderer\Support\RequiredField;
 use Derafu\Support\ArrayReader;
 use Derafu\Support\ArrayType;
 use Derafu\Support\Caster;
@@ -123,11 +124,6 @@ final class InputWidgetRenderer implements WidgetRendererInterface
             }
         }
 
-        // Add validation attributes from property.
-        if ($field->isRequired()) {
-            $attrs['required'] = 'required';
-        }
-
         if ($property instanceof StringSchemaInterface) {
             if ($property->getMinLength() !== null) {
                 $attrs['minlength'] = (string)$property->getMinLength();
@@ -182,6 +178,11 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         // Handle readonly from schema property or control options.
         if ($property->isReadOnly() || !empty($controlOptions['readonly'])) {
             $attrs['readonly'] = 'readonly';
+        }
+
+        // What says that the field is required.
+        if ($type !== 'hidden') {
+            $attrs = array_merge($attrs, RequiredField::attributes($field, $options));
         }
 
         // Apply custom attributes from options.

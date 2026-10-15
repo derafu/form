@@ -2,11 +2,11 @@
    This template renders the label of a field.
    It assumes that the 'field' variable is available and contains the field object.
    The 'label' variable contains the label text (it may come from the control or be overridden).
+   The 'is_required' variable says if the field is shown as required, and 'hide_required_asterisk' if its asterisk is hidden.
 #}
 
 {% set label_attr = options.label_attr|default({}) %}
 {% set label_class = '' %}
-{% set is_required = field.property.isRequired is defined and field.property.isRequired %}
 
 {# Assign label class based on widget type. #}
 {% if field.widget.type in ['checkbox', 'radio'] %}
@@ -48,7 +48,7 @@
 {% endfor %}
 
 {# Add required field indicator. #}
-{% set required_marker = is_required and options.required_label|default(true)
+{% set required_marker = is_required and not hide_required_asterisk
     ? ' <span class="text-danger">*</span>'
     : ''
 %}

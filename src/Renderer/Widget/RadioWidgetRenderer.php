@@ -15,6 +15,7 @@ namespace Derafu\Form\Renderer\Widget;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
+use Derafu\Form\Renderer\Support\RequiredField;
 use Derafu\Support\ArrayReader;
 use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
@@ -88,10 +89,6 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             ;
         }
 
-        if ($field->isRequired()) {
-            $attrs['required'] = 'required';
-        }
-
         $controlOptions = $control->getOptions();
         if (!empty($controlOptions['placeholder'])) {
             $attrs['placeholder'] = $controlOptions['placeholder'];
@@ -110,6 +107,8 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             'choices' => $choices,
             'value' => $value,
             'name' => $name,
+            'required' => RequiredField::isAnnounced($field),
+            'native_required' => RequiredField::isNative($field, $options),
         ];
 
         return $formRenderer->getRenderer()->render(

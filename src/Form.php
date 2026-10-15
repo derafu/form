@@ -18,6 +18,7 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Options\FormOptionsInterface;
 use Derafu\Form\Contract\Rules\FormRulesInterface;
 use Derafu\Form\Contract\Schema\FormSchemaInterface;
+use Derafu\Form\Contract\Schema\ObjectSchemaInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\ElementsAwareInterface;
 use Derafu\Form\Contract\UiSchema\FormUiSchemaInterface;
@@ -29,6 +30,7 @@ use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\Support\ArrayReader;
 use Derafu\Support\JsonSerializer;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
@@ -154,6 +156,11 @@ final class Form implements FormInterface
                 if ($property) {
                     // Create the field and set the widget.
                     $field = new FormField($property, $element);
+                    $field->setRequired($this->isRequiredProperty($name));
+                    $field->setNativeRequired(
+                        $this->optionBool('native_required') ?? !$this->isNotValidatedByBrowser()
+                    );
+                    $field->setRequiredAsteriskHidden($this->optionBool('hide_required_asterisk') ?? false);
                     $field->setWidget($this->widgetFactory->create($field));
 
                     // Initialize field data: explicit form data takes precedence,
@@ -181,6 +188,44 @@ final class Form implements FormInterface
                 );
             }
         }
+    }
+
+    /**
+     * A boolean option of the form, or `null` if it does not have it.
+     *
+     * @throws InvalidArgumentException If the option is not a boolean.
+     */
+    private function optionBool(string $key): ?bool
+    {
+        return ArrayReader::from($this->options?->toArray() ?? [])->bool($key);
+    }
+
+    /**
+     * Whether the form says that the browser does not validate it (`novalidate`).
+     */
+    private function isNotValidatedByBrowser(): bool
+    {
+        return $this->options?->getAttributes()->getNovalidate() ?? false;
+    }
+
+    /**
+     * Whether the property is in the `required` list of the object that has it.
+     *
+     * @param string $name The name of the property, with dots for the ones that
+     * are nested.
+     */
+    private function isRequiredProperty(string $name): bool
+    {
+        $path = explode('.', $name);
+        $last = array_pop($path);
+
+        $parent = $path === []
+            ? $this->getSchema()
+            : $this->getSchema()->getProperty(implode('.', $path))
+        ;
+
+        return $parent instanceof ObjectSchemaInterface
+            && in_array($last, $parent->getRequired(), true);
     }
 
     /**

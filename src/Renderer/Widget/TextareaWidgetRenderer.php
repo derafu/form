@@ -16,6 +16,7 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
+use Derafu\Form\Renderer\Support\RequiredField;
 use Derafu\Support\ArrayReader;
 use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
@@ -94,8 +95,8 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         }
 
         // Add validation attributes from property.
-        if ($field->isRequired()) {
-            $attrs['required'] = 'required';
+        foreach (RequiredField::attributes($field, $options) as $name => $value) {
+            $attrs[$name] = $value;
         }
 
         if ($property instanceof StringSchemaInterface) {

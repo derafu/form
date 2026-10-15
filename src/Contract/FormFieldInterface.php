@@ -89,6 +89,41 @@ interface FormFieldInterface extends JsonSerializable
     public function setRequired(bool $required = true): static;
 
     /**
+     * Checks if the browser must ask for the field when it is required.
+     *
+     * It is the field that says it, so a widget that is rendered alone does
+     * not need to know the form: the form that has the field decides it.
+     *
+     * @return bool True if the control has the native `required`, false if it
+     * only says that it is required (`aria-required`).
+     */
+    public function isNativeRequired(): bool;
+
+    /**
+     * Sets if the browser must ask for the field when it is required.
+     *
+     * @param bool $nativeRequired True to ask for it with the native `required`.
+     * @return static The current instance.
+     */
+    public function setNativeRequired(bool $nativeRequired = true): static;
+
+    /**
+     * Checks if the label of the field hides the asterisk of the required
+     * fields.
+     *
+     * @return bool True if the asterisk is hidden, false if it is shown.
+     */
+    public function isRequiredAsteriskHidden(): bool;
+
+    /**
+     * Sets if the label of the field hides the asterisk of the required fields.
+     *
+     * @param bool $hidden True to hide the asterisk.
+     * @return static The current instance.
+     */
+    public function setRequiredAsteriskHidden(bool $hidden = true): static;
+
+    /**
      * Checks if the field has been rendered.
      *
      * @return bool True if the field has been rendered, false otherwise.

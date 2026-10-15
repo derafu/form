@@ -85,6 +85,22 @@ final class FormFieldTest extends TestCase
     }
 
     #[Test]
+    public function shouldKeepWhatThePresentationOfTheRequiredFieldsNeeds(): void
+    {
+        $field = $this->field();
+        $this->assertFalse($field->isNativeRequired());
+        $this->assertFalse($field->isRequiredAsteriskHidden());
+
+        $field->setNativeRequired()->setRequiredAsteriskHidden();
+        $this->assertTrue($field->isNativeRequired());
+        $this->assertTrue($field->isRequiredAsteriskHidden());
+
+        $field->setNativeRequired(false)->setRequiredAsteriskHidden(false);
+        $this->assertFalse($field->isNativeRequired());
+        $this->assertFalse($field->isRequiredAsteriskHidden());
+    }
+
+    #[Test]
     public function shouldBeWrittenAsArrayAndAsJson(): void
     {
         $field = $this->field()->setRequired()->setData('x')->setErrors(['e']);

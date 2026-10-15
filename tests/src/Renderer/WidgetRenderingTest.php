@@ -111,6 +111,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\UiSchema\UiSchemaCondition::class)]
 #[UsesClass(\Derafu\Form\UiSchema\UiSchemaRule::class)]
 #[UsesClass(\Derafu\Form\UiSchema\HorizontalLayout::class)]
+#[CoversClass(\Derafu\Form\Renderer\Support\RequiredField::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\BooleanSchema::class)]
 final class WidgetRenderingTest extends TestCase
 {
     /**
@@ -129,7 +131,11 @@ final class WidgetRenderingTest extends TestCase
         bool $required = false
     ): string {
         $definition = array_replace_recursive([
-            'schema' => ['type' => 'object', 'properties' => ['field' => $property + ['type' => 'string']]],
+            'schema' => [
+                'type' => 'object',
+                'properties' => ['field' => $property + ['type' => 'string']],
+                'required' => $required ? ['field'] : [],
+            ],
             'uischema' => [
                 'type' => 'VerticalLayout',
                 'elements' => [['type' => 'Control', 'scope' => '#/properties/field'] + $control],
@@ -139,7 +145,6 @@ final class WidgetRenderingTest extends TestCase
 
         $field = $form->getField('field');
         $this->assertNotNull($field);
-        $field->setRequired($required);
 
         return html_entity_decode(
             FormRendererFactory::create()->renderElement($field->getControl(), $form, $options)
@@ -188,7 +193,7 @@ final class WidgetRenderingTest extends TestCase
         );
 
         $this->assertStringContainsString('class="form-check-input is-invalid extra"', $html);
-        $this->assertStringContainsString('required="required"', $html);
+        $this->assertStringContainsString('aria-required="true"', $html);
 
         $html = $this->row(['enum' => ['a', 'b']], ['options' => ['widget' => 'radio']], ['value' => ['a']]);
         $this->assertStringContainsString('class="form-check-input"', $html);
@@ -212,7 +217,7 @@ final class WidgetRenderingTest extends TestCase
         $this->assertStringContainsString('max="20"', $html);
         $this->assertStringContainsString('step="5"', $html);
         $this->assertStringContainsString('value="15"', $html);
-        $this->assertStringContainsString('required="required"', $html);
+        $this->assertStringNotContainsString('aria-required="true"', $html);
 
         $html = $this->row(
             ['type' => 'integer'],
@@ -427,5 +432,183 @@ final class WidgetRenderingTest extends TestCase
         $this->expectException(TranslatableInvalidArgumentException::class);
         $this->expectExceptionMessage('requires an ArraySchemaInterface');
         $widget->render($field, ['renderer' => FormRendererFactory::create()]);
+    }
+
+    private const ASTERISK = '<span class="text-danger">*</span>';
+
+    #[Test]
+    public function shouldShowTheAsteriskOfTheRequiredFieldsUnlessItIsHidden(): void
+    {
+        $this->assertStringContainsString(self::ASTERISK, $this->row([], [], [], [], true));
+        $this->assertStringNotContainsString(self::ASTERISK, $this->row([], []));
+        $this->assertStringNotContainsString(self::ASTERISK, $this->row([], ['options' => ['hide_required_asterisk' => true]], [], [], true));
+        $this->assertStringNotContainsString(self::ASTERISK, $this->row([], [], ['hide_required_asterisk' => true], [], true));
+        $this->assertStringNotContainsString(self::ASTERISK, $this->row([], [], [], ['options' => ['hide_required_asterisk' => true]], true));
+    }
+
+    #[Test]
+    public function shouldLetTheControlDecideBeforeTheOptionsAndTheOptionsBeforeTheForm(): void
+    {
+        $form = ['options' => ['hide_required_asterisk' => true]];
+
+        $this->assertStringContainsString(
+            self::ASTERISK,
+            $this->row([], ['options' => ['hide_required_asterisk' => false]], ['hide_required_asterisk' => true], $form, true)
+        );
+        $this->assertStringContainsString(
+            self::ASTERISK,
+            $this->row([], [], ['hide_required_asterisk' => false], $form, true)
+        );
+    }
+
+    #[Test]
+    public function shouldNotAcceptAnAsteriskOptionThatIsNotABoolean(): void
+    {
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "hide_required_asterisk" must be of type bool, string given.');
+
+        $this->row([], ['options' => ['hide_required_asterisk' => 'no']], [], [], true);
+    }
+
+    #[Test]
+    public function shouldAskForAValueOnlyToTheBooleanThatMustBeChecked(): void
+    {
+        // Required only says that the key is in the data: nothing for the user.
+        $html = $this->row(['type' => 'boolean'], [], [], [], true);
+        $this->assertStringNotContainsString('required', $html);
+        $this->assertStringNotContainsString(self::ASTERISK, $html);
+
+        foreach ([['const' => true], ['enum' => [true]]] as $mustBeTrue) {
+            $html = $this->row(['type' => 'boolean'] + $mustBeTrue, [], [], [], true);
+            $this->assertStringContainsString('required="required"', $html);
+            $this->assertStringContainsString(self::ASTERISK, $html);
+        }
+
+        $html = $this->row(['type' => 'boolean', 'const' => false], [], [], [], true);
+        $this->assertStringNotContainsString('required="required"', $html);
+    }
+
+    #[Test]
+    public function shouldAskForTheRequiredFieldsInTheBrowserUnlessTheFormSaysNot(): void
+    {
+        $off = ['options' => ['native_required' => false]];
+        $novalidate = ['options' => ['attributes' => ['novalidate' => true]]];
+        $controls = [
+            'input' => [[], []],
+            'textarea' => [[], ['options' => ['multi' => true]]],
+            'select' => [['enum' => ['a', 'b']], []],
+            'radio' => [['enum' => ['a', 'b']], ['options' => ['widget' => 'radio']]],
+        ];
+
+        foreach ($controls as $kind => [$property, $control]) {
+            // By default.
+            $this->assertStringContainsString('required="required"', $this->row($property, $control, [], [], true), $kind);
+
+            // Not for the one that is not required.
+            $this->assertStringNotContainsString('required="required"', $this->row($property, $control), $kind);
+
+            // The form or the render say not to.
+            $this->assertStringNotContainsString('required="required"', $this->row($property, $control, [], $off, true), $kind);
+            $this->assertStringNotContainsString('required="required"', $this->row($property, $control, ['native_required' => false], [], true), $kind);
+
+            // A form that is not validated in the browser does not ask for it...
+            $this->assertStringNotContainsString('required="required"', $this->row($property, $control, [], $novalidate, true), $kind);
+
+            // ...unless the option says it.
+            $both = ['options' => ['native_required' => true, 'attributes' => ['novalidate' => true]]];
+            $this->assertStringContainsString('required="required"', $this->row($property, $control, [], $both, true), $kind);
+            $this->assertStringContainsString('required="required"', $this->row($property, $control, ['native_required' => true], $off, true), $kind);
+        }
+
+        // One radio is enough for the group.
+        $html = $this->row(['enum' => ['a', 'b']], ['options' => ['widget' => 'radio']], [], [], true);
+        $this->assertSame(1, substr_count($html, 'required="required"'));
+    }
+
+    #[Test]
+    public function shouldAnnounceTheRequiredFieldsWhenTheBrowserDoesNotAskForThem(): void
+    {
+        $off = ['options' => ['native_required' => false]];
+
+        foreach ([[[], []], [['enum' => ['a', 'b']], []], [[], ['options' => ['multi' => true]]]] as [$property, $control]) {
+            $html = $this->row($property, $control, [], $off, true);
+            $this->assertStringContainsString('aria-required="true"', $html);
+            $this->assertStringNotContainsString('required="required"', $html);
+        }
+    }
+
+    #[Test]
+    public function shouldNotAskInTheBrowserForWhatCanNotBeAnswered(): void
+    {
+        // Hidden controls, groups of checkboxes and a boolean that is only required.
+        $this->assertStringNotContainsString('required="required"', $this->row([], ['options' => ['widget' => 'hidden']], [], [], true));
+        $this->assertStringNotContainsString(
+            'required="required"',
+            $this->row(['type' => 'array', 'items' => ['enum' => ['a', 'b']]], [], [], [], true)
+        );
+        $this->assertStringNotContainsString('required="required"', $this->row(['type' => 'boolean'], [], [], [], true));
+    }
+
+    #[Test]
+    public function shouldDisableTheControlsOfAFieldThatStartsHidden(): void
+    {
+        $definition = fn (string $kind) => [
+            'schema' => ['type' => 'object', 'properties' => ['kind' => ['type' => 'string'], 'field' => ['type' => 'string']]],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [
+                    ['type' => 'Control', 'scope' => '#/properties/kind'],
+                    [
+                        'type' => 'Control',
+                        'scope' => '#/properties/field',
+                        'rule' => [
+                            'effect' => 'SHOW',
+                            'condition' => ['scope' => '#/properties/kind', 'schema' => ['const' => 'yes']],
+                        ],
+                    ],
+                ],
+            ],
+            'data' => ['kind' => $kind],
+            'options' => ['csrf_protection' => false],
+        ];
+        $factory = new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider())));
+
+        $hidden = html_entity_decode(FormRendererFactory::create()->render($factory->create($definition('no'))));
+        $this->assertMatchesRegularExpression('/<input[^>]*name="field"[^>]*disabled/', $hidden);
+        $this->assertStringContainsString('d-none', $hidden);
+
+        $shown = html_entity_decode(FormRendererFactory::create()->render($factory->create($definition('yes'))));
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="field"[^>]*disabled/', $shown);
+    }
+
+    #[Test]
+    public function shouldRenderAWidgetAndALabelThatAreAloneAsTheFormSays(): void
+    {
+        foreach ([[[], true, false], [['native_required' => false, 'hide_required_asterisk' => true], false, true]] as [$options, $native, $hidden]) {
+            $form = (new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider()))))->create([
+                'schema' => ['type' => 'object', 'required' => ['field'], 'properties' => ['field' => ['type' => 'string']]],
+                'uischema' => ['type' => 'VerticalLayout', 'elements' => [['type' => 'Control', 'scope' => '#/properties/field']]],
+                'options' => ['csrf_protection' => false] + $options,
+            ]);
+            $field = $form->getField('field');
+            $this->assertNotNull($field);
+            $renderer = FormRendererFactory::create();
+
+            $this->assertSame($native, str_contains($renderer->renderWidget($field), 'required="required"'));
+            $this->assertSame(!$hidden, str_contains($renderer->renderLabel($field), self::ASTERISK));
+        }
+    }
+
+    #[Test]
+    public function shouldApplyTheAttributesToEveryCheckboxOfAGroup(): void
+    {
+        $html = $this->row(
+            ['type' => 'array', 'items' => ['enum' => ['a', 'b']]],
+            [],
+            ['attr' => ['disabled' => true, 'data-x' => 'y']]
+        );
+
+        $this->assertSame(2, substr_count($html, 'data-x="y"'));
+        $this->assertSame(2, preg_match_all('/<input[^>]*type="checkbox"[^>]*disabled/', $html));
     }
 }

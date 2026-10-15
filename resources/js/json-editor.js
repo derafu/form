@@ -60,6 +60,10 @@ function initJsonEditor(selector, options) {
         // Hide the original field (kept in the DOM so the form can submit it).
         field.style.display = 'none';
 
+        // A hidden control can not be focused, so with `required` the browser
+        // would block the submit and show nothing. The server asks for the value.
+        field.required = false;
+
         // Hide the label if it exists, by looking for a label child within the
         // field's parent element.
         const label = field.parentElement.querySelector('label');

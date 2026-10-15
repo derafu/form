@@ -114,10 +114,6 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
             $attrs['value'] = (string)$defaultValue;
         }
 
-        if ($field->isRequired()) {
-            $attrs['required'] = 'required';
-        }
-
         // Control options
         $controlOptions = $control->getOptions();
 

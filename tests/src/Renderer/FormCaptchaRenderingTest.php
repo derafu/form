@@ -67,6 +67,7 @@ use Twig\Error\RuntimeError;
 #[UsesClass(PropertyDefinition::class)]
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\Support\RequiredField::class)]
 final class FormCaptchaRenderingTest extends TestCase
 {
     private function renderer(?InMemoryCaptchaProvider $captcha): FormRendererInterface

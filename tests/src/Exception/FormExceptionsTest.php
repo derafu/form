@@ -84,6 +84,7 @@ use Throwable;
 #[CoversClass(TextareaWidgetRenderer::class)]
 #[UsesClass(InputActionResolver::class)]
 #[UsesClass(UiSchemaElementDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\Support\RequiredField::class)]
 final class FormExceptionsTest extends TestCase
 {
     /**

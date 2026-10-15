@@ -116,6 +116,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(ChoicesShorthand::class)]
 #[UsesClass(FormDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
 final class FormDataProcessorStringCastTest extends TestCase
 {
     private FormDataProcessorInterface $processor;

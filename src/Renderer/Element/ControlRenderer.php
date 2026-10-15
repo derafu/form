@@ -100,6 +100,18 @@ final class ControlRenderer implements ElementRendererInterface
         // Merge control options with passed options.
         $fieldOptions = array_merge($element->getOptions(), $options);
 
+        // The control and the options that are passed can override what the
+        // form says (it is in the field) about the asterisk of the required
+        // fields (`hide_required_asterisk`) and about the browser asking for
+        // them (`native_required`): the control decides first.
+        foreach (['hide_required_asterisk', 'native_required'] as $key) {
+            $value = ArrayReader::from($element->getOptions())->bool($key)
+                ?? ArrayReader::from($options)->bool($key);
+            if ($value !== null) {
+                $fieldOptions[$key] = $value;
+            }
+        }
+
         // Evaluate initial rule state when an evaluator is available.
         $rule = $element->getRule();
         if ($rule !== null && $this->ruleEvaluator !== null) {
@@ -120,13 +132,12 @@ final class ControlRenderer implements ElementRendererInterface
                 $fieldOptions['rule_initially_hidden'] = true;
             }
 
-            // ENABLE / DISABLE → editability rule.
+            // Controls of a field that is not active (hidden or not editable)
+            // are disabled: they are not validated nor submitted, as the
+            // script of the rules leaves them when the state changes.
             // Pass disabled via options['attr'] so every widget renderer picks
             // it up through their final array_merge($attrs, $options['attr']).
-            if (
-                !$initiallyActive
-                && ($effect === UiSchemaRuleEffect::ENABLE || $effect === UiSchemaRuleEffect::DISABLE)
-            ) {
+            if (!$initiallyActive) {
                 $attr = ArrayReader::from($fieldOptions)->mapOf('attr', ArrayType::scalar()) ?? [];
                 $attr['disabled'] = true;
                 $fieldOptions['attr'] = $attr;

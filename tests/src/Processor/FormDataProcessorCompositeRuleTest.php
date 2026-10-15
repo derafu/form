@@ -107,6 +107,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(PropertyDefinition::class)]
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
 final class FormDataProcessorCompositeRuleTest extends TestCase
 {
     private FormDataProcessor $processor;

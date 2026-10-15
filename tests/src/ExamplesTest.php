@@ -186,6 +186,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(ChoicesShorthand::class)]
 #[UsesClass(FormDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\Support\RequiredField::class)]
 final class ExamplesTest extends TestCase
 {
     private FormRendererInterface $renderer;

@@ -69,6 +69,7 @@ use Twig\Error\RuntimeError;
 #[UsesClass(PropertyDefinition::class)]
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\Support\RequiredField::class)]
 final class FormCsrfRenderingTest extends TestCase
 {
     private InMemoryCsrfTokenManager $manager;

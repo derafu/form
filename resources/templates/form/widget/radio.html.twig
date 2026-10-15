@@ -2,7 +2,7 @@
    This template renders a group of radio buttons.
    It follows the same structure as other input templates.
 #}
-<div class="radio-group">
+<div class="radio-group" role="radiogroup"{% if required %} aria-required="true"{% endif %}>
     {% for value_option, label in choices %}
         {% set radio_attrs = attrs|merge({
             'id': name ~ '_' ~ loop.index0 ~ '_field',
@@ -13,9 +13,9 @@
             {% set radio_attrs = radio_attrs|merge({'checked': 'checked'}) %}
         {% endif %}
 
-        {# Only apply required to the first radio for HTML validation #}
-        {% if not loop.first and radio_attrs.required is defined %}
-            {% set radio_attrs = radio_attrs|filter((v, k) => k != 'required') %}
+        {# One radio with `required` is enough to ask for a choice of the group. #}
+        {% if native_required and loop.first %}
+            {% set radio_attrs = radio_attrs|merge({'required': 'required'}) %}
         {% endif %}
 
         {# Generate the HTML attributes string. #}

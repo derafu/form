@@ -16,7 +16,9 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Form\Renderer\Support\RequiredField;
 use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -45,6 +47,7 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
         }
 
         $reader = ArrayReader::from($options);
+        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
 
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -95,9 +98,10 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
             'choices' => $choices,
             'value' => $value,
             'name' => $name,
+            'attrs' => $customAttrs,
             'widget_class' => $widgetClass,
             'has_errors' => $hasErrors,
-            'required' => $field->isRequired(),
+            'required' => RequiredField::isAnnounced($field),
         ];
 
         // Render the template.

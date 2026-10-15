@@ -48,6 +48,20 @@ final class FormField implements FormFieldInterface
     private bool $required = false;
 
     /**
+     * Whether the browser asks for the field when it is required.
+     *
+     * @var bool
+     */
+    private bool $nativeRequired = false;
+
+    /**
+     * Whether the label hides the asterisk of the required fields.
+     *
+     * @var bool
+     */
+    private bool $requiredAsteriskHidden = false;
+
+    /**
      * Whether the field has been rendered.
      *
      * @var bool
@@ -148,6 +162,42 @@ final class FormField implements FormFieldInterface
     public function setRequired(bool $required = true): static
     {
         $this->required = $required;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isNativeRequired(): bool
+    {
+        return $this->nativeRequired;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setNativeRequired(bool $nativeRequired = true): static
+    {
+        $this->nativeRequired = $nativeRequired;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isRequiredAsteriskHidden(): bool
+    {
+        return $this->requiredAsteriskHidden;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setRequiredAsteriskHidden(bool $hidden = true): static
+    {
+        $this->requiredAsteriskHidden = $hidden;
 
         return $this;
     }

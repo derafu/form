@@ -18,6 +18,7 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
 use Derafu\Form\Contract\Rules\FormRulesInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Form\Contract\Schema\BooleanSchemaInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
 use Derafu\Form\Contract\Schema\PropertySchemaInterface;
@@ -307,9 +308,20 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
         // choices validation: derives allowed values from oneOf (const+title pairs)
         // or enum (plain list). getChoices() normalises both sources to [value => label].
-        $choices = $property->getChoices();
-        if ($choices !== null) {
-            $rules[] = 'in:' . implode(',', array_keys($choices));
+        // A boolean has no choices to list: it is fixed to `true` or to `false`
+        // with `const` or with an `enum` of that one value (the terms of a
+        // service, for example, with `const: true`).
+        if ($property instanceof BooleanSchemaInterface) {
+            if ($property->getConst() === true || $property->getEnum() === [true]) {
+                $rules[] = 'accepted';
+            } elseif ($property->getConst() === false || $property->getEnum() === [false]) {
+                $rules[] = 'declined';
+            }
+        } else {
+            $choices = $property->getChoices();
+            if ($choices !== null) {
+                $rules[] = 'in:' . implode(',', array_keys($choices));
+            }
         }
 
         // Integer validations.

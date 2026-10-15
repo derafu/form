@@ -61,6 +61,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\Renderer\Widget\SliderWidgetRenderer::class)]
 #[UsesClass(PropertyDefinition::class)]
 #[UsesClass(UiSchemaElementDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\Support\RequiredField::class)]
 final class FormRendererValueInconsistencyTest extends TestCase
 {
     /**

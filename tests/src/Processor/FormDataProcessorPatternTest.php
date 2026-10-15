@@ -78,6 +78,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(PropertyDefinition::class)]
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\BooleanSchema::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
 final class FormDataProcessorPatternTest extends TestCase
 {
     private FormDataProcessor $processor;
@@ -288,5 +290,58 @@ final class FormDataProcessorPatternTest extends TestCase
         $this->assertIsArray($data);
 
         return $data;
+    }
+
+    // =========================================================================
+    // Boolean that is fixed to a value
+    // =========================================================================
+
+    /**
+     * @param array<string, mixed> $property
+     */
+    private function formWithBoolean(array $property, bool $required): Form
+    {
+        return Form::fromArray([
+            'options' => ['csrf_protection' => false],
+            'schema' => [
+                'type' => 'object',
+                'properties' => ['terms' => ['type' => 'boolean'] + $property],
+                'required' => $required ? ['terms'] : [],
+            ],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [['type' => 'Control', 'scope' => '#/properties/terms']],
+            ],
+        ]);
+    }
+
+    public function testABooleanThatMustBeTrueFailsWhenItIsNotChecked(): void
+    {
+        foreach ([['const' => true], ['enum' => [true]]] as $property) {
+            $form = $this->formWithBoolean($property, true);
+
+            $this->assertTrue($this->processor->process($form, [])->hasErrors());
+            $this->assertTrue($this->processor->process($form, ['terms' => '0'])->hasErrors());
+
+            $result = $this->processor->process($form, ['terms' => '1']);
+            $this->assertFalse($result->hasErrors());
+            $this->assertSame(['terms' => true], $result->getProcessedData());
+        }
+    }
+
+    public function testABooleanThatMustBeFalseFailsWhenItIsChecked(): void
+    {
+        $form = $this->formWithBoolean(['const' => false], false);
+
+        $this->assertTrue($this->processor->process($form, ['terms' => '1'])->hasErrors());
+        $this->assertFalse($this->processor->process($form, [])->hasErrors());
+    }
+
+    public function testABooleanThatIsRequiredOnlyNeedsTheKey(): void
+    {
+        $form = $this->formWithBoolean([], true);
+
+        $this->assertFalse($this->processor->process($form, ['terms' => '0'])->hasErrors());
+        $this->assertFalse($this->processor->process($form, [])->hasErrors());
     }
 }

@@ -2,7 +2,7 @@
    This template renders a group of checkboxes.
    It follows the same structure as other input templates.
 #}
-<div class="checkbox-group d-flex flex-wrap gap-3">
+<div class="checkbox-group d-flex flex-wrap gap-3" role="group"{% if required %} aria-required="true"{% endif %}>
     {% for choice_value, label in choices %}
         {% set checkbox_attrs = {
             'type': 'checkbox',
@@ -10,15 +10,10 @@
             'name': name ~ '[]',
             'value': choice_value,
             'class': widget_class
-        } %}
+        }|merge(attrs|default({})) %}
 
         {% if choice_value in (value|default([])) %}
             {% set checkbox_attrs = checkbox_attrs|merge({'checked': 'checked'}) %}
-        {% endif %}
-
-        {# Add validation attributes if needed #}
-        {% if required and loop.first %}
-            {% set checkbox_attrs = checkbox_attrs|merge({'required': 'required'}) %}
         {% endif %}
 
         {# Generate the HTML attributes string. #}

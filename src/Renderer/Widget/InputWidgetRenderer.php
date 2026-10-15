@@ -162,6 +162,12 @@ final class InputWidgetRenderer implements WidgetRendererInterface
             $attrs['accept'] = 'image/*';
         }
 
+        // The files that the browser offers (`accept`): extensions or MIME types,
+        // like `.xml` or `.p12,.pfx`. It replaces the one of the image controls.
+        if ($type === 'file' && !empty($controlOptions['accept'])) {
+            $attrs['accept'] = $controlOptions['accept'];
+        }
+
         // Handle readonly from schema property or control options.
         if ($property->isReadOnly() || !empty($controlOptions['readonly'])) {
             $attrs['readonly'] = 'readonly';

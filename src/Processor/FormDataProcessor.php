@@ -20,6 +20,7 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
 use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
+use Derafu\Form\Data\FieldPath;
 use Derafu\Form\Exception\CaptchaUnavailableException;
 use Derafu\Translation\Contract\TranslatableInterface;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
@@ -138,6 +139,14 @@ final class FormDataProcessor implements FormDataProcessorInterface
         // Resolve the complete, merged rules into the form's own FormRules instance.
         $this->resolver->resolve($form);
 
+        // The first level of the names of the fields that are in an object.
+        $objectRoots = [];
+        foreach ($form->getFields() as $fieldName => $field) {
+            if (str_contains($fieldName, '.')) {
+                $objectRoots[FieldPath::root($fieldName)] = true;
+            }
+        }
+
         // Process each field using the rules now stored in the form.
         foreach ($form->getFields() as $fieldName => $field) {
             // Skip fields whose UiSchema rule makes them inactive given the
@@ -148,7 +157,7 @@ final class FormDataProcessor implements FormDataProcessorInterface
                 continue;
             }
 
-            $fieldValue = $data[$fieldName] ?? null;
+            $fieldValue = FieldPath::get($data, $fieldName);
             $fieldRules = $form->getRules()[$fieldName];
 
             try {
@@ -157,20 +166,26 @@ final class FormDataProcessor implements FormDataProcessorInterface
                     $fieldValue,
                     $fieldRules
                 );
-                $processedData[$fieldName] = $processedValue;
+                $processedData = FieldPath::set($processedData, $fieldName, $processedValue);
             } catch (Throwable $e) {
                 // Collect validation and other processing errors.
                 $errors[$fieldName] = [$this->resolveErrorMessage($e)];
                 $isValid = false;
                 // Keep original value for invalid fields.
-                $processedData[$fieldName] = $fieldValue;
+                $processedData = FieldPath::set($processedData, $fieldName, $fieldValue);
             }
         }
 
         // Add any fields from data that weren't in the schema, excluding
         // fields that were intentionally skipped due to an inactive rule.
+        // The key of an object that has fields of the form is not an extra one:
+        // its fields are the ones that were processed.
         foreach ($data as $fieldName => $fieldValue) {
-            if (!isset($processedData[$fieldName]) && !isset($skippedFields[$fieldName])) {
+            if (
+                !isset($processedData[$fieldName])
+                && !isset($skippedFields[$fieldName])
+                && !isset($objectRoots[$fieldName])
+            ) {
                 $processedData[$fieldName] = $fieldValue;
             }
         }

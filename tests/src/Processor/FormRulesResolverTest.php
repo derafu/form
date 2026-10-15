@@ -72,6 +72,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\Pattern::class)]
 final class FormRulesResolverTest extends TestCase
 {
     private FormRulesResolver $resolver;
@@ -257,6 +258,10 @@ final class FormRulesResolverTest extends TestCase
             'email_format' => [
                 ['type' => 'string', 'format' => 'email'],
                 ['transform' => ['lowercase'], 'sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['email']],
+            ],
+            'regex_format' => [
+                ['type' => 'string', 'format' => 'regex'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['regex_pattern']],
             ],
             'url_format' => [
                 ['type' => 'string', 'format' => 'url'],

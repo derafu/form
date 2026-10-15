@@ -58,7 +58,8 @@ final class GroupRenderer implements ElementRendererInterface
         $elementsHTML = [];
 
         // Render each child element
-        $elementsOptions = ArrayReader::from($options)->listOf('elements_options', ArrayType::map()) ?? [];
+        $groupOptions = array_merge($options, $element->getOptions());
+        $elementsOptions = ArrayReader::from($groupOptions)->listOf('elements_options', ArrayType::map()) ?? [];
 
         foreach ($childElements as $elementIndex => $childElement) {
             // Check if there are element-specific options.
@@ -80,7 +81,7 @@ final class GroupRenderer implements ElementRendererInterface
         $context = [
             'element' => $element,
             'form' => $form,
-            'options' => $options,
+            'options' => $groupOptions,
             'elements_html' => $elementsHTML,
         ];
 

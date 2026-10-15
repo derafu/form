@@ -73,6 +73,7 @@ use stdClass;
 #[CoversClass(TagType::class)]
 #[CoversClass(TextType::class)]
 #[CoversClass(TextareaType::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\Pattern::class)]
 final class TypeBehaviourTest extends TestCase
 {
     /**
@@ -91,14 +92,14 @@ final class TypeBehaviourTest extends TestCase
             'masked' => [MaskedType::class, 'masked', ['type' => 'string'], ['x'], [1, null], false],
             'object' => [ObjectType::class, 'object', ['type' => 'object'], [$object, 'x'], [], false],
             'radio' => [RadioType::class, 'radio', ['type' => 'string', 'enum' => []], ['x'], [], false],
-            'range' => [RangeType::class, 'range', ['type' => 'string'], [1, '1.5'], ['x', null], false],
+            'range' => [RangeType::class, 'range', ['type' => 'number'], [1, '1.5'], ['x', null], false],
             'search' => [SearchType::class, 'search', ['type' => 'string'], ['x'], [1, null], false],
-            'slider' => [SliderType::class, 'slider', ['type' => 'string'], [1, '1.5'], ['x', null], false],
+            'slider' => [SliderType::class, 'slider', ['type' => 'number'], [1, '1.5'], ['x', null], false],
             'tag' => [TagType::class, 'tag', ['type' => 'string'], ['x'], [1, null], false],
             'text' => [TextType::class, 'text', ['type' => 'string'], ['x', ''], [1, null, []], false],
             'textarea' => [TextareaType::class, 'textarea', ['type' => 'string'], ['x'], [1, null], false],
             'password' => [PasswordType::class, 'password', ['type' => 'string', 'format' => 'password'], ['x'], [1, null], false],
-            'regex' => [RegexType::class, 'regex', ['type' => 'string', 'format' => 'regex'], ['^a$', '('], [1, null], false],
+            'regex' => [RegexType::class, 'regex', ['type' => 'string', 'format' => 'regex'], ['^a$', '', 'a/b', '^a\\/b$', '(?<year>\\d{4})'], ['(', '[a-', 'a\\', 1, null], false],
             'hostname' => [
                 HostnameType::class, 'hostname',
                 ['type' => 'string', 'format' => 'hostname', 'maxLength' => 255, 'minLength' => 1],

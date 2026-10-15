@@ -117,6 +117,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ChoicesShorthand::class)]
 #[UsesClass(FormDefinition::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Data\FieldPath::class)]
 final class FormDataProcessorStringCastTest extends TestCase
 {
     private FormDataProcessorInterface $processor;

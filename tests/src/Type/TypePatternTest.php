@@ -48,6 +48,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UriType::class)]
 #[CoversClass(UuidType::class)]
 #[CoversClass(WeekType::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\Pattern::class)]
 final class TypePatternTest extends TestCase
 {
     // =========================================================================

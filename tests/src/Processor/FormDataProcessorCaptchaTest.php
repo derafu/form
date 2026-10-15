@@ -59,6 +59,7 @@ use Symfony\Component\Translation\Translator;
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Data\FieldPath::class)]
 final class FormDataProcessorCaptchaTest extends TestCase
 {
     private const INVALID = 'The captcha is not valid. Try again.';

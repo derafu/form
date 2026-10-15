@@ -29,7 +29,9 @@ use Derafu\Form\Contract\FormInterface;
  *      - required:  always placed first in validate, deduplicated.
  *
  * resolve() fills the form's own FormRulesInterface instance in place.
- * After calling it, $form->getRules() contains the complete resolved set.
+ * After calling it, $form->getRules() reads the complete resolved set, and the
+ * explicit rules that it starts from are always the declared ones: resolving a
+ * form again gives the same result.
  */
 interface FormRulesResolverInterface
 {

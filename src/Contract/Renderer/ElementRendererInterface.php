@@ -20,6 +20,20 @@ use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
  *
  * Element renderers are responsible for rendering UI schema elements like
  * controls, layouts, groups, etc.
+ *
+ * The options of an element come from several places, and the one that is
+ * closest to the element decides. From the one that decides last to the one that
+ * decides first:
+ *
+ *   1. The defaults of the renderer.
+ *   2. The options of the form (its `options` section).
+ *   3. The options that are passed when rendering (`$options`), that go down to
+ *      all the elements.
+ *   4. The options of the element (its `options` in the UI schema).
+ *
+ * A layout can also give options to each one of its children by their index
+ * (`elements_options`, in its own options or in the ones that are passed), that
+ * count as options that are passed to that child.
  */
 interface ElementRendererInterface
 {

@@ -17,6 +17,8 @@ use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\HorizontalLayoutInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\FormRenderer;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -54,28 +56,34 @@ final class HorizontalLayoutRenderer implements ElementRendererInterface
         // Get elements of the horizontal layout.
         $uiElements = $element->getElements();
 
+        // The options of the layout: its own decide before the ones that are
+        // passed, and the children do not get them.
+        $layoutOptions = array_merge($options, $element->getOptions());
+
+        // The options of each child, by its index (`elements_options`): they are
+        // passed to the child, and the size and the class of its column are
+        // taken from them, before what the child asks for.
+        $elementsOptions = ArrayReader::from($layoutOptions)->listOf('elements_options', ArrayType::map()) ?? [];
+
         // Render each element.
         $elementsHtml = [];
-        $elementsOptions = [];
+        $columns = [];
 
-        foreach ($uiElements as $uiElement) {
-            // Check if this element has specific options for the horizontal layout.
-            $elementOptions = $options;
-
-            // If the element has options for column sizing, extract them.
-            $uiElementOptions = $uiElement->getOptions();
-            if (isset($uiElementOptions['col_size'])) {
-                $elementOptions['col_size'] = $uiElementOptions['col_size'];
+        foreach ($uiElements as $index => $uiElement) {
+            // The size of the column that the element asks for.
+            $column = [];
+            $colSize = ArrayReader::from($uiElement->getOptions())->get('col_size', ArrayType::scalar());
+            if ($colSize !== null) {
+                $column['col_size'] = $colSize;
             }
-
-            // Store the options for this element.
-            $elementsOptions[] = $elementOptions;
+            $elementOptions = $elementsOptions[$index] ?? [];
+            $columns[] = array_merge($column, $elementOptions);
 
             // Render the element.
             $elementsHtml[] = $formRenderer->renderElement(
                 $uiElement,
                 $form,
-                $options
+                array_merge($options, $elementOptions)
             );
         }
 
@@ -83,9 +91,9 @@ final class HorizontalLayoutRenderer implements ElementRendererInterface
         $context = [
             'element' => $element,
             'form' => $form,
-            'options' => $options,
+            'options' => $layoutOptions,
             'elements_html' => $elementsHtml,
-            'elements_options' => $elementsOptions,
+            'columns' => $columns,
         ];
 
         // Render the template.

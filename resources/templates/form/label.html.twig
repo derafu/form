@@ -26,7 +26,7 @@
 
 {# Build the HTML attributes for the label. #}
 {% set final_attr = {
-    'for': field.property.getName() ~ '_field'
+    'for': field.name ~ '_field'
 } %}
 
 {% if label_class is not empty %}

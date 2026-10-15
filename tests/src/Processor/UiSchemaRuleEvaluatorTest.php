@@ -37,6 +37,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UiSchemaCompositeCondition::class)]
 #[CoversClass(UiSchemaCompositeConditionType::class)]
 #[CoversClass(ConditionSchema::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\Pattern::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Data\FieldPath::class)]
 final class UiSchemaRuleEvaluatorTest extends TestCase
 {
     private UiSchemaRuleEvaluator $evaluator;
@@ -416,5 +418,30 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
 
         $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => 'yes']));
         $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'no']));
+    }
+
+    public function testPatternWithSlashesIsMatched(): void
+    {
+        foreach (['^a/b$', '^a\\/b$'] as $pattern) {
+            $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => $pattern]);
+
+            $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => 'a/b']), $pattern);
+            $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'ab']), $pattern);
+        }
+    }
+
+    public function testAConditionCanBeOnAFieldOfAnObject(): void
+    {
+        $rule = new UiSchemaRule(
+            UiSchemaRuleEffect::SHOW,
+            new UiSchemaCompositeCondition(
+                UiSchemaCompositeConditionType::AND,
+                [new UiSchemaCondition('#/properties/a/properties/b', ConditionSchema::fromArray(['const' => 'yes']))]
+            )
+        );
+
+        $this->assertTrue($this->evaluator->isActive($rule, ['a' => ['b' => 'yes']]));
+        $this->assertFalse($this->evaluator->isActive($rule, ['a' => ['b' => 'no']]));
+        $this->assertTrue($this->evaluator->isActive($rule, ['a.b' => 'yes']));
     }
 }

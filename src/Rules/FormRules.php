@@ -22,21 +22,36 @@ use Derafu\Translation\Exception\Logic\TranslatableBadMethodCallException;
 /**
  * Per-field processing rules for a form.
  *
- * Starts with the rules declared in the form's 'rules' section. After the
- * resolver calls fill(), the collection holds the complete merged set
- * (schema-derived + UI-derived + explicit). All reads always reflect the
- * current contents of the collection.
+ * It holds two sets of rules:
+ *
+ *   - The rules **declared** in the form's 'rules' section. They are set when
+ *     the object is created and never change: they are what toArray() and
+ *     jsonSerialize() give, because they are the definition of the form.
+ *   - The rules **resolved** by the resolver with fill(): the complete merged
+ *     set (schema-derived + UI-derived + explicit). Once there is one, every
+ *     read (ArrayAccess and the getters of each category) gives it; before
+ *     that, the declared rules.
+ *
+ * The resolver always starts from the declared rules, so resolving a form again
+ * gives the same result.
  *
  * ArrayAccess writes are not supported; use fill() for bulk population.
  */
 final class FormRules implements FormRulesInterface
 {
     /**
-     * The rules of each field.
+     * The rules that the definition of the form declares, of each field.
      *
      * @var array<string, RuleSet>
      */
-    private array $rules;
+    private array $declared;
+
+    /**
+     * The rules that the resolver gave, of each field (`null` until it does).
+     *
+     * @var array<string, RuleSet>|null
+     */
+    private ?array $resolved = null;
 
     /**
      * @param array<string, array<array-key, mixed>> $rules Rules keyed by field
@@ -46,7 +61,7 @@ final class FormRules implements FormRulesInterface
      */
     public function __construct(array $rules = [])
     {
-        $this->rules = $this->toSets($rules);
+        $this->declared = $this->toSets($rules);
     }
 
     /**
@@ -57,7 +72,18 @@ final class FormRules implements FormRulesInterface
      */
     public function fill(array $resolvedRules): void
     {
-        $this->rules = $this->toSets($resolvedRules);
+        $this->resolved = $this->toSets($resolvedRules);
+    }
+
+    /**
+     * The rules that are read: the resolved ones, or the declared ones if there
+     * are none yet.
+     *
+     * @return array<string, RuleSet>
+     */
+    private function effective(): array
+    {
+        return $this->resolved ?? $this->declared;
     }
 
     /**
@@ -65,7 +91,7 @@ final class FormRules implements FormRulesInterface
      */
     public function getCastRule(string $fieldName): ?string
     {
-        return ($this->rules[$fieldName] ?? null)?->cast;
+        return ($this->effective()[$fieldName] ?? null)?->cast;
     }
 
     /**
@@ -73,7 +99,9 @@ final class FormRules implements FormRulesInterface
      */
     public function getSanitizeRules(string $fieldName): array
     {
-        return isset($this->rules[$fieldName]) ? $this->rules[$fieldName]->sanitize : [];
+        $rules = $this->effective();
+
+        return isset($rules[$fieldName]) ? $rules[$fieldName]->sanitize : [];
     }
 
     /**
@@ -81,7 +109,9 @@ final class FormRules implements FormRulesInterface
      */
     public function getTransformRules(string $fieldName): array
     {
-        return isset($this->rules[$fieldName]) ? $this->rules[$fieldName]->transform : [];
+        $rules = $this->effective();
+
+        return isset($rules[$fieldName]) ? $rules[$fieldName]->transform : [];
     }
 
     /**
@@ -89,7 +119,9 @@ final class FormRules implements FormRulesInterface
      */
     public function getValidateRules(string $fieldName): array
     {
-        return isset($this->rules[$fieldName]) ? $this->rules[$fieldName]->validate : [];
+        $rules = $this->effective();
+
+        return isset($rules[$fieldName]) ? $rules[$fieldName]->validate : [];
     }
 
     /**
@@ -97,7 +129,7 @@ final class FormRules implements FormRulesInterface
      */
     public function offsetExists(mixed $offset): bool
     {
-        return isset($this->rules[$offset]);
+        return isset($this->effective()[$offset]);
     }
 
     /**
@@ -109,7 +141,7 @@ final class FormRules implements FormRulesInterface
      */
     public function offsetGet(mixed $offset): mixed
     {
-        return ($this->rules[$offset] ?? null)?->toArray() ?? [];
+        return ($this->effective()[$offset] ?? null)?->toArray() ?? [];
     }
 
     /**
@@ -139,7 +171,7 @@ final class FormRules implements FormRulesInterface
      */
     public function toArray(): array
     {
-        return array_map(static fn (RuleSet $rules): array => $rules->toArray(), $this->rules);
+        return array_map(static fn (RuleSet $rules): array => $rules->toArray(), $this->declared);
     }
 
     /**

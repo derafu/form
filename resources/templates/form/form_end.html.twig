@@ -1,9 +1,11 @@
 {#
    This template renders the closing form tag.
    It assumes that the 'form' variable is available and contains the form object.
+   The fields that were not rendered get the same options as the rest of the form.
 #}
 
-{% if options.render_rest|default(true) %}
-    {{ form_rest(form) }}
+{# `default` would take false for empty, so the option is read with `??`. #}
+{% if options.render_rest ?? true %}
+    {{ form_rest(form, options) }}
 {% endif %}
 </form>

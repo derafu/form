@@ -118,7 +118,9 @@ final class FormTwigExtension extends AbstractExtension
     }
 
     /**
-     * Renders the closing form tag.
+     * Renders the closing form tag, with the fields that were not rendered
+     * before it (the template of the end does it, unless the option
+     * `render_rest` is false).
      *
      * @param FormInterface $form The form to end rendering.
      * @param array<string, mixed> $options Additional options for rendering.
@@ -126,10 +128,10 @@ final class FormTwigExtension extends AbstractExtension
      */
     public function renderFormEnd(FormInterface $form, array $options = []): Markup
     {
-        $html = $this->renderer->renderRest($form, $options);
-        $html = $this->renderer->renderEnd($form, $options);
-
-        return new Markup($html, $this->charset);
+        return new Markup(
+            $this->renderer->renderEnd($form, $options),
+            $this->charset
+        );
     }
 
     /**

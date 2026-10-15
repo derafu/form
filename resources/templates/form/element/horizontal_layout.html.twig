@@ -1,26 +1,22 @@
 {#
    This template renders a horizontal layout.
    It assumes that the 'element' variable is available and contains the UI element object.
-   The 'elements_html' variable contains the child elements already rendered.
+   The 'elements_html' variable contains the child elements already rendered, and 'columns' the options of the
+   column of each one (the `col_size` that the element asks for and its `elements_options`, that decide first).
 #}
 
 {% set layout_attr = options.layout_attr|default({}) %}
 {% set layout_class = 'row ' ~ (layout_attr.class|default('')) %}
-{% set elements_count = elements_html|length %}
-
-{# Determine the default column size. #}
-{% set default_column_size = 12 // elements_count %}
 
 <div class="{{ layout_class }}"{% for attr_name, attr_value in layout_attr %} {% if attr_name != 'class' %} {{ attr_name }}="{{ attr_value }}"{% endif %}{% endfor %}>
     {% for index, element_html in elements_html %}
-        {# Get the column size for this element, if specified in the options. #}
-        {% set element_options = options.element_options[index]|default({}) %}
-        {% set col_size = element_options.col_size|default(default_column_size) %}
-        {% set col_class = 'col-md-' ~ col_size %}
+        {# The column has the size that was asked for; the ones without it share the space that is left, equally. #}
+        {% set column = columns[index]|default({}) %}
+        {% set col_class = column.col_size is defined ? 'col-md-' ~ column.col_size : 'col-md' %}
 
         {# Apply additional classes if specified. #}
-        {% if element_options.class is defined %}
-            {% set col_class = col_class ~ ' ' ~ element_options.class %}
+        {% if column.class is defined %}
+            {% set col_class = col_class ~ ' ' ~ column.class %}
         {% endif %}
 
         <div class="{{ col_class }}">

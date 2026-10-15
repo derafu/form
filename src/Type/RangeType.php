@@ -45,4 +45,16 @@ final class RangeType extends AbstractType
     {
         return Caster::requireNumber($value);
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return array<string, mixed>
+     */
+    public function getJsonSchema(): array
+    {
+        return [
+            'type' => 'number',
+        ];
+    }
 }

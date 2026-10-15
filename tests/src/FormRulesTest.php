@@ -282,4 +282,36 @@ final class FormRulesTest extends TestCase
         $this->assertSame($rules->toArray(), $rules->jsonSerialize());
         $this->assertJsonStringEqualsJsonString((string) json_encode($rules->toArray()), $rules->toJson());
     }
+
+    public function testTheResolvedRulesAreReadAndTheDeclaredOnesAreWritten(): void
+    {
+        $rules = FormRules::fromArray(['name' => ['transform' => ['uppercase']]]);
+
+        // Before the resolver: the declared ones.
+        $this->assertSame(['uppercase'], $rules->getTransformRules('name'));
+
+        $rules->fill(['name' => ['transform' => ['uppercase'], 'sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['required']]]);
+
+        // After it: the resolved ones are read...
+        $this->assertSame('string', $rules->getCastRule('name'));
+        $this->assertSame(['trim'], $rules->getSanitizeRules('name'));
+        $this->assertSame(['required'], $rules->getValidateRules('name'));
+        $this->assertSame(['uppercase'], $rules->getTransformRules('name'));
+        $this->assertSame('string', $rules['name']['cast'] ?? null);
+        $this->assertTrue($rules->offsetExists('name'));
+
+        // ...and the declared ones are written.
+        $this->assertSame(['name' => ['transform' => ['uppercase']]], $rules->toArray());
+        $this->assertSame($rules->toArray(), $rules->jsonSerialize());
+    }
+
+    public function testResolvingWithoutFieldsLeavesNoRulesToRead(): void
+    {
+        $rules = FormRules::fromArray(['name' => ['transform' => ['uppercase']]]);
+
+        $rules->fill([]);
+
+        $this->assertSame([], $rules['name']);
+        $this->assertSame(['name' => ['transform' => ['uppercase']]], $rules->toArray());
+    }
 }

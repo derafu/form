@@ -97,19 +97,16 @@ final class ControlRenderer implements ElementRendererInterface
             ]);
         }
 
-        // Merge control options with passed options.
-        $fieldOptions = array_merge($element->getOptions(), $options);
+        // Merge the options that are passed with the ones of the control: the
+        // control decides, as in every element.
+        $fieldOptions = array_merge($options, $element->getOptions());
 
-        // The control and the options that are passed can override what the
-        // form says (it is in the field) about the asterisk of the required
-        // fields (`hide_required_asterisk`) and about the browser asking for
-        // them (`native_required`): the control decides first.
+        // What the form says about the asterisk of the required fields
+        // (`hide_required_asterisk`) and about the browser asking for them
+        // (`native_required`) is in the field, and the options that are passed
+        // or the ones of the control override it. They must be booleans.
         foreach (['hide_required_asterisk', 'native_required'] as $key) {
-            $value = ArrayReader::from($element->getOptions())->bool($key)
-                ?? ArrayReader::from($options)->bool($key);
-            if ($value !== null) {
-                $fieldOptions[$key] = $value;
-            }
+            ArrayReader::from($fieldOptions)->bool($key);
         }
 
         // Evaluate initial rule state when an evaluator is available.

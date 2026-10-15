@@ -57,7 +57,7 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
         $control = $field->getControl();
 
         // Determine if there are errors.
-        $hasErrors = $options['has_errors'] ?? false;
+        $hasErrors = !$field->isValid();
 
         // Determine the CSS class of the widget.
         $widgetClass = 'form-check-input';

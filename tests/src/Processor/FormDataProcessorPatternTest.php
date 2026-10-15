@@ -80,6 +80,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(FormDefinition::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\BooleanSchema::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\Pattern::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Data\FieldPath::class)]
 final class FormDataProcessorPatternTest extends TestCase
 {
     private FormDataProcessor $processor;
@@ -343,5 +345,62 @@ final class FormDataProcessorPatternTest extends TestCase
 
         $this->assertFalse($this->processor->process($form, ['terms' => '0'])->hasErrors());
         $this->assertFalse($this->processor->process($form, [])->hasErrors());
+    }
+
+    /**
+     * A slash that is escaped in the pattern is still a slash of the pattern,
+     * not the end of it.
+     */
+    public function testPatternWithAnEscapedSlashIsProcessed(): void
+    {
+        $form = $this->formWithPattern('^a\\/b$');
+
+        $this->assertTrue($this->processor->process($form, ['code' => 'a/b'])->isValid());
+        $this->assertFalse($this->processor->process($form, ['code' => 'ab'])->isValid());
+    }
+
+    /**
+     * A field with the format `regex` must have a regular expression.
+     */
+    public function testFormatRegexNeedsARegularExpression(): void
+    {
+        $form = Form::fromArray([
+            'options' => ['csrf_protection' => false],
+            'schema' => [
+                'type' => 'object',
+                'properties' => ['rule' => ['type' => 'string', 'format' => 'regex']],
+            ],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [['type' => 'Control', 'scope' => '#/properties/rule']],
+            ],
+        ]);
+
+        $this->assertTrue($this->processor->process($form, ['rule' => '^[a-z]+/\\d$'])->isValid());
+        $this->assertFalse($this->processor->process($form, ['rule' => '(['])->isValid());
+    }
+
+    /**
+     * Processing a form again starts from the rules that its definition
+     * declares, so nothing is added to the ones of the first time.
+     */
+    public function testAFormThatIsProcessedAgainHasTheSameRules(): void
+    {
+        $form = Form::fromArray([
+            'options' => ['csrf_protection' => false],
+            'rules' => ['name' => ['transform' => ['uppercase']]],
+            'schema' => ['type' => 'object', 'required' => ['name'], 'properties' => ['name' => ['type' => 'string']]],
+            'uischema' => ['type' => 'VerticalLayout', 'elements' => [['type' => 'Control', 'scope' => '#/properties/name']]],
+        ]);
+
+        $this->processor->process($form, ['name' => ' ana ']);
+        $first = $form->getRules()['name'];
+        $result = $this->processor->process($form, ['name' => ' ana ']);
+
+        $this->assertSame($first, $form->getRules()['name']);
+        $this->assertSame(['uppercase'], $first['transform'] ?? null);
+        $this->assertSame(['trim'], $first['sanitize'] ?? null);
+        $this->assertSame(['name' => 'ANA'], $result->getProcessedData());
+        $this->assertSame(['name' => ['transform' => ['uppercase']]], $form->toArray()['rules']);
     }
 }

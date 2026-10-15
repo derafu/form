@@ -36,7 +36,13 @@ use JsonSerializable;
  * ArrayAccess contract: $rules[$fieldName] returns the complete rules array
  * for that field (same shape as the Data Processor expects) or [] when no
  * rules exist for that field. offsetSet() and offsetUnset() throw
- * BadMethodCallException; use fill() to replace the contents in bulk.
+ * BadMethodCallException; use fill() to give the resolved rules.
+ *
+ * The collection has the rules that the definition of the form declares and,
+ * after fill(), the resolved ones. The reads (ArrayAccess and the getters of
+ * each category) give the resolved rules once there are some, and the declared
+ * ones before; toArray() and jsonSerialize() always give the declared ones, that
+ * are the definition of the form.
  *
  * @extends ArrayAccess<string, array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>}>
  */
@@ -82,19 +88,20 @@ interface FormRulesInterface extends ArrayAccess, JsonSerializable
     public function getValidateRules(string $fieldName): array;
 
     /**
-     * Replaces the contents of this collection with the fully resolved rules.
+     * Gives the fully resolved rules to this collection.
      *
      * Called by FormRulesResolverInterface after merging schema-derived,
      * UI-derived, and explicit rules. Operates on the existing instance so
      * that $form->getRules() always reflects the current resolved state
-     * without creating a second object.
+     * without creating a second object. The declared rules are not replaced:
+     * a new resolution starts from them again, and toArray() still gives them.
      *
      * @param array<string, array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>}> $resolvedRules Complete per-field rules keyed by field name.
      */
     public function fill(array $resolvedRules): void;
 
     /**
-     * Returns the full rules definition as a plain array.
+     * Returns the rules that the definition declares as a plain array.
      *
      * The returned structure mirrors the 'rules' section of a form definition:
      * field names as keys, each value being an array with optional 'cast',

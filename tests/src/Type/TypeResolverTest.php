@@ -47,6 +47,7 @@ use stdClass;
 #[UsesClass(IntegerType::class)]
 #[UsesClass(ObjectType::class)]
 #[UsesClass(TextType::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\Pattern::class)]
 final class TypeResolverTest extends TestCase
 {
     private function resolver(): TypeResolver

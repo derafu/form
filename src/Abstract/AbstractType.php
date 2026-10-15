@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Abstract;
 
 use Derafu\Form\Contract\Type\TypeInterface;
+use Derafu\Form\Schema\Pattern;
 
 /**
  * Base implementation of TypeInterface.
@@ -88,7 +89,7 @@ abstract class AbstractType implements TypeInterface
             return null;
         }
 
-        return '/' . str_replace('/', '\/', static::PATTERN) . '/';
+        return Pattern::toRegex(static::PATTERN);
     }
 
     /**

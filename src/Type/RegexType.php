@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
+use Derafu\Form\Schema\Pattern;
 
 /**
  * Represents a regex type in the form.
@@ -44,6 +45,9 @@ final class RegexType extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
+     * The value is a pattern, written like the ones of JSON Schema (without
+     * delimiters): it is valid if it can be compiled.
      */
     public function validateValue(mixed $value): bool
     {
@@ -51,6 +55,14 @@ final class RegexType extends AbstractType
             return false;
         }
 
-        return true;
+        // PHP raises a warning for a pattern that can not be compiled; the
+        // result is what says it.
+        set_error_handler(static fn (): bool => true);
+
+        try {
+            return preg_match(Pattern::toRegex($value), '') !== false;
+        } finally {
+            restore_error_handler();
+        }
     }
 }

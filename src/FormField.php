@@ -135,7 +135,13 @@ final class FormField implements FormFieldInterface
      */
     public function getName(): string
     {
-        return sprintf($this->namePattern, $this->property->getName());
+        // The name of a field that is in an object has the levels after the first
+        // one in brackets (`address[city]`), as PHP reads the data of a form.
+        $levels = explode('.', $this->control->getPropertyName());
+        $first = (string) array_shift($levels);
+
+        return sprintf($this->namePattern, $first)
+            . implode('', array_map(static fn (string $level): string => '[' . $level . ']', $levels));
     }
 
     /**

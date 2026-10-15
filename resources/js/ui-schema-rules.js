@@ -277,10 +277,10 @@ export const UiSchemaRules = {
     },
 
     /**
-     * Extracts the field name from a JSON Pointer scope.
+     * Extracts the name of the control (the attribute `name`) from a JSON Pointer scope.
      *
      * "#/properties/fieldName"                     → "fieldName"
-     * "#/properties/parent/properties/child"       → "parent.child"
+     * "#/properties/parent/properties/child"       → "parent[child]"
      *
      * @param {string} scope JSON Pointer scope string.
      * @returns {string}
@@ -290,7 +290,8 @@ export const UiSchemaRules = {
         if (!match) {
             return scope;
         }
-        return match[1].replace(/\/properties\//g, '.');
+        const [first, ...levels] = match[1].split('/properties/');
+        return first + levels.map(level => `[${level}]`).join('');
     },
 
     /**

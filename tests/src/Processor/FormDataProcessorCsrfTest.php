@@ -58,6 +58,7 @@ use Symfony\Component\Translation\Translator;
 #[UsesClass(UiSchemaElementDefinition::class)]
 #[UsesClass(FormDefinition::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Data\FieldPath::class)]
 final class FormDataProcessorCsrfTest extends TestCase
 {
     private InMemoryCsrfTokenManager $manager;

@@ -119,4 +119,16 @@ final class FormFieldTest extends TestCase
         $this->assertSame(['e'], $decoded['errors']);
         $this->assertTrue($decoded['required']);
     }
+
+    #[Test]
+    public function shouldNameTheFieldOfAnObjectWithItsLevelsInBrackets(): void
+    {
+        $field = new FormField(
+            PropertySchemaFactory::create(['type' => 'string', 'name' => 'city']),
+            new Control(['type' => 'Control', 'scope' => '#/properties/address/properties/city'])
+        );
+
+        $this->assertSame('address[city]', $field->getName());
+        $this->assertSame('rows[0][address][city]', $field->setNamePattern('rows[0][%s]')->getName());
+    }
 }

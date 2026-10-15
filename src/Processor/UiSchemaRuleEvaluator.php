@@ -17,6 +17,8 @@ use Derafu\Form\Contract\UiSchema\ConditionSchemaInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaCompositeConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
+use Derafu\Form\Data\FieldPath;
+use Derafu\Form\Schema\Pattern;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
 use Derafu\Support\Caster;
@@ -95,7 +97,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
         array $data
     ): bool {
         $fieldName = $this->extractFieldNameFromScope($condition->getScope());
-        return $this->evaluateSchema($condition->getSchema(), $data[$fieldName] ?? null);
+        return $this->evaluateSchema($condition->getSchema(), FieldPath::get($data, $fieldName));
     }
 
     /**
@@ -206,7 +208,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
      */
     private function matches(string $pattern, string $text): bool
     {
-        $regex = '/' . str_replace('/', '\/', $pattern) . '/';
+        $regex = Pattern::toRegex($pattern);
 
         $warning = null;
         set_error_handler(static function (int $level, string $message) use (&$warning): bool {

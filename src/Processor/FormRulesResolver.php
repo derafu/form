@@ -24,6 +24,7 @@ use Derafu\Form\Contract\Schema\NumberSchemaInterface;
 use Derafu\Form\Contract\Schema\PropertySchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
+use Derafu\Form\Schema\Pattern;
 
 /**
  * Resolves the complete, merged processing rules for every field in a form.
@@ -104,8 +105,9 @@ final class FormRulesResolver implements FormRulesResolverInterface
     private function resolveFormToRules(FormInterface $form): array
     {
         $fieldRules = [];
-        $requiredFields = $form->getSchema()->getRequired();
-        $explicitRules = $form->getRules();
+        // What the definition declares: the rules that are in the form now may
+        // be the ones that a previous resolution gave.
+        $explicitRules = $form->getRules()->toArray();
 
         foreach ($form->getFields() as $fieldName => $field) {
             $rules = $this->resolveFieldToRules(
@@ -117,7 +119,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
             // required fields, regardless of what additional rules may have
             // added. This produces a meaningful "required" error rather than
             // "invalid file format" when no value is submitted.
-            if (in_array($fieldName, $requiredFields)) {
+            if ($field->isRequired()) {
                 $validate = array_values(
                     array_filter($rules->validate, fn (string $r) => $r !== 'required')
                 );
@@ -295,8 +297,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
             if ($property->getPattern() !== null) {
                 // JSON Schema patterns are ECMA (no delimiters). The DataProcessor's
                 // RegexRule uses preg_match(), which requires PCRE delimiters.
-                // We add '/' delimiters and escape any literal '/' inside the pattern.
-                $rules[] = 'regex:/' . str_replace('/', '\/', $property->getPattern()) . '/';
+                $rules[] = 'regex:' . Pattern::toRegex($property->getPattern());
             }
 
             if ($property->getContentMediaType() !== null) {
@@ -431,6 +432,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
             'ipv4' => 'ip',
             'ipv6' => 'ip',
             'uuid' => 'uuid',
+            'regex' => 'regex_pattern',
             'base64' => 'base64',
             'json' => 'json',
             default => 'string',

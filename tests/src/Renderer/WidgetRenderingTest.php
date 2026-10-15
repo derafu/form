@@ -113,6 +113,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\UiSchema\HorizontalLayout::class)]
 #[CoversClass(\Derafu\Form\Renderer\Support\RequiredField::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\BooleanSchema::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Data\FieldPath::class)]
 final class WidgetRenderingTest extends TestCase
 {
     /**
@@ -187,8 +188,8 @@ final class WidgetRenderingTest extends TestCase
         $html = $this->row(
             ['enum' => ['a', 'b']],
             ['options' => ['widget' => 'radio', 'placeholder' => 'Pick one']],
-            ['has_errors' => true, 'widget_class' => 'extra'],
-            [],
+            ['widget_class' => 'extra'],
+            ['errors' => ['field' => ['Bad']]],
             true
         );
 
@@ -208,10 +209,13 @@ final class WidgetRenderingTest extends TestCase
         $html = $this->row(
             ['type' => 'integer', 'minimum' => 10, 'maximum' => 20, 'multipleOf' => 5],
             ['options' => ['widget' => 'slider']],
-            ['has_errors' => true, 'widget_class' => 'extra', 'value' => 15],
-            [],
+            ['widget_class' => 'extra', 'value' => 15],
+            ['errors' => ['field' => ['Bad']]],
             true
         );
+
+        $this->assertStringContainsString('class="form-slider is-invalid extra"', $html);
+        $this->assertStringContainsString('class="slider-group is-invalid"', $html);
 
         $this->assertStringContainsString('min="10"', $html);
         $this->assertStringContainsString('max="20"', $html);
@@ -228,6 +232,8 @@ final class WidgetRenderingTest extends TestCase
         $this->assertStringContainsString('max="8"', $html);
         $this->assertStringContainsString('step="2"', $html);
         $this->assertStringContainsString('value="[1]"', $html);
+        $this->assertStringContainsString('class="form-slider"', $html);
+        $this->assertStringContainsString('class="slider-group"', $html);
     }
 
     #[Test]
@@ -447,17 +453,28 @@ final class WidgetRenderingTest extends TestCase
     }
 
     #[Test]
-    public function shouldLetTheControlDecideBeforeTheOptionsAndTheOptionsBeforeTheForm(): void
+    public function shouldLetTheControlDecideBeforeTheOptionsOfTheRenderAndThemBeforeTheForm(): void
     {
         $form = ['options' => ['hide_required_asterisk' => true]];
 
+        // The control before the options of the render...
         $this->assertStringContainsString(
             self::ASTERISK,
-            $this->row([], ['options' => ['hide_required_asterisk' => false]], ['hide_required_asterisk' => true], $form, true)
+            $this->row([], ['options' => ['hide_required_asterisk' => false]], ['hide_required_asterisk' => true], [], true)
         );
+        $this->assertStringNotContainsString(
+            self::ASTERISK,
+            $this->row([], ['options' => ['hide_required_asterisk' => true]], ['hide_required_asterisk' => false], [], true)
+        );
+
+        // ...and these before the form.
         $this->assertStringContainsString(
             self::ASTERISK,
             $this->row([], [], ['hide_required_asterisk' => false], $form, true)
+        );
+        $this->assertStringNotContainsString(
+            self::ASTERISK,
+            $this->row([], [], [], $form, true)
         );
     }
 
@@ -610,5 +627,184 @@ final class WidgetRenderingTest extends TestCase
 
         $this->assertSame(2, substr_count($html, 'data-x="y"'));
         $this->assertSame(2, preg_match_all('/<input[^>]*type="checkbox"[^>]*disabled/', $html));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $controls
+     * @param array<string, mixed> $options
+     */
+    private function columns(array $controls, array $options = []): string
+    {
+        return $this->layout([
+            'type' => 'HorizontalLayout',
+            'elements' => $controls,
+        ], $options);
+    }
+
+    #[Test]
+    public function shouldGiveEachColumnTheSizeThatItsElementAsksFor(): void
+    {
+        $html = $this->columns([
+            ['type' => 'Control', 'scope' => '#/properties/a', 'options' => ['col_size' => 4]],
+            ['type' => 'Control', 'scope' => '#/properties/b'],
+        ]);
+
+        $this->assertStringContainsString('class="col-md-4"', $html);
+        $this->assertStringContainsString('class="col-md"', $html);
+    }
+
+    #[Test]
+    public function shouldLetTheOptionsOfTheColumnsOfTheCallerDecideBeforeTheElements(): void
+    {
+        $html = $this->columns(
+            [
+                ['type' => 'Control', 'scope' => '#/properties/a', 'options' => ['col_size' => 4]],
+                ['type' => 'Control', 'scope' => '#/properties/b', 'options' => ['col_size' => 4]],
+            ],
+            ['elements_options' => [['col_size' => 8, 'class' => 'extra'], []]]
+        );
+
+        $this->assertStringContainsString('class="col-md-8 extra"', $html);
+        $this->assertStringContainsString('class="col-md-4"', $html);
+    }
+
+    #[Test]
+    public function shouldNotAcceptASizeOfColumnThatIsNotScalar(): void
+    {
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "col_size" must be of type bool|float|int|string, array given.');
+
+        $this->columns([['type' => 'Control', 'scope' => '#/properties/a', 'options' => ['col_size' => [4]]]]);
+    }
+
+    #[Test]
+    public function shouldGiveTheSameSpaceToEveryColumnWithoutSize(): void
+    {
+        $controls = array_map(
+            fn (string $name) => ['type' => 'Control', 'scope' => '#/properties/' . $name],
+            ['a', 'b']
+        );
+
+        $this->assertSame(2, substr_count($this->columns($controls), 'class="col-md"'));
+    }
+
+    #[Test]
+    public function shouldUseTheOptionsOfTheLayoutsAndOfTheGroupsThatTheDefinitionHas(): void
+    {
+        $html = $this->layout([
+            'type' => 'VerticalLayout',
+            'options' => ['layout_attr' => ['class' => 'my-vertical']],
+            'elements' => [
+                [
+                    'type' => 'HorizontalLayout',
+                    'options' => ['layout_attr' => ['class' => 'my-horizontal'], 'elements_options' => [['col_size' => 9]]],
+                    'elements' => [['type' => 'Control', 'scope' => '#/properties/a', 'options' => ['col_size' => 3]]],
+                ],
+                [
+                    'type' => 'Group',
+                    'label' => 'G',
+                    'options' => ['footer' => 'My footer'],
+                    'elements' => [['type' => 'Control', 'scope' => '#/properties/b']],
+                ],
+            ],
+        ]);
+
+        $this->assertStringContainsString('my-vertical', $html);
+        $this->assertStringContainsString('my-horizontal', $html);
+        $this->assertStringContainsString('class="col-md-9"', $html);
+        $this->assertStringContainsString('My footer', $html);
+    }
+
+    #[Test]
+    public function shouldPassTheOptionsOfEachElementOfAHorizontalLayoutToIt(): void
+    {
+        $html = $this->columns(
+            [
+                ['type' => 'Control', 'scope' => '#/properties/a'],
+                ['type' => 'Control', 'scope' => '#/properties/b'],
+            ],
+            ['elements_options' => [['attr' => ['data-x' => 'y']]]]
+        );
+
+        $this->assertSame(1, substr_count($html, 'data-x="y"'));
+    }
+
+    #[Test]
+    public function shouldRenderTheFieldsThatWereNotRenderedWhenTheFormEnds(): void
+    {
+        $form = (new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider()))))->create([
+            'schema' => ['type' => 'object', 'properties' => ['a' => ['type' => 'string'], 'b' => ['type' => 'string']]],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [
+                    ['type' => 'Control', 'scope' => '#/properties/a'],
+                    ['type' => 'Control', 'scope' => '#/properties/b'],
+                ],
+            ],
+            'options' => ['csrf_protection' => false],
+        ]);
+        $renderer = FormRendererFactory::create();
+        $extension = new \Derafu\Form\Renderer\FormTwigExtension($renderer);
+
+        // Only one of the fields is rendered: the other one comes with the end.
+        $field = $form->getField('a');
+        $this->assertNotNull($field);
+        $renderer->renderRow($field);
+
+        $end = (string) $extension->renderFormEnd($form, ['attr' => ['data-x' => 'y']]);
+        $this->assertStringContainsString('name="b"', $end);
+        $this->assertStringContainsString('data-x="y"', $end);
+        $this->assertStringNotContainsString('name="a"', $end);
+        $this->assertStringEndsWith('</form>', trim($end));
+    }
+
+    #[Test]
+    public function shouldNotRenderTheRestWhenTheEndOfTheFormSaysNot(): void
+    {
+        $form = (new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider()))))->create([
+            'schema' => ['type' => 'object', 'properties' => ['a' => ['type' => 'string']]],
+            'uischema' => ['type' => 'VerticalLayout', 'elements' => [['type' => 'Control', 'scope' => '#/properties/a']]],
+            'options' => ['csrf_protection' => false],
+        ]);
+
+        $end = (string) (new \Derafu\Form\Renderer\FormTwigExtension(FormRendererFactory::create()))
+            ->renderFormEnd($form, ['render_rest' => false]);
+
+        $this->assertStringNotContainsString('name="a"', $end);
+        $this->assertStringContainsString('</form>', $end);
+    }
+
+    #[Test]
+    public function shouldRenderTheFieldsOfAnObjectWithTheNameOfPhpAndAnAsteriskByTheListOfTheirObject(): void
+    {
+        $form = (new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider()))))->create([
+            'schema' => [
+                'type' => 'object',
+                'required' => ['contact'],
+                'properties' => [
+                    'contact' => [
+                        'type' => 'object',
+                        'required' => ['address'],
+                        'properties' => ['address' => ['type' => 'string'], 'city' => ['type' => 'string']],
+                    ],
+                ],
+            ],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [
+                    ['type' => 'Control', 'scope' => '#/properties/contact/properties/address'],
+                    ['type' => 'Control', 'scope' => '#/properties/contact/properties/city'],
+                ],
+            ],
+            'data' => ['contact' => ['address' => 'Street 1']],
+            'options' => ['csrf_protection' => false],
+        ]);
+
+        $html = html_entity_decode(FormRendererFactory::create()->render($form));
+
+        $this->assertMatchesRegularExpression('/<input[^>]*name="contact\[address\]"[^>]*value="Street 1"[^>]*required/', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*name="contact\[city\]"(?![^>]*required)/', $html);
+        $this->assertSame(1, substr_count($html, self::ASTERISK));
+        $this->assertStringContainsString('for="contact[address]_field"', $html);
     }
 }

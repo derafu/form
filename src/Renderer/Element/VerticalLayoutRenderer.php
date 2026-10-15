@@ -55,7 +55,7 @@ final class VerticalLayoutRenderer implements ElementRendererInterface
         $context = [
             'element' => $element,
             'form' => $form,
-            'options' => $options,
+            'options' => array_merge($options, $element->getOptions()),
             // Render child elements.
             'elements_html' => $formRenderer->renderElements(
                 $element->getElements(),

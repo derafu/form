@@ -2,11 +2,11 @@
    This template renders a range slider with left fill using CSS gradients.
    Method 1: Pure CSS with dynamic gradient.
 #}
-<div class="slider-group">
+<div class="slider-group{% if has_errors %} is-invalid{% endif %}">
+    {# The class of the input (with the one of the state and the extra one) comes in the attrs. #}
     {% set slider_attrs = attrs|merge({
         'id': name ~ '_field',
-        'type': 'range',
-        'class': 'form-slider'
+        'type': 'range'
     }) %}
 
     {# Set default min/max if not provided #}

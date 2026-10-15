@@ -45,9 +45,12 @@ final class UiSchemaElementFactory implements UiSchemaElementFactoryInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     public static function create(array $definition): UiSchemaElementInterface
     {
+        /** @var string $type */
         $type = $definition['type'] ?? 'Control';
 
         if (!isset(self::VALID_TYPES[$type])) {

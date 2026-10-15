@@ -39,9 +39,12 @@ final class FormUiSchemaFactory implements FormUiSchemaFactoryInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     public static function create(array $definition): FormUiSchemaInterface
     {
+        /** @var string $type */
         $type = $definition['type'] ?? 'VerticalLayout';
 
         if (!isset(self::VALID_TYPES[$type])) {

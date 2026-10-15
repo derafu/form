@@ -12,12 +12,16 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Renderer;
 
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
 use Derafu\Form\Factory\FormRendererFactory;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\Widget\TextareaWidgetRenderer;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -83,6 +87,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
 #[UsesClass(\Derafu\Form\Widget\Widget::class)]
 #[UsesClass(\Derafu\Form\Widget\WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class TextareaFloatingHeightTest extends TestCase
 {
     /**

@@ -143,7 +143,7 @@ interface FormInterface extends JsonSerializable
      * rather than modifying the current one.
      *
      * @param FormDataInterface $data The data to use for the new form instance.
-     * @param array<string, array>|null $errors Optional errors for each field (by name)
+     * @param array<string, array<string>>|null $errors Optional errors for each field (by name)
      * @param array<string>|null $formErrors Optional errors of the form as a whole.
      * @return static A new form instance with the updated data and errors.
      */
@@ -156,7 +156,7 @@ interface FormInterface extends JsonSerializable
     /**
      * Converts the Form to an array representation.
      *
-     * @return array The complete form as an array.
+     * @return array<string, mixed> The complete form as an array.
      */
     public function toArray(): array;
 
@@ -170,7 +170,7 @@ interface FormInterface extends JsonSerializable
     /**
      * Gets the JSON Forms definition for this form.
      *
-     * @return array JSON Forms definition (schema, uischema, data).
+     * @return array<string, mixed> JSON Forms definition (schema, uischema, data).
      */
     public function toJsonFormDefinition(): array;
 
@@ -179,7 +179,7 @@ interface FormInterface extends JsonSerializable
      *
      * The array should contain 'schema', 'uischema', and optionally 'data' keys.
      *
-     * @param array $definition The array definition of the form.
+     * @param array<string, mixed> $definition The array definition of the form.
      * @return static A new form instance based on the provided definition.
      */
     public static function fromArray(array $definition): static;

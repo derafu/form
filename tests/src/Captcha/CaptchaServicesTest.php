@@ -78,10 +78,10 @@ final class CaptchaServicesTest extends TestCase
     {
         $container = $this->container(withProvider: true);
 
-        $html = $container->get(FormRendererInterface::class)->render($this->form());
+        $html = $this->service($container, FormRendererInterface::class)->render($this->form());
         $this->assertStringContainsString('<div class="test-captcha" data-form="contact"></div>', $html);
 
-        $processor = $container->get(FormDataProcessorInterface::class);
+        $processor = $this->service($container, FormDataProcessorInterface::class);
         $this->assertFalse($processor->process($this->form(), ['email' => 'a@b.cl'])->isValid());
         $this->assertTrue($processor->process($this->form(), ['email' => 'a@b.cl', 'test-captcha-response' => 'solved-contact'])->isValid());
     }
@@ -92,13 +92,26 @@ final class CaptchaServicesTest extends TestCase
         $container = $this->container(withProvider: false);
 
         try {
-            $container->get(FormRendererInterface::class)->render($this->form());
+            $this->service($container, FormRendererInterface::class)->render($this->form());
             $this->fail('A protected form was rendered without a captcha.');
         } catch (RuntimeError $e) {
             $this->assertInstanceOf(TranslatableLogicException::class, $e->getPrevious());
         }
 
         $this->expectException(TranslatableLogicException::class);
-        $container->get(FormDataProcessorInterface::class)->process($this->form(), ['email' => 'a@b.cl']);
+        $this->service($container, FormDataProcessorInterface::class)->process($this->form(), ['email' => 'a@b.cl']);
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $id
+     * @return T
+     */
+    private function service(ContainerBuilder $container, string $id): object
+    {
+        $service = $container->get($id);
+        $this->assertInstanceOf($id, $service);
+
+        return $service;
     }
 }

@@ -104,7 +104,7 @@ interface PropertySchemaInterface extends JsonSerializable
      * Provide sample values associated with a particular property, for the
      * purpose of illustrating usage.
      *
-     * @return array|null
+     * @return list<mixed>|null
      * @link https://www.learnjsonschema.com/2020-12/meta-data/examples/
      */
     public function getExamples(): ?array;
@@ -112,7 +112,7 @@ interface PropertySchemaInterface extends JsonSerializable
     /**
      * Sets the property examples.
      *
-     * @param array $examples
+     * @param list<mixed> $examples
      * @return static The current instance.
      */
     public function setExamples(array $examples): static;
@@ -165,7 +165,7 @@ interface PropertySchemaInterface extends JsonSerializable
      *
      * Property value must be equal to one of the elements in this array.
      *
-     * @return array|null Array of allowed values or `null` if not an enum.
+     * @return list<bool|float|int|string>|null Array of allowed values or `null` if not an enum.
      * @link https://www.learnjsonschema.com/2020-12/validation/enum/
      */
     public function getEnum(): ?array;
@@ -173,7 +173,7 @@ interface PropertySchemaInterface extends JsonSerializable
     /**
      * Sets the enum values for the property.
      *
-     * @param array $enum
+     * @param list<bool|float|int|string> $enum
      * @return static The current instance.
      */
     public function setEnum(array $enum): static;
@@ -198,7 +198,7 @@ interface PropertySchemaInterface extends JsonSerializable
      * Gets the list of options for a property where the property value must
      * match all of this options.
      *
-     * @return array|null
+     * @return list<array<string, mixed>>|null
      * @link https://www.learnjsonschema.com/2020-12/applicator/allof/
      */
     public function getAllOf(): ?array;
@@ -207,7 +207,7 @@ interface PropertySchemaInterface extends JsonSerializable
      * Sets the list of options for a property where the property value must
      * match all of this options.
      *
-     * @param array $allOf
+     * @param list<array<string, mixed>> $allOf
      * @return static The current instance.
      */
     public function setAllOf(array $allOf): static;
@@ -216,7 +216,7 @@ interface PropertySchemaInterface extends JsonSerializable
      * Gets the list of options for a property where the property value must
      * match at least one of this options.
      *
-     * @return array|null
+     * @return list<array<string, mixed>>|null
      * @link https://www.learnjsonschema.com/2020-12/applicator/anyof/
      */
     public function getAnyOf(): ?array;
@@ -225,7 +225,7 @@ interface PropertySchemaInterface extends JsonSerializable
      * Sets the list of options for a property where the property value must
      * match at least one of this options.
      *
-     * @param array $anyOf
+     * @param list<array<string, mixed>> $anyOf
      * @return static The current instance.
      */
     public function setAnyOf(array $anyOf): static;
@@ -234,7 +234,7 @@ interface PropertySchemaInterface extends JsonSerializable
      * Gets the list of options for a property where the property value must
      * match exactly one of this options.
      *
-     * @return array[]|null
+     * @return list<array<string, mixed>>|null
      * @link https://www.learnjsonschema.com/2020-12/applicator/oneof/
      */
     public function getOneOf(): ?array;
@@ -243,7 +243,7 @@ interface PropertySchemaInterface extends JsonSerializable
      * Sets the list of options for a property where the property value must
      * match exactly one of this options.
      *
-     * @param array[] $oneOf
+     * @param list<array<string, mixed>> $oneOf
      * @return static The current instance.
      */
     public function setOneOf(array $oneOf): static;
@@ -268,7 +268,7 @@ interface PropertySchemaInterface extends JsonSerializable
     /**
      * Converts the Schema to an array representation.
      *
-     * @return array The complete schema as an array.
+     * @return array<string, mixed> The complete schema as an array.
      */
     public function toArray(): array;
 
@@ -282,7 +282,7 @@ interface PropertySchemaInterface extends JsonSerializable
     /**
      * Create a Schema instance from an array.
      *
-     * @param array $definition The schema definition as an array.
+     * @param array<string, mixed> $definition The schema definition as an array.
      * @return static
      */
     public static function fromArray(array $definition): static;

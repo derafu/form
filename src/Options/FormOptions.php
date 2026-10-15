@@ -19,6 +19,8 @@ use Derafu\Support\JsonSerializer;
 
 /**
  * Implementation of the OptionsInterface that represents a form options.
+ *
+ * @extends ArrayObject<string, mixed>
  */
 final class FormOptions extends ArrayObject implements FormOptionsInterface
 {
@@ -63,9 +65,9 @@ final class FormOptions extends ArrayObject implements FormOptionsInterface
     public function getAttributes(): FormAttributesInterface
     {
         if (!isset($this->attributes)) {
-            $this->attributes = FormAttributes::fromArray(
-                $this->get('attributes', [])
-            );
+            /** @var array<string, mixed> $attributes */
+            $attributes = $this->get('attributes', []);
+            $this->attributes = FormAttributes::fromArray($attributes);
         }
 
         return $this->attributes;
@@ -83,6 +85,8 @@ final class FormOptions extends ArrayObject implements FormOptionsInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -91,6 +95,8 @@ final class FormOptions extends ArrayObject implements FormOptionsInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -109,7 +115,7 @@ final class FormOptions extends ArrayObject implements FormOptionsInterface
      * Handle dot notation.
      *
      * @param string $path
-     * @return array
+     * @return list<string>
      */
     private function parsePath(string $path): array
     {
@@ -122,6 +128,8 @@ final class FormOptions extends ArrayObject implements FormOptionsInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $data
      */
     public static function fromArray(array $data): static
     {

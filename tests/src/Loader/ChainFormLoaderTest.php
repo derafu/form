@@ -14,13 +14,17 @@ namespace Derafu\TestsForm\Loader;
 
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Loader\ChainFormLoader;
 use Derafu\Form\Loader\JsonFormLoader;
 use Derafu\Form\Loader\PhpFormLoader;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
@@ -69,6 +73,10 @@ use RuntimeException;
 #[UsesClass(\Derafu\Form\Type\WeekType::class)]
 #[UsesClass(\Derafu\Form\UiSchema\Control::class)]
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class ChainFormLoaderTest extends TestCase
 {
     private const FIXTURES = __DIR__ . '/../../fixtures/forms';

@@ -17,6 +17,8 @@ use JsonSerializable;
 
 /**
  * Represents the options for a form.
+ *
+ * @extends ArrayAccess<string, mixed>
  */
 interface FormOptionsInterface extends ArrayAccess, JsonSerializable
 {
@@ -56,7 +58,7 @@ interface FormOptionsInterface extends ArrayAccess, JsonSerializable
     /**
      * Converts the Options to an array representation.
      *
-     * @return array The complete options as an array.
+     * @return array<string, mixed> The complete options as an array.
      */
     public function toArray(): array;
 
@@ -70,7 +72,7 @@ interface FormOptionsInterface extends ArrayAccess, JsonSerializable
     /**
      * Creates a FormOptions instance from an array.
      *
-     * @param array $data The options data as an array.
+     * @param array<string, mixed> $data The options data as an array.
      * @return static The FormOptions instance.
      */
     public static function fromArray(array $data): static;

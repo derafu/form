@@ -14,6 +14,7 @@ namespace Derafu\Form\Abstract;
 
 use Derafu\Form\Contract\Schema\PropertySchemaInterface;
 use Derafu\Support\JsonSerializer;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Base implementation of PropertySchemaInterface.
@@ -60,7 +61,7 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
     /**
      * Sample values for the property.
      *
-     * @var array|null
+     * @var list<mixed>|null
      */
     protected ?array $examples = null;
 
@@ -95,21 +96,21 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
     /**
      * List of schemas that the property must match all of.
      *
-     * @var array|null
+     * @var list<array<string, mixed>>|null
      */
     protected ?array $allOf = null;
 
     /**
      * List of schemas that the property must match at least one of.
      *
-     * @var array|null
+     * @var list<array<string, mixed>>|null
      */
     protected ?array $anyOf = null;
 
     /**
      * List of schemas that the property must match exactly one of.
      *
-     * @var array|null
+     * @var list<array<string, mixed>>|null
      */
     protected ?array $oneOf = null;
 
@@ -215,6 +216,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return list<mixed>|null
      */
     public function getExamples(): ?array
     {
@@ -223,6 +226,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param list<mixed> $examples
      */
     public function setExamples(array $examples): static
     {
@@ -274,6 +279,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return list<bool|float|int|string>|null
      */
     public function getEnum(): ?array
     {
@@ -282,6 +289,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param list<bool|float|int|string> $enum
      */
     public function setEnum(array $enum): static
     {
@@ -310,6 +319,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return list<array<string, mixed>>|null
      */
     public function getAllOf(): ?array
     {
@@ -318,6 +329,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param list<array<string, mixed>> $allOf
      */
     public function setAllOf(array $allOf): static
     {
@@ -328,6 +341,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return list<array<string, mixed>>|null
      */
     public function getAnyOf(): ?array
     {
@@ -336,6 +351,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param list<array<string, mixed>> $anyOf
      */
     public function setAnyOf(array $anyOf): static
     {
@@ -346,6 +363,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return list<array<string, mixed>>|null
      */
     public function getOneOf(): ?array
     {
@@ -354,6 +373,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param list<array<string, mixed>> $oneOf
      */
     public function setOneOf(array $oneOf): static
     {
@@ -364,6 +385,9 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @throws InvalidArgumentException If the value or the title of a choice is
+     * not a string, a number or a boolean.
      */
     public function getChoices(): ?array
     {
@@ -371,7 +395,7 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
             $choices = [];
             foreach ($this->oneOf as $option) {
                 if (isset($option['const'])) {
-                    $choices[$option['const']] = $option['title'] ?? $option['const'];
+                    $choices[self::choiceText($option['const'])] = self::choiceText($option['title'] ?? $option['const']);
                 }
             }
             return $choices !== [] ? $choices : null;
@@ -380,7 +404,7 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
         if ($this->enum !== null) {
             $choices = [];
             foreach ($this->enum as $value) {
-                $choices[$value] = $value;
+                $choices[self::choiceText($value)] = self::choiceText($value);
             }
             return $choices !== [] ? $choices : null;
         }
@@ -389,7 +413,28 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
     }
 
     /**
+     * Turns the value or the title of a choice into its text.
+     *
+     * A boolean or a number is written as PHP does (`true` is `"1"`, `1.5` is
+     * `"1.5"`), so two different values are never the same key.
+     *
+     * @param mixed $value The value or the title of the choice.
+     * @return string The text.
+     * @throws InvalidArgumentException If it is not a string, a number or a
+     * boolean.
+     */
+    private static function choiceText(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : throw new InvalidArgumentException([
+            'The value or the title of a choice must be a string, a number or a boolean, {given} given.',
+            'given' => get_debug_type($value),
+        ]);
+    }
+
+    /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -467,6 +512,8 @@ abstract class AbstractPropertySchema implements PropertySchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     abstract public static function fromArray(array $definition): static;
 }

@@ -14,11 +14,16 @@ namespace Derafu\TestsForm\Loader;
 
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Loader\JsonFormLoader;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
@@ -65,6 +70,10 @@ use RuntimeException;
 #[UsesClass(\Derafu\Form\Type\WeekType::class)]
 #[UsesClass(\Derafu\Form\UiSchema\Control::class)]
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class JsonFormLoaderTest extends TestCase
 {
     private const FIXTURES = __DIR__ . '/../../fixtures/forms';
@@ -109,8 +118,71 @@ final class JsonFormLoaderTest extends TestCase
         $loader->load('broken');
     }
 
+    public function testDataThatIsNotAnObjectCanNotBeMerged(): void
+    {
+        $loader = new JsonFormLoader($this->makeFactory());
+        $loader->addPath(self::FIXTURES);
+
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "data" must be of type object, string given.');
+
+        $loader->load('bad-data', [], ['name' => 'from-call']);
+    }
+
+    public function testUnreadableFileThrows(): void
+    {
+        $directory = sys_get_temp_dir() . '/derafu-form-' . uniqid('', true);
+        mkdir($directory);
+        $file = $directory . '/locked.form.json';
+        file_put_contents($file, '{}');
+        // The loader says the path that it resolved (/var is /private/var in macOS).
+        $resolved = (string) realpath($file);
+        chmod($file, 0000);
+
+        // PHP warns that the file can not be read.
+        set_error_handler(static fn (): bool => true);
+
+        try {
+            if (is_readable($file)) {
+                $this->markTestSkipped('The file can be read (the user is root).');
+            }
+
+            $loader = new JsonFormLoader($this->makeFactory());
+            $loader->addPath($directory);
+
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('Failed to read JSON form file "' . $resolved . '".');
+
+            $loader->load('locked');
+        } finally {
+            restore_error_handler();
+            chmod($file, 0644);
+            unlink($file);
+            rmdir($directory);
+        }
+    }
+
     private function makeFactory(): FormFactoryInterface
     {
         return new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider())));
+    }
+
+    public function testAFileThatIsNotADefinitionThrows(): void
+    {
+        $directory = sys_get_temp_dir() . '/derafu-form-' . uniqid('', true);
+        mkdir($directory);
+        file_put_contents($directory . '/scalar.form.json', '5');
+
+        try {
+            $loader = new JsonFormLoader($this->makeFactory());
+            $loader->addPath($directory);
+
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('must decode to an array');
+            $loader->load('scalar');
+        } finally {
+            unlink($directory . '/scalar.form.json');
+            rmdir($directory);
+        }
     }
 }

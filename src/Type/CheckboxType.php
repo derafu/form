@@ -35,6 +35,8 @@ final class CheckboxType extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

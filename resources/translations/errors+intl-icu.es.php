@@ -80,8 +80,12 @@ return [
         'Una definición de UiSchemaCompositeCondition requiere la clave "type".',
     'A UiSchemaCompositeCondition definition requires a non-empty "conditions" array.' =>
         'Una definición de UiSchemaCompositeCondition requiere un arreglo "conditions" no vacío.',
-    'Invalid PCRE pattern in rule condition: "{pattern}".' =>
-        'Patrón PCRE inválido en la condición de la regla: "{pattern}".',
+    'The value or the title of a choice must be a string, a number or a boolean, {given} given.' =>
+        'El valor o el título de una opción debe ser un string, un número o un booleano, se entregó {given}.',
+    'The "widget" option of the control "{scope}" must be a string, {given} given.' =>
+        'La opción "widget" del control "{scope}" debe ser un string, se entregó {given}.',
+    'Invalid PCRE pattern in rule condition: "{pattern}": {error}' =>
+        'Patrón PCRE inválido en la condición de la regla: "{pattern}": {error}',
 
     // Types.
     "Type ''{type}'' not found in registry. Available types: {types}." =>
@@ -140,6 +144,8 @@ return [
         'FormRules no soporta offsetSet(). Usa fill() para entregar las reglas resueltas.',
     'FormRules does not support offsetUnset().' =>
         'FormRules no soporta offsetUnset().',
+    'Failed to read JSON form file "{file}".' =>
+        'No se pudo leer el archivo JSON del formulario "{file}".',
     'The directory "{directory}" does not exist.' =>
         'El directorio "{directory}" no existe.',
     'The file "{file}" does not exist.' =>

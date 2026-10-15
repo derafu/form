@@ -107,6 +107,9 @@ final class TypePatternTest extends TestCase
         }
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function typesWithPatternProvider(): array
     {
         return [

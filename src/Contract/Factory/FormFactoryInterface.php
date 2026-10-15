@@ -26,7 +26,7 @@ interface FormFactoryInterface
      * If `schema` or `uischema` are not provided, they will be automatically
      * generated based on the data.
      *
-     * @param array $definition The form definition with schema, uischema and data.
+     * @param array<string, mixed> $definition The form definition with schema, uischema and data.
      * @return FormInterface A new form instance.
      * @throws InvalidArgumentException If the definition is invalid.
      */

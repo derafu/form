@@ -25,7 +25,7 @@ abstract class AbstractType implements TypeInterface
     /**
      * The options of the type.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected array $options = [];
 
@@ -39,7 +39,7 @@ abstract class AbstractType implements TypeInterface
     /**
      * Constructor.
      *
-     * @param array $options The options of the type.
+     * @param array<string, mixed> $options The options of the type.
      */
     public function __construct(array $options = [])
     {
@@ -51,6 +51,8 @@ abstract class AbstractType implements TypeInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getOptions(): array
     {
@@ -67,6 +69,8 @@ abstract class AbstractType implements TypeInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function setOptions(array $options): static
     {
@@ -93,13 +97,11 @@ abstract class AbstractType implements TypeInterface
     public function validateValue(mixed $value): bool
     {
         $regex = $this->getRegex();
-        if ($regex !== null) {
-            if (!preg_match($regex, $value)) {
-                return false;
-            }
+        if ($regex === null) {
+            return true;
         }
 
-        return true;
+        return is_string($value) && preg_match($regex, $value) === 1;
     }
 
     /**
@@ -112,6 +114,8 @@ abstract class AbstractType implements TypeInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {
@@ -137,7 +141,7 @@ abstract class AbstractType implements TypeInterface
     /**
      * Get the default options for the type.
      *
-     * @return array The default options.
+     * @return array<string, mixed> The default options.
      */
     protected function getDefaultOptions(): array
     {

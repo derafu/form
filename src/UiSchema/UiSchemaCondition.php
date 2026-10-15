@@ -61,6 +61,8 @@ final class UiSchemaCondition implements UiSchemaConditionInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -80,6 +82,7 @@ final class UiSchemaCondition implements UiSchemaConditionInterface
      */
     public static function fromArray(array $definition): static
     {
+        /** @var array{scope?: string, schema?: array<string, mixed>} $definition */
         if (!isset($definition['scope'])) {
             throw new InvalidArgumentException(
                 'A UiSchemaCondition definition requires a "scope" key.'

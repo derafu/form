@@ -152,6 +152,8 @@ final class IntegerSchema extends AbstractPropertySchema implements IntegerSchem
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -182,79 +184,82 @@ final class IntegerSchema extends AbstractPropertySchema implements IntegerSchem
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     public static function fromArray(array $definition): static
     {
-        $schema = new static($definition['name'] ?? '');
+        $def = PropertyDefinition::fromArray($definition);
+        $schema = new static($def->name);
 
         // Set common properties.
-        if (isset($definition['title'])) {
-            $schema->setTitle($definition['title']);
+        if ($def->title !== null) {
+            $schema->setTitle($def->title);
         }
 
-        if (isset($definition['description'])) {
-            $schema->setDescription($definition['description']);
+        if ($def->description !== null) {
+            $schema->setDescription($def->description);
         }
 
-        if (isset($definition['default'])) {
-            $schema->setDefault($definition['default']);
+        if ($def->default !== null) {
+            $schema->setDefault($def->default);
         }
 
-        if (isset($definition['deprecated'])) {
-            $schema->setDeprecated($definition['deprecated']);
+        if ($def->deprecated !== null) {
+            $schema->setDeprecated($def->deprecated);
         }
 
-        if (isset($definition['examples'])) {
-            $schema->setExamples($definition['examples']);
+        if ($def->examples !== null) {
+            $schema->setExamples($def->examples);
         }
 
-        if (isset($definition['readOnly'])) {
-            $schema->setReadOnly($definition['readOnly']);
+        if ($def->readOnly !== null) {
+            $schema->setReadOnly($def->readOnly);
         }
 
-        if (isset($definition['writeOnly'])) {
-            $schema->setWriteOnly($definition['writeOnly']);
+        if ($def->writeOnly !== null) {
+            $schema->setWriteOnly($def->writeOnly);
         }
 
-        if (isset($definition['enum'])) {
-            $schema->setEnum($definition['enum']);
+        if ($def->enum !== null) {
+            $schema->setEnum($def->enum);
         }
 
-        if (isset($definition['const'])) {
-            $schema->setConst($definition['const']);
+        if ($def->const !== null) {
+            $schema->setConst($def->const);
         }
 
-        if (isset($definition['allOf'])) {
-            $schema->setAllOf($definition['allOf']);
+        if ($def->allOf !== null) {
+            $schema->setAllOf($def->allOf);
         }
 
-        if (isset($definition['anyOf'])) {
-            $schema->setAnyOf($definition['anyOf']);
+        if ($def->anyOf !== null) {
+            $schema->setAnyOf($def->anyOf);
         }
 
-        if (isset($definition['oneOf'])) {
-            $schema->setOneOf($definition['oneOf']);
+        if ($def->oneOf !== null) {
+            $schema->setOneOf($def->oneOf);
         }
 
         // Set integer-specific properties.
-        if (isset($definition['exclusiveMaximum'])) {
-            $schema->setExclusiveMaximum((int)$definition['exclusiveMaximum']);
+        if ($def->exclusiveMaximum !== null) {
+            $schema->setExclusiveMaximum((int)$def->exclusiveMaximum);
         }
 
-        if (isset($definition['exclusiveMinimum'])) {
-            $schema->setExclusiveMinimum((int)$definition['exclusiveMinimum']);
+        if ($def->exclusiveMinimum !== null) {
+            $schema->setExclusiveMinimum((int)$def->exclusiveMinimum);
         }
 
-        if (isset($definition['maximum'])) {
-            $schema->setMaximum((int)$definition['maximum']);
+        if ($def->maximum !== null) {
+            $schema->setMaximum((int)$def->maximum);
         }
 
-        if (isset($definition['minimum'])) {
-            $schema->setMinimum((int)$definition['minimum']);
+        if ($def->minimum !== null) {
+            $schema->setMinimum((int)$def->minimum);
         }
 
-        if (isset($definition['multipleOf'])) {
-            $schema->setMultipleOf((int)$definition['multipleOf']);
+        if ($def->multipleOf !== null) {
+            $schema->setMultipleOf((int)$def->multipleOf);
         }
 
         return $schema;

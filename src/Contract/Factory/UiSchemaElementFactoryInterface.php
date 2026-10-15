@@ -22,7 +22,7 @@ interface UiSchemaElementFactoryInterface
     /**
      * Create a UiSchemaElement instance from an array.
      *
-     * @param array $definition The UI schema definition as an array.
+     * @param array<string, mixed> $definition The UI schema definition as an array.
      * @return UiSchemaElementInterface The created UiSchemaElement instance.
      */
     public static function create(array $definition): UiSchemaElementInterface;

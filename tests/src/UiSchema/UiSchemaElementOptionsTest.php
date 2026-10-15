@@ -17,8 +17,10 @@ use Derafu\Form\UiSchema\Categorization;
 use Derafu\Form\UiSchema\Category;
 use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\HorizontalLayout;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(AbstractUiSchemaElement::class)]
@@ -27,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Categorization::class)]
 #[CoversClass(HorizontalLayout::class)]
 #[CoversClass(VerticalLayout::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
 final class UiSchemaElementOptionsTest extends TestCase
 {
     public function testGroupConstructorOptions(): void

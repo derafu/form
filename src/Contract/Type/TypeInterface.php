@@ -29,7 +29,7 @@ interface TypeInterface
     /**
      * Gets the options of the type.
      *
-     * @return array The options of the type.
+     * @return array<string, mixed> The options of the type.
      */
     public function getOptions(): array;
 
@@ -45,7 +45,7 @@ interface TypeInterface
     /**
      * Sets the options of the type.
      *
-     * @param array $options The options of the type.
+     * @param array<string, mixed> $options The options of the type.
      * @return static The current instance.
      */
     public function setOptions(array $options): static;
@@ -69,7 +69,7 @@ interface TypeInterface
     /**
      * Get the JSON schema for the type.
      *
-     * @return array The JSON schema.
+     * @return array<string, mixed> The JSON schema.
      */
     public function getJsonSchema(): array;
 

@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
+use Derafu\Support\Caster;
 
 /**
  * Represents an float type in the form.
@@ -42,11 +43,13 @@ final class FloatType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return (float)$value;
+        return (float) Caster::requireNumber($value);
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

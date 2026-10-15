@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
+use Derafu\Support\Caster;
 
 /**
  * Represents an integer type in the form.
@@ -42,11 +43,13 @@ final class IntegerType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return (int)$value;
+        return (int) Caster::requireNumber($value);
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

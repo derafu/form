@@ -16,6 +16,8 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -27,6 +29,8 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(FormFieldInterface $field, array $options = []): string
     {
@@ -37,6 +41,9 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
                 'The "renderer" option in TextareaWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
+
+        $reader = ArrayReader::from($options);
+        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
 
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -49,8 +56,9 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        if (isset($options['widget_class'])) {
-            $widgetClass .= ' ' . $options['widget_class'];
+        $extraClass = $reader->string('widget_class');
+        if ($extraClass !== null) {
+            $widgetClass .= ' ' . $extraClass;
         }
 
         // Get field name.
@@ -67,8 +75,8 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         ];
 
         // Default rows and cols.
-        $rows = $options['rows'] ?? 5;
-        $cols = $options['cols'] ?? 40;
+        $rows = $reader->int('rows') ?? 5;
+        $cols = $reader->int('cols') ?? 40;
 
         $attrs['rows'] = (string)$rows;
         $attrs['cols'] = (string)$cols;
@@ -81,7 +89,7 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         if (!empty($options['floating_labels'])) {
             $attrs['style'] = sprintf(
                 'height: calc(%d * 1.25rem + 2.25rem + 2px)',
-                max(1, (int)$rows)
+                max(1, $rows)
             );
         }
 
@@ -111,9 +119,7 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         }
 
         // Apply custom attributes from options.
-        if (isset($options['attr']) && is_array($options['attr'])) {
-            $attrs = array_merge($attrs, $options['attr']);
-        }
+        $attrs = array_merge($attrs, $customAttrs);
 
         // Prepare context for template.
         $context = [

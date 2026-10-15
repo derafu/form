@@ -60,7 +60,7 @@ trait ObjectSchemaTrait
     /**
      * Whether additional properties are allowed.
      *
-     * @var bool|array
+     * @var bool|array<string, mixed> mixed>
      */
     protected bool|array $additionalProperties = true;
 
@@ -94,7 +94,7 @@ trait ObjectSchemaTrait
     public function getProperty(string $name): ?PropertySchemaInterface
     {
         if (preg_match('~^#/properties/(.+)$~', $name, $matches)) {
-            $segments = preg_split('~/properties/~', $matches[1]);
+            $segments = explode('/properties/', $matches[1]);
         } else {
             $segments = explode('.', $name);
         }
@@ -207,6 +207,8 @@ trait ObjectSchemaTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return bool|array<string, mixed> mixed>
      */
     public function getAdditionalProperties(): bool|array
     {
@@ -215,6 +217,8 @@ trait ObjectSchemaTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @param bool|array<string, mixed> $additionalProperties
      */
     public function setAdditionalProperties(bool|array $additionalProperties = true): static
     {

@@ -14,6 +14,8 @@ namespace Derafu\Form\UiSchema;
 
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -23,6 +25,25 @@ use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as I
  */
 final class Control extends AbstractUiSchemaElement implements ControlInterface
 {
+    /**
+     * The scope of the property that the control is for.
+     */
+    private readonly string $scope;
+
+    /**
+     * Creates a control from its definition.
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If the scope is missing, or a known key
+     * has a wrong type.
+     */
+    public function __construct(array $definition)
+    {
+        parent::__construct($definition);
+
+        $this->scope = ArrayReader::from($definition)->require('scope', ArrayType::string());
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -36,7 +57,7 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
      */
     public function getScope(): string
     {
-        return $this->definition['scope'];
+        return $this->scope;
     }
 
     /**
@@ -61,7 +82,7 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
      */
     public function getPropertyName(): string
     {
-        $name = $this->definition['options']['name'] ?? null;
+        $name = ArrayReader::from($this->definition->options)->string('name');
         if ($name) {
             return $name;
         }
@@ -76,7 +97,7 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
      */
     public function getLabel(): ?string
     {
-        return $this->definition['label'] ?? null;
+        return $this->definition->label;
     }
 
     /**
@@ -84,27 +105,33 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
      */
     public function getControlType(): ?string
     {
-        return $this->definition['options']['type'] ?? null;
+        return ArrayReader::from($this->definition->options)->string('type');
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getOptions(): array
     {
-        return $this->definition['options'] ?? [];
+        return $this->definition->options;
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
-        return $this->definition;
+        return $this->definition->toArray();
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     public static function fromArray(array $definition): static
     {

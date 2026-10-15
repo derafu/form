@@ -29,7 +29,7 @@ interface PropertySchemaFactoryInterface
      * Dispatches to the concrete schema class that matches the `type` key.
      * Defaults to StringSchema when the type is absent or unrecognised.
      *
-     * @param array $definition The JSON Schema property definition, including
+     * @param array<string, mixed> $definition The JSON Schema property definition, including
      *   a `name` key that identifies the property within its parent schema.
      * @return PropertySchemaInterface
      */

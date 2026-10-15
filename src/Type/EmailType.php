@@ -43,6 +43,8 @@ final class EmailType extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

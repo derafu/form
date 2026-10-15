@@ -68,6 +68,8 @@ final class FormSchema extends AbstractPropertySchema implements FormSchemaInter
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -119,85 +121,88 @@ final class FormSchema extends AbstractPropertySchema implements FormSchemaInter
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     public static function fromArray(array $definition): static
     {
-        $schema = new static($definition['name'] ?? '');
+        $def = PropertyDefinition::fromArray($definition);
+        $schema = new static($def->name);
 
         // Set common properties.
-        if (isset($definition['title'])) {
-            $schema->setTitle($definition['title']);
+        if ($def->title !== null) {
+            $schema->setTitle($def->title);
         }
 
-        if (isset($definition['description'])) {
-            $schema->setDescription($definition['description']);
+        if ($def->description !== null) {
+            $schema->setDescription($def->description);
         }
 
-        if (isset($definition['default'])) {
-            $schema->setDefault($definition['default']);
+        if ($def->default !== null) {
+            $schema->setDefault($def->default);
         }
 
-        if (isset($definition['deprecated'])) {
-            $schema->setDeprecated($definition['deprecated']);
+        if ($def->deprecated !== null) {
+            $schema->setDeprecated($def->deprecated);
         }
 
-        if (isset($definition['examples'])) {
-            $schema->setExamples($definition['examples']);
+        if ($def->examples !== null) {
+            $schema->setExamples($def->examples);
         }
 
-        if (isset($definition['readOnly'])) {
-            $schema->setReadOnly($definition['readOnly']);
+        if ($def->readOnly !== null) {
+            $schema->setReadOnly($def->readOnly);
         }
 
-        if (isset($definition['writeOnly'])) {
-            $schema->setWriteOnly($definition['writeOnly']);
+        if ($def->writeOnly !== null) {
+            $schema->setWriteOnly($def->writeOnly);
         }
 
-        if (isset($definition['enum'])) {
-            $schema->setEnum($definition['enum']);
+        if ($def->enum !== null) {
+            $schema->setEnum($def->enum);
         }
 
-        if (isset($definition['const'])) {
-            $schema->setConst($definition['const']);
+        if ($def->const !== null) {
+            $schema->setConst($def->const);
         }
 
-        if (isset($definition['allOf'])) {
-            $schema->setAllOf($definition['allOf']);
+        if ($def->allOf !== null) {
+            $schema->setAllOf($def->allOf);
         }
 
-        if (isset($definition['anyOf'])) {
-            $schema->setAnyOf($definition['anyOf']);
+        if ($def->anyOf !== null) {
+            $schema->setAnyOf($def->anyOf);
         }
 
-        if (isset($definition['oneOf'])) {
-            $schema->setOneOf($definition['oneOf']);
+        if ($def->oneOf !== null) {
+            $schema->setOneOf($def->oneOf);
         }
 
         // Set object-specific options.
 
-        if (isset($definition['required'])) {
-            $schema->setRequired($definition['required']);
+        if ($def->required !== null) {
+            $schema->setRequired($def->required);
         }
 
-        if (isset($definition['dependentRequired'])) {
-            $schema->setDependentRequired($definition['dependentRequired']);
+        if ($def->dependentRequired !== null) {
+            $schema->setDependentRequired($def->dependentRequired);
         }
 
-        if (isset($definition['maxProperties'])) {
-            $schema->setMaxProperties($definition['maxProperties']);
+        if ($def->maxProperties !== null) {
+            $schema->setMaxProperties($def->maxProperties);
         }
 
-        if (isset($definition['minProperties'])) {
-            $schema->setMinProperties($definition['minProperties']);
+        if ($def->minProperties !== null) {
+            $schema->setMinProperties($def->minProperties);
         }
 
-        if (isset($definition['additionalProperties'])) {
-            $schema->setAdditionalProperties($definition['additionalProperties']);
+        if ($def->additionalProperties !== null) {
+            $schema->setAdditionalProperties($def->additionalProperties);
         }
 
         // Set object-specific properties.
-        if (isset($definition['properties']) && is_array($definition['properties'])) {
-            foreach ($definition['properties'] as $propName => $propDefinition) {
+        if ($def->properties !== null) {
+            foreach ($def->properties as $propName => $propDefinition) {
                 $propSchema = PropertySchemaFactory::create(
                     array_merge(['name' => $propName], $propDefinition)
                 );
@@ -206,9 +211,9 @@ final class FormSchema extends AbstractPropertySchema implements FormSchemaInter
         }
 
         // Set definitions.
-        if (isset($definition['$defs']) && is_array($definition['$defs'])) {
+        if ($def->defs !== null) {
             $definitions = [];
-            foreach ($definition['$defs'] as $defName => $defDefinition) {
+            foreach ($def->defs as $defName => $defDefinition) {
                 $definitions[$defName] = PropertySchemaFactory::create(
                     array_merge(['name' => $defName], $defDefinition)
                 );
@@ -217,9 +222,9 @@ final class FormSchema extends AbstractPropertySchema implements FormSchemaInter
         }
 
         // Handle legacy "definitions" field.
-        if (isset($definition['definitions']) && is_array($definition['definitions'])) {
+        if ($def->definitions !== null) {
             $definitions = $schema->getDefinitions();
-            foreach ($definition['definitions'] as $defName => $defDefinition) {
+            foreach ($def->definitions as $defName => $defDefinition) {
                 $definitions[$defName] = PropertySchemaFactory::create(
                     array_merge(['name' => $defName], $defDefinition)
                 );

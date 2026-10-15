@@ -14,11 +14,16 @@ namespace Derafu\TestsForm\Loader;
 
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Loader\YamlFormLoader;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
@@ -65,6 +70,10 @@ use RuntimeException;
 #[UsesClass(\Derafu\Form\Type\WeekType::class)]
 #[UsesClass(\Derafu\Form\UiSchema\Control::class)]
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class YamlFormLoaderTest extends TestCase
 {
     private const FIXTURES = __DIR__ . '/../../fixtures/forms';
@@ -109,8 +118,38 @@ final class YamlFormLoaderTest extends TestCase
         $loader->load('broken');
     }
 
+    public function testDataThatIsNotAnObjectCanNotBeMerged(): void
+    {
+        $loader = new YamlFormLoader($this->makeFactory());
+        $loader->addPath(self::FIXTURES);
+
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "data" must be of type object, string given.');
+
+        $loader->load('bad-data', [], ['name' => 'from-call']);
+    }
+
     private function makeFactory(): FormFactoryInterface
     {
         return new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider())));
+    }
+
+    public function testAFileThatIsNotADefinitionThrows(): void
+    {
+        $directory = sys_get_temp_dir() . '/derafu-form-' . uniqid('', true);
+        mkdir($directory);
+        file_put_contents($directory . '/scalar.form.yaml', 'just text');
+
+        try {
+            $loader = new YamlFormLoader($this->makeFactory());
+            $loader->addPath($directory);
+
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('must parse to an array');
+            $loader->load('scalar');
+        } finally {
+            unlink($directory . '/scalar.form.yaml');
+            rmdir($directory);
+        }
     }
 }

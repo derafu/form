@@ -207,12 +207,10 @@ final class FormTexts
             $options['choices'] = $this->mapChoices($options['choices'], $path . '.choices', $translate);
         }
 
-        if (isset($options['cascade']['choices']) && is_array($options['cascade']['choices'])) {
-            $options['cascade']['choices'] = $this->mapChoices(
-                $options['cascade']['choices'],
-                $path . '.cascade.choices',
-                $translate
-            );
+        $cascade = $options['cascade'] ?? null;
+        if (is_array($cascade) && isset($cascade['choices']) && is_array($cascade['choices'])) {
+            $cascade['choices'] = $this->mapChoices($cascade['choices'], $path . '.cascade.choices', $translate);
+            $options['cascade'] = $cascade;
         }
 
         if (isset($options['detail']) && is_array($options['detail'])) {

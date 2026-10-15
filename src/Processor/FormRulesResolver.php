@@ -12,9 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Processor;
 
+use Derafu\DataProcessor\RuleSet;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
+use Derafu\Form\Contract\Rules\FormRulesInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
@@ -46,7 +48,10 @@ final class FormRulesResolver implements FormRulesResolverInterface
      */
     public function resolve(FormInterface $form): void
     {
-        $form->getRules()->fill($this->resolveFormToRules($form));
+        $form->getRules()->fill(array_map(
+            static fn (RuleSet $rules): array => $rules->toArray(),
+            $this->resolveFormToRules($form)
+        ));
     }
 
     /**
@@ -59,37 +64,29 @@ final class FormRulesResolver implements FormRulesResolverInterface
      * and is injected at the form level by resolveFormToRules().
      *
      * @param PropertySchemaInterface $property The JSON Schema property object.
-     * @return array The Data Processor rules array (cast, sanitize, transform, validate).
+     * @return array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>} The Data Processor rules array (cast, sanitize, transform, validate).
      */
     public function mapSchemaToRules(PropertySchemaInterface $property): array
     {
-        $rules = [];
+        return $this->deriveRules($property)->toArray();
+    }
 
-        // Casting rules (only for supported types).
+    /**
+     * Derives the rules of a property from its schema.
+     *
+     * @param PropertySchemaInterface $property The JSON Schema property object.
+     * @return RuleSet The rules (the casting ones only for the supported types).
+     */
+    private function deriveRules(PropertySchemaInterface $property): RuleSet
+    {
         $type = $property->getType();
-        if ($this->isTypeSupportedForCasting($type)) {
-            $rules['cast'] = $this->mapTypeToCastRule($type);
-        }
 
-        // Sanitization rules.
-        $sanitizeRules = $this->derivesSanitizeRules($property);
-        if (!empty($sanitizeRules)) {
-            $rules['sanitize'] = $sanitizeRules;
-        }
-
-        // Transformation rules.
-        $transformRules = $this->derivesTransformRules($property);
-        if (!empty($transformRules)) {
-            $rules['transform'] = $transformRules;
-        }
-
-        // Validation rules.
-        $validateRules = $this->derivesValidateRules($property);
-        if (!empty($validateRules)) {
-            $rules['validate'] = $validateRules;
-        }
-
-        return $rules;
+        return new RuleSet(
+            cast: $this->isTypeSupportedForCasting($type) ? $this->mapTypeToCastRule($type) : null,
+            transform: $this->derivesTransformRules($property),
+            sanitize: $this->derivesSanitizeRules($property),
+            validate: $this->derivesValidateRules($property),
+        );
     }
 
     // =========================================================================
@@ -97,11 +94,11 @@ final class FormRulesResolver implements FormRulesResolverInterface
     // =========================================================================
 
     /**
-     * Resolves all field rules for the form and returns the raw array used
+     * Resolves all field rules for the form and returns the rules used
      * internally by resolve() to build the FormRulesInterface.
      *
      * @param FormInterface $form
-     * @return array<string, array>
+     * @return array<string, RuleSet>
      */
     private function resolveFormToRules(FormInterface $form): array
     {
@@ -110,21 +107,24 @@ final class FormRulesResolver implements FormRulesResolverInterface
         $explicitRules = $form->getRules();
 
         foreach ($form->getFields() as $fieldName => $field) {
-            $additionalRules = $explicitRules[$fieldName] ?? [];
-            $fieldRules[$fieldName] = $this->resolveFieldToRules($field, $additionalRules);
+            $rules = $this->resolveFieldToRules(
+                $field,
+                RuleSet::fromArray($explicitRules[$fieldName] ?? [])
+            );
 
             // Ensure 'required' fires first and appears exactly once for
             // required fields, regardless of what additional rules may have
             // added. This produces a meaningful "required" error rather than
             // "invalid file format" when no value is submitted.
             if (in_array($fieldName, $requiredFields)) {
-                $validate = $fieldRules[$fieldName]['validate'] ?? [];
                 $validate = array_values(
-                    array_filter($validate, fn (string $r) => $r !== 'required')
+                    array_filter($rules->validate, fn (string $r) => $r !== 'required')
                 );
                 array_unshift($validate, 'required');
-                $fieldRules[$fieldName]['validate'] = $validate;
+                $rules = new RuleSet($rules->cast, $rules->transform, $rules->sanitize, $validate);
             }
+
+            $fieldRules[$fieldName] = $rules;
         }
 
         return $fieldRules;
@@ -137,10 +137,10 @@ final class FormRulesResolver implements FormRulesResolverInterface
      * configuration, then merges any explicit additional rules on top.
      *
      * @param FormFieldInterface $field The form field to resolve.
-     * @param array $additionalRules Extra rules from the form's 'rules' section.
-     * @return array The complete Data Processor rules for this field.
+     * @param RuleSet $additionalRules Extra rules from the form's 'rules' section.
+     * @return RuleSet The complete Data Processor rules for this field.
      */
-    private function resolveFieldToRules(FormFieldInterface $field, array $additionalRules = []): array
+    private function resolveFieldToRules(FormFieldInterface $field, RuleSet $additionalRules): RuleSet
     {
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -151,38 +151,26 @@ final class FormRulesResolver implements FormRulesResolverInterface
         // Their only relevant processing is file/image validation.
         $uploadControls = ['file', 'image'];
         if (in_array($control->getControlType(), $uploadControls, true)) {
-            $uiValidateRules = $this->derivesControlValidateRules($control);
-            $rules = empty($uiValidateRules) ? [] : ['validate' => $uiValidateRules];
-            return empty($additionalRules) ? $rules : $this->mergeAdditionalRules($rules, $additionalRules);
+            return $this->mergeAdditionalRules(
+                new RuleSet(validate: $this->derivesControlValidateRules($control)),
+                $additionalRules
+            );
         }
 
         // Start with schema-based rules.
-        $rules = $this->mapSchemaToRules($property);
+        $rules = $this->deriveRules($property);
 
-        // Apply UI-specific transformations based on control options.
-        $uiTransformRules = $this->derivesControlTransformRules($control);
-        if (!empty($uiTransformRules)) {
-            $rules['transform'] = array_merge(
-                $rules['transform'] ?? [],
-                $uiTransformRules
-            );
-        }
-
-        // Apply UI-specific validations.
-        $uiValidateRules = $this->derivesControlValidateRules($control);
-        if (!empty($uiValidateRules)) {
-            $rules['validate'] = array_merge(
-                $rules['validate'] ?? [],
-                $uiValidateRules
-            );
-        }
+        // Apply UI-specific transformations and validations based on control
+        // options.
+        $rules = new RuleSet(
+            cast: $rules->cast,
+            transform: array_merge($rules->transform, $this->derivesControlTransformRules($control)),
+            sanitize: $rules->sanitize,
+            validate: array_merge($rules->validate, $this->derivesControlValidateRules($control)),
+        );
 
         // Merge explicit rules from the form's 'rules' section on top.
-        if (!empty($additionalRules)) {
-            $rules = $this->mergeAdditionalRules($rules, $additionalRules);
-        }
-
-        return $rules;
+        return $this->mergeAdditionalRules($rules, $additionalRules);
     }
 
     /**
@@ -194,36 +182,33 @@ final class FormRulesResolver implements FormRulesResolverInterface
      *   - transform: explicit appended after derived (sequential pipeline).
      *   - validate:  explicit appended after derived (all rules must pass).
      *
-     * @param array $rules The rules derived from schema and UI schema.
-     * @param array $additionalRules The extra rules from the form's 'rules' section.
-     * @return array The merged rules.
+     * @param RuleSet $rules The rules derived from schema and UI schema.
+     * @param RuleSet $additionalRules The extra rules from the form's 'rules' section.
+     * @return RuleSet The merged rules.
      */
-    private function mergeAdditionalRules(array $rules, array $additionalRules): array
+    private function mergeAdditionalRules(RuleSet $rules, RuleSet $additionalRules): RuleSet
     {
         // cast: explicit replaces derived entirely. When the cast type changes,
         // the derived sanitizers are also cleared because they were derived for
         // the original schema type (e.g. 'trim' is only safe on strings; after
         // casting to integer it would cause a SanitizationException). Any
         // explicit sanitizers from the 'rules' section are added back below.
-        if (isset($additionalRules['cast'])) {
-            $prevCast = $rules['cast'] ?? null;
-            $rules['cast'] = $additionalRules['cast'];
-            if ($prevCast !== $rules['cast']) {
-                unset($rules['sanitize']);
+        $cast = $rules->cast;
+        $sanitize = $rules->sanitize;
+        if ($additionalRules->cast !== null) {
+            $cast = $additionalRules->cast;
+            if ($rules->cast !== $cast) {
+                $sanitize = [];
             }
         }
 
         // sanitize, transform, validate: explicit appended after derived.
-        foreach (['sanitize', 'transform', 'validate'] as $category) {
-            if (!empty($additionalRules[$category])) {
-                $rules[$category] = array_merge(
-                    $rules[$category] ?? [],
-                    (array) $additionalRules[$category]
-                );
-            }
-        }
-
-        return $rules;
+        return new RuleSet(
+            cast: $cast,
+            transform: array_merge($rules->transform, $additionalRules->transform),
+            sanitize: array_merge($sanitize, $additionalRules->sanitize),
+            validate: array_merge($rules->validate, $additionalRules->validate),
+        );
     }
 
     // =========================================================================
@@ -256,7 +241,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
     /**
      * @param PropertySchemaInterface $property
-     * @return array
+     * @return list<string>
      */
     private function derivesSanitizeRules(PropertySchemaInterface $property): array
     {
@@ -271,7 +256,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
     /**
      * @param PropertySchemaInterface $property
-     * @return array
+     * @return list<string>
      */
     private function derivesTransformRules(PropertySchemaInterface $property): array
     {
@@ -286,7 +271,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
     /**
      * @param PropertySchemaInterface $property
-     * @return array
+     * @return list<string>
      */
     private function derivesValidateRules(PropertySchemaInterface $property): array
     {
@@ -377,7 +362,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
     /**
      * @param ControlInterface $control The UI control element.
-     * @return array
+     * @return list<string>
      */
     private function derivesControlTransformRules(ControlInterface $control): array
     {
@@ -394,7 +379,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
     /**
      * @param ControlInterface $control The UI control element.
-     * @return array
+     * @return list<string>
      */
     private function derivesControlValidateRules(ControlInterface $control): array
     {

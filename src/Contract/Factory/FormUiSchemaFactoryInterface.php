@@ -22,7 +22,7 @@ interface FormUiSchemaFactoryInterface
     /**
      * Create a FormUiSchema instance from an array.
      *
-     * @param array $definition The UI schema definition as an array.
+     * @param array<string, mixed> $definition The UI schema definition as an array.
      * @return FormUiSchemaInterface The created FormUiSchema instance.
      */
     public static function create(array $definition): FormUiSchemaInterface;

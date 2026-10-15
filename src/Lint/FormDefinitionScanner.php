@@ -23,6 +23,7 @@ use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use SplFileInfo;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -82,6 +83,7 @@ final class FormDefinitionScanner
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)
         );
+        /** @var SplFileInfo $file */
         foreach ($iterator as $file) {
             if ($file->isFile() && in_array($file->getExtension(), self::EXTENSIONS, true)) {
                 $files[] = $file->getPathname();

@@ -56,7 +56,7 @@ final class InputActionResolverTest extends TestCase
     {
         $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(
-            function (?string $id, array $parameters, ?string $domain, ?string $locale): string {
+            function (string $id, array $parameters, ?string $domain, ?string $locale): string {
                 $this->assertSame('form+intl-icu', $domain);
                 $this->assertSame('es', $locale);
 
@@ -85,7 +85,7 @@ final class InputActionResolverTest extends TestCase
     {
         $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(
-            function (?string $id, array $parameters): string {
+            function (string $id, array $parameters): string {
                 if ($id === 'Value from field "{title}" copied.') {
                     return sprintf('Valor del campo "%s" copiado.', $parameters['title']);
                 }
@@ -125,7 +125,7 @@ final class InputActionResolverTest extends TestCase
         $translatedIds = [];
         $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(
-            function (?string $id) use (&$translatedIds): string {
+            function (string $id) use (&$translatedIds): string {
                 $translatedIds[] = $id;
 
                 return $id;
@@ -141,5 +141,30 @@ final class InputActionResolverTest extends TestCase
 
         $this->assertNotContains('Custom message', $translatedIds);
         $this->assertStringContainsString('Custom message', $actions[0]['onclick']);
+    }
+
+    public function testAcceptsASingleActionAsAStringOrAsAnObject(): void
+    {
+        $resolver = new InputActionResolver();
+        $field = $this->fieldWithTitle('Password');
+
+        $this->assertSame(
+            $resolver->resolve(['toggle-password'], $field),
+            $resolver->resolve('toggle-password', $field)
+        );
+        $this->assertSame(
+            $resolver->resolve(['toggle-password'], $field),
+            $resolver->resolve(['type' => 'toggle-password'], $field)
+        );
+    }
+
+    public function testGivesNothingForWhatIsNotAnAction(): void
+    {
+        $resolver = new InputActionResolver();
+        $field = $this->fieldWithTitle('Password');
+
+        $this->assertSame([], $resolver->resolve(null, $field));
+        $this->assertSame([], $resolver->resolve(5, $field));
+        $this->assertSame([], $resolver->resolve([5, 'unknown', ['type' => 'unknown']], $field));
     }
 }

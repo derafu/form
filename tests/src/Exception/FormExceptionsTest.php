@@ -45,6 +45,7 @@ use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\UiSchemaCompositeCondition;
 use Derafu\Form\UiSchema\UiSchemaCondition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\UiSchemaRule;
 use Derafu\Translation\Contract\TranslatableInterface;
 use InvalidArgumentException;
@@ -82,6 +83,7 @@ use Throwable;
 #[CoversClass(SliderWidgetRenderer::class)]
 #[CoversClass(TextareaWidgetRenderer::class)]
 #[UsesClass(InputActionResolver::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
 final class FormExceptionsTest extends TestCase
 {
     /**
@@ -106,6 +108,9 @@ final class FormExceptionsTest extends TestCase
         ];
     }
 
+    /**
+     * @param non-empty-string $message
+     */
     #[DataProvider('failuresProvider')]
     public function testTheFailureIsATranslatableErrorThatSaysTheSame(Closure $failure, string $message): void
     {
@@ -175,6 +180,7 @@ final class FormExceptionsTest extends TestCase
 
     /**
      * @param Closure(self): mixed $render
+     * @param non-empty-string $message
      */
     #[DataProvider('renderersProvider')]
     public function testARendererThatIsNotUsedAsExpectedIsATranslatableError(Closure $render, string $message): void

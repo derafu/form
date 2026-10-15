@@ -48,7 +48,7 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
     /**
      * The schema that at least one item must match.
      *
-     * @var array|null
+     * @var array<string, mixed>|null
      */
     protected ?array $contains = null;
 
@@ -134,6 +134,8 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>|null
      */
     public function getContains(): ?array
     {
@@ -142,6 +144,8 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $contains
      */
     public function setContains(array $contains): static
     {
@@ -202,6 +206,8 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -240,87 +246,90 @@ final class ArraySchema extends AbstractPropertySchema implements ArraySchemaInt
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     public static function fromArray(array $definition): static
     {
-        $schema = new static($definition['name'] ?? '');
+        $def = PropertyDefinition::fromArray($definition);
+        $schema = new static($def->name);
 
         // Set common properties.
-        if (isset($definition['title'])) {
-            $schema->setTitle($definition['title']);
+        if ($def->title !== null) {
+            $schema->setTitle($def->title);
         }
 
-        if (isset($definition['description'])) {
-            $schema->setDescription($definition['description']);
+        if ($def->description !== null) {
+            $schema->setDescription($def->description);
         }
 
-        if (isset($definition['default'])) {
-            $schema->setDefault($definition['default']);
+        if ($def->default !== null) {
+            $schema->setDefault($def->default);
         }
 
-        if (isset($definition['deprecated'])) {
-            $schema->setDeprecated($definition['deprecated']);
+        if ($def->deprecated !== null) {
+            $schema->setDeprecated($def->deprecated);
         }
 
-        if (isset($definition['examples'])) {
-            $schema->setExamples($definition['examples']);
+        if ($def->examples !== null) {
+            $schema->setExamples($def->examples);
         }
 
-        if (isset($definition['readOnly'])) {
-            $schema->setReadOnly($definition['readOnly']);
+        if ($def->readOnly !== null) {
+            $schema->setReadOnly($def->readOnly);
         }
 
-        if (isset($definition['writeOnly'])) {
-            $schema->setWriteOnly($definition['writeOnly']);
+        if ($def->writeOnly !== null) {
+            $schema->setWriteOnly($def->writeOnly);
         }
 
-        if (isset($definition['enum'])) {
-            $schema->setEnum($definition['enum']);
+        if ($def->enum !== null) {
+            $schema->setEnum($def->enum);
         }
 
-        if (isset($definition['const'])) {
-            $schema->setConst($definition['const']);
+        if ($def->const !== null) {
+            $schema->setConst($def->const);
         }
 
-        if (isset($definition['allOf'])) {
-            $schema->setAllOf($definition['allOf']);
+        if ($def->allOf !== null) {
+            $schema->setAllOf($def->allOf);
         }
 
-        if (isset($definition['anyOf'])) {
-            $schema->setAnyOf($definition['anyOf']);
+        if ($def->anyOf !== null) {
+            $schema->setAnyOf($def->anyOf);
         }
 
-        if (isset($definition['oneOf'])) {
-            $schema->setOneOf($definition['oneOf']);
+        if ($def->oneOf !== null) {
+            $schema->setOneOf($def->oneOf);
         }
 
         // Set array-specific properties.
-        if (isset($definition['items']) && is_array($definition['items'])) {
-            $schema->setItems(PropertySchemaFactory::create($definition['items']));
+        if (is_array($def->items)) {
+            $schema->setItems(PropertySchemaFactory::create($def->items));
         }
 
-        if (isset($definition['maxItems'])) {
-            $schema->setMaxItems($definition['maxItems']);
+        if ($def->maxItems !== null) {
+            $schema->setMaxItems($def->maxItems);
         }
 
-        if (isset($definition['minItems'])) {
-            $schema->setMinItems($definition['minItems']);
+        if ($def->minItems !== null) {
+            $schema->setMinItems($def->minItems);
         }
 
-        if (isset($definition['contains'])) {
-            $schema->setContains($definition['contains']);
+        if ($def->contains !== null) {
+            $schema->setContains($def->contains);
         }
 
-        if (isset($definition['maxContains'])) {
-            $schema->setMaxContains($definition['maxContains']);
+        if ($def->maxContains !== null) {
+            $schema->setMaxContains($def->maxContains);
         }
 
-        if (isset($definition['minContains'])) {
-            $schema->setMinContains($definition['minContains']);
+        if ($def->minContains !== null) {
+            $schema->setMinContains($def->minContains);
         }
 
-        if (isset($definition['uniqueItems'])) {
-            $schema->setUniqueItems($definition['uniqueItems']);
+        if ($def->uniqueItems !== null) {
+            $schema->setUniqueItems($def->uniqueItems);
         }
 
         return $schema;

@@ -16,6 +16,9 @@ use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\HorizontalLayoutInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Factory\UiSchemaElementFactory;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Represents a horizontal layout in a UI Schema.
@@ -72,6 +75,8 @@ final class HorizontalLayout extends AbstractUiSchemaElement implements Horizont
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -93,14 +98,19 @@ final class HorizontalLayout extends AbstractUiSchemaElement implements Horizont
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If a key is missing or has a wrong type.
      */
     public static function fromArray(array $definition): static
     {
+        $reader = ArrayReader::from($definition);
+
         $elements = [];
-        foreach ($definition['elements'] as $element) {
+        foreach ($reader->require('elements', ArrayType::listOf(ArrayType::map())) as $element) {
             $elements[] = UiSchemaElementFactory::create($element);
         }
 
-        return new static($elements, $definition['options'] ?? []);
+        return new static($elements, $reader->map('options') ?? []);
     }
 }

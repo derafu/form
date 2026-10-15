@@ -136,7 +136,9 @@ final class ProcessResult implements ProcessResultInterface
     public function getForm(): FormInterface
     {
         if (!isset($this->newForm)) {
-            $formData = FormData::fromArray($this->processedData);
+            /** @var array<string, mixed> $processedData */
+            $processedData = $this->processedData;
+            $formData = FormData::fromArray($processedData);
             $this->newForm = $this->originalForm->withData($formData, $this->errors, $this->formErrors);
         }
         return $this->newForm;

@@ -255,7 +255,7 @@ final class FormDataProcessor implements FormDataProcessorInterface
      * Delegates to UiSchemaRuleEvaluator. A field with no rule is always active.
      *
      * @param FormFieldInterface $field The field to evaluate.
-     * @param array $data The full submitted data array.
+     * @param array<string, mixed> $data The full submitted data array.
      * @return bool True if the field should be processed, false if it must be skipped.
      */
     private function isFieldActive(FormFieldInterface $field, array $data): bool

@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Renderer\Support;
 
 use Derafu\Form\Contract\FormFieldInterface;
+use Derafu\Support\ArrayReader;
 use Derafu\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -129,10 +130,11 @@ final class InputActionResolver
             return null;
         }
 
-        $type = $action['type'] ?? null;
+        $reader = ArrayReader::from($action);
+        $type = $reader->string('type');
         $defaults = $type !== null ? (self::ACTIONS[$type] ?? []) : [];
 
-        $onclick = $action['onclick'] ?? $this->buildOnclick($type, $action, $field);
+        $onclick = $reader->string('onclick') ?? $this->buildOnclick($type, $reader, $field);
         if ($onclick === null) {
             return null;
         }
@@ -140,10 +142,10 @@ final class InputActionResolver
         // Only translate the built-in default label when it will actually
         // be used; an explicit override is the caller's own text and is
         // never translated (nor is trans() called needlessly for it).
-        $label = $action['label'] ?? $this->defaultLabel($type);
+        $label = $reader->string('label') ?? $this->defaultLabel($type);
 
         return [
-            'icon' => $action['icon'] ?? $defaults['icon'] ?? '',
+            'icon' => $reader->string('icon') ?? $defaults['icon'] ?? '',
             'label' => $label,
             'onclick' => $onclick,
         ];
@@ -153,21 +155,21 @@ final class InputActionResolver
      * Builds the `onclick` handler for a known action type.
      *
      * @param string|null $type The action type.
-     * @param array $action The raw action entry (for per-action overrides).
+     * @param ArrayReader $action The raw action entry (for per-action overrides).
      * @param FormFieldInterface $field The field the action belongs to.
      * @return string|null `null` when the type is not a known built-in.
      */
-    private function buildOnclick(?string $type, array $action, FormFieldInterface $field): ?string
+    private function buildOnclick(?string $type, ArrayReader $action, FormFieldInterface $field): ?string
     {
         return match ($type) {
             'toggle-password' => 'FormFields.showPassword(this)',
             'generate-password' => sprintf(
                 'FormFields.generatePassword(this, %d)',
-                $action['length'] ?? 16
+                $action->int('length') ?? 16
             ),
             'copy' => sprintf(
                 "UI.copy(this.closest('.input-group').querySelector('input, textarea'), %s)",
-                json_encode($action['message'] ?? $this->buildCopyMessage($field))
+                json_encode($action->string('message') ?? $this->buildCopyMessage($field))
             ),
             default => null,
         };

@@ -19,6 +19,7 @@ use Derafu\Form\Contract\UiSchema\UiSchemaConditionInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
+use Derafu\Support\Caster;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 
 /**
@@ -32,6 +33,8 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $data
      */
     public function isActive(UiSchemaRuleInterface $rule, array $data): bool
     {
@@ -57,7 +60,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
      *
      * @param UiSchemaCompositeConditionInterface $condition The composite
      * condition to evaluate.
-     * @param array $data The data to evaluate the condition against.
+     * @param array<string, mixed> $data The data to evaluate the condition against.
      * @return bool True if the composite condition is satisfied.
      */
     private function evaluateCompositeCondition(
@@ -84,7 +87,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
      * against the condition's schema fragment.
      *
      * @param UiSchemaConditionInterface $condition The simple condition.
-     * @param array $data The data to evaluate the condition against.
+     * @param array<string, mixed> $data The data to evaluate the condition against.
      * @return bool True if the field value satisfies the condition schema.
      */
     private function evaluateSimpleCondition(
@@ -172,15 +175,14 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
             // An invalid PCRE pattern is a programming error (misconfigured
             // form definition) and must throw immediately rather than silently
             // producing wrong activation behaviour.
-            $regex = '/' . str_replace('/', '\/', $schema->getPattern()) . '/';
-            $result = @preg_match($regex, (string) $value);
-            if ($result === false) {
-                throw new LogicException([
-                    'Invalid PCRE pattern in rule condition: "{pattern}".',
-                    'pattern' => $schema->getPattern(),
-                ]);
-            }
-            $checks[] = $result === 1;
+            // A value that is not text (an array, an object that has no text) can
+            // not match a pattern, so the condition is not met.
+            $text = match (true) {
+                $value === null => '',
+                is_scalar($value) => (string) $value,
+                default => Caster::toString($value),
+            };
+            $checks[] = $text !== null && $this->matches($schema->getPattern(), $text);
         }
 
         if (empty($checks)) {
@@ -189,6 +191,45 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
 
         // All checks must pass (implicit AND across keywords).
         return !in_array(false, $checks, strict: true);
+    }
+
+    /**
+     * Tells if a text matches a JSON Schema pattern.
+     *
+     * The warning that PHP raises for a pattern that is not valid is not
+     * hidden: its text is part of the error that is thrown.
+     *
+     * @param string $pattern The pattern, without delimiters.
+     * @param string $text The text to test.
+     * @return bool True if the text matches.
+     * @throws LogicException If the pattern is not a valid PCRE pattern.
+     */
+    private function matches(string $pattern, string $text): bool
+    {
+        $regex = '/' . str_replace('/', '\/', $pattern) . '/';
+
+        $warning = null;
+        set_error_handler(static function (int $level, string $message) use (&$warning): bool {
+            $warning = $message;
+
+            return true;
+        });
+
+        try {
+            $result = preg_match($regex, $text);
+        } finally {
+            restore_error_handler();
+        }
+
+        if ($result === false) {
+            throw new LogicException([
+                'Invalid PCRE pattern in rule condition: "{pattern}": {error}',
+                'pattern' => $pattern,
+                'error' => $warning ?? preg_last_error_msg(),
+            ]);
+        }
+
+        return $result === 1;
     }
 
     /**

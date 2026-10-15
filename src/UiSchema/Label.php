@@ -14,6 +14,9 @@ namespace Derafu\Form\UiSchema;
 
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\LabelInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Represents a label in a UI Schema.
@@ -59,6 +62,8 @@ final class Label extends AbstractUiSchemaElement implements LabelInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -78,9 +83,12 @@ final class Label extends AbstractUiSchemaElement implements LabelInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If a key is missing or has a wrong type.
      */
     public static function fromArray(array $definition): static
     {
-        return new static($definition['text']);
+        return new static(ArrayReader::from($definition)->require('text', ArrayType::string()));
     }
 }

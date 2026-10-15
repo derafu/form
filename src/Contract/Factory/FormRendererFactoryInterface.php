@@ -22,7 +22,7 @@ interface FormRendererFactoryInterface
     /**
      * Creates a new form renderer instance.
      *
-     * @param array $options The options for the form renderer.
+     * @param array<string, mixed> $options The options for the form renderer.
      * @return FormRendererInterface The created form renderer.
      */
     public static function create(array $options = []): FormRendererInterface;

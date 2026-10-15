@@ -32,6 +32,8 @@ final class ObjectType extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

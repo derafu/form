@@ -26,6 +26,8 @@ final class HorizontalLayoutRenderer implements ElementRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         UiSchemaElementInterface $element,

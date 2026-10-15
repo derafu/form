@@ -26,7 +26,7 @@ final class FormData implements FormDataInterface
     /**
      * Creates a new Data.
      *
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     public function __construct(private array $data)
     {
@@ -80,6 +80,7 @@ final class FormData implements FormDataInterface
             if (!isset($current[$part])) {
                 $current[$part] = [];
             }
+            /** @var array<string, mixed> $current */
             $current = &$current[$part];
         }
 
@@ -90,6 +91,8 @@ final class FormData implements FormDataInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function all(): array
     {
@@ -98,6 +101,8 @@ final class FormData implements FormDataInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -106,6 +111,8 @@ final class FormData implements FormDataInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -124,7 +131,7 @@ final class FormData implements FormDataInterface
      * Parse property path from various formats to array segments.
      *
      * @param string $path Path in dot notation or JSON Forms scope format.
-     * @return array Path segments
+     * @return list<string> Path segments
      */
     private function parsePath(string $path): array
     {
@@ -134,7 +141,7 @@ final class FormData implements FormDataInterface
             $path = substr($path, 13);
 
             // Split by "/properties/" and flatten.
-            return preg_split('~/properties/~', $path);
+            return explode('/properties/', $path);
         }
 
         // Handle dot notation.
@@ -148,6 +155,8 @@ final class FormData implements FormDataInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $data
      */
     public static function fromArray(array $data): static
     {

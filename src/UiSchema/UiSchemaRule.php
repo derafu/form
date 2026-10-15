@@ -61,6 +61,8 @@ final class UiSchemaRule implements UiSchemaRuleInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -80,6 +82,7 @@ final class UiSchemaRule implements UiSchemaRuleInterface
      */
     public static function fromArray(array $definition): static
     {
+        /** @var array{effect?: int|string, condition?: array{type?: int|string, ...<string, mixed>}} $definition */
         if (!isset($definition['effect'])) {
             throw new InvalidArgumentException(
                 'A UiSchemaRule definition requires an "effect" key.'

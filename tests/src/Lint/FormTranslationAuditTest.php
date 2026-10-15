@@ -220,4 +220,70 @@ final class FormTranslationAuditTest extends TestCase
             $failures
         );
     }
+
+    #[Test]
+    public function acceptsAListOfProviders(): void
+    {
+        $report = (new FormTranslationAudit())->audit(
+            self::AUDIT,
+            [new SimpleTranslationResourceProvider([__DIR__ . '/../../fixtures/translated/translations'])]
+        );
+
+        $expected = $this->report();
+        $this->assertSame($expected->describe($expected->missingTranslations), $report->describe($report->missingTranslations));
+        $this->assertSame(count($expected->texts), count($report->texts));
+        $this->assertFalse($report->nothingFound);
+    }
+
+    #[Test]
+    public function readsTheLiteralsOfADefinitionAndSkipsWhatIsNotOne(): void
+    {
+        $directory = sys_get_temp_dir() . '/derafu-form-' . uniqid('', true);
+        mkdir($directory);
+        file_put_contents($directory . '/a.form.php', <<<'PHP'
+            <?php return [
+                'options' => ['translation_domain' => 'd'],
+                'schema' => ['title' => 'Title', 'examples' => [true, false, null, PHP_EOL, 3.5, 'x']],
+                'uischema' => ['type' => 'VerticalLayout', 'elements' => []],
+                'data' => ['schema' => ['title' => 'Nested']],
+            ];
+            PHP);
+        file_put_contents($directory . '/b.form.json', '5');
+
+        try {
+            $scanner = new FormDefinitionScanner();
+            $ids = array_map(fn (FormText $text) => $text->id, $scanner->scanFile($directory . '/a.form.php'));
+
+            $this->assertSame(['Title'], $ids);
+            $this->assertSame([], $scanner->scanFile($directory . '/b.form.json'));
+        } finally {
+            unlink($directory . '/a.form.php');
+            unlink($directory . '/b.form.json');
+            rmdir($directory);
+        }
+    }
+
+    #[Test]
+    public function skipsTheCallsThatAreNotCalledYet(): void
+    {
+        $directory = sys_get_temp_dir() . '/derafu-form-' . uniqid('', true);
+        mkdir($directory);
+        file_put_contents($directory . '/a.form.php', <<<'PHP'
+            <?php return function (array $context): array {
+                $translate = $context['_t'](...);
+
+                return ['schema' => ['title' => $translate('x')], 'uischema' => ['type' => 'VerticalLayout', 'elements' => []]];
+            };
+            PHP);
+
+        try {
+            $texts = (new FormDefinitionScanner())->scanFile($directory . '/a.form.php');
+
+            $this->assertNotEmpty($texts);
+            $this->assertTrue($texts[0]->isDynamic());
+        } finally {
+            unlink($directory . '/a.form.php');
+            rmdir($directory);
+        }
+    }
 }

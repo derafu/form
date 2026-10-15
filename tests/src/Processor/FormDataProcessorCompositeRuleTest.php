@@ -15,10 +15,12 @@ namespace Derafu\Form\Tests\Processor;
 use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
+use Derafu\Form\Contract\Processor\ProcessResultInterface;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
@@ -30,12 +32,14 @@ use Derafu\Form\Schema\ArraySchema;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\ConditionSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\UiSchemaCompositeCondition;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaCondition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\UiSchemaRule;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
 use Derafu\Form\UiSchema\VerticalLayout;
@@ -43,6 +47,7 @@ use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -99,6 +104,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormDataProcessorCompositeRuleTest extends TestCase
 {
     private FormDataProcessor $processor;
@@ -119,7 +127,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
      * Builds a form with three string fields: "trigger_a", "trigger_b", and
      * "dependent". The dependent control carries the given composite rule.
      *
-     * @param array $rule Raw rule definition array for the dependent control.
+     * @param array<string, mixed> $rule Raw rule definition array for the dependent control.
      * @return Form
      */
     private function formWithCompositeRule(array $rule): Form
@@ -173,7 +181,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -199,7 +207,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -225,7 +233,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -251,7 +259,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     // =========================================================================
@@ -281,7 +289,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -307,7 +315,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -333,7 +341,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     // =========================================================================
@@ -375,7 +383,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -409,7 +417,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -443,7 +451,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         ]);
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     // =========================================================================
@@ -508,7 +516,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -522,7 +530,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -536,7 +544,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -553,7 +561,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     // =========================================================================
@@ -611,7 +619,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -625,7 +633,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     // =========================================================================
@@ -638,6 +646,8 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     /**
      * Builds a form with an integer trigger and a string dependent.
      * The dependent is shown when the trigger satisfies the given schema.
+     *
+     * @param array<string, mixed> $conditionSchema
      */
     private function formWithNumericRule(array $conditionSchema): Form
     {
@@ -682,7 +692,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -696,7 +706,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -710,7 +720,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -724,7 +734,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -738,7 +748,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -754,7 +764,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -768,7 +778,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -782,7 +792,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -796,7 +806,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -810,7 +820,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -824,7 +834,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -838,7 +848,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     // =========================================================================
@@ -899,7 +909,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -913,7 +923,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -928,7 +938,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -942,7 +952,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
         );
 
         $this->assertTrue($result->isValid());
-        $this->assertArrayNotHasKey('dependent', $result->getProcessedData());
+        $this->assertArrayNotHasKey('dependent', $this->processedData($result));
     }
 
     /**
@@ -960,5 +970,16 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
             $this->formWithPatternRule('[invalid'),
             ['trigger' => 'anything', 'dependent' => 'value']
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function processedData(ProcessResultInterface $result): array
+    {
+        $data = $result->getProcessedData();
+        $this->assertIsArray($data);
+
+        return $data;
     }
 }

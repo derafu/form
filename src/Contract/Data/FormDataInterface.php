@@ -51,14 +51,14 @@ interface FormDataInterface extends JsonSerializable
     /**
      * Gets all data as an associative array.
      *
-     * @return array All form data.
+     * @return array<string, mixed> All form data.
      */
     public function all(): array;
 
     /**
      * Converts the data to an array representation.
      *
-     * @return array The complete data as an array.
+     * @return array<string, mixed> The complete data as an array.
      */
     public function toArray(): array;
 
@@ -72,7 +72,7 @@ interface FormDataInterface extends JsonSerializable
     /**
      * Create a Data instance from an array.
      *
-     * @param array $data The data values as an array.
+     * @param array<string, mixed> $data The data values as an array.
      * @return static The data instance.
      */
     public static function fromArray(array $data): static;

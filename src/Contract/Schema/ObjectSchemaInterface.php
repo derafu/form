@@ -121,7 +121,7 @@ interface ObjectSchemaInterface extends PropertySchemaInterface
      * Gets the `additionalProperties` value, which determines if properties not
      * defined in the schema are allowed.
      *
-     * @return bool|array A boolean indicating if additional properties are
+     * @return bool|array<string, mixed> A boolean indicating if additional properties are
      * allowed, or an array defining their schema.
      */
     public function getAdditionalProperties(): bool|array;
@@ -130,7 +130,7 @@ interface ObjectSchemaInterface extends PropertySchemaInterface
      * Sets the `additionalProperties` value, which determines if properties not
      * defined in the schema are allowed.
      *
-     * @param bool|array $additionalProperties
+     * @param bool|array<string, mixed> $additionalProperties
      * @return static The current instance.
      */
     public function setAdditionalProperties(

@@ -39,7 +39,7 @@ final class TypeResolver implements TypeResolverInterface
     public function guess(mixed $value): TypeInterface
     {
         // Handle large integer strings that exceed PHP's integer range.
-        if (is_string($value) && preg_match('/^-?\d+$/', $value)) {
+        if (is_string($value) && is_numeric($value) && preg_match('/^-?\d+$/', $value)) {
             $bigNumber = bccomp($value, (string)PHP_INT_MAX, 0) > 0
                 || bccomp($value, (string)PHP_INT_MIN, 0) < 0;
 

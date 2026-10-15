@@ -15,9 +15,12 @@ namespace Derafu\TestsForm\Processor;
 use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Processor\FormDataProcessor;
 use Derafu\Form\Processor\FormRulesResolver;
 use Derafu\Form\Processor\ProcessResult;
+use Derafu\Form\Schema\PropertyDefinition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
 use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -51,6 +54,9 @@ use Symfony\Component\Translation\Translator;
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
 #[UsesClass(\Derafu\Form\Widget\Widget::class)]
 #[UsesClass(\Derafu\Form\Widget\WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormDataProcessorCsrfTest extends TestCase
 {
     private InMemoryCsrfTokenManager $manager;

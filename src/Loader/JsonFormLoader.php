@@ -14,6 +14,7 @@ namespace Derafu\Form\Loader;
 
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\FormInterface;
+use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
 use JsonException;
 
@@ -28,6 +29,10 @@ class JsonFormLoader extends AbstractFileFormLoader
 {
     protected const EXTENSION = '.form.json';
 
+    /**
+     * @param array<string, mixed> $context
+     * @param array<string, mixed> $data
+     */
     public function load(
         string $name,
         array $context = [],
@@ -35,6 +40,7 @@ class JsonFormLoader extends AbstractFileFormLoader
     ): FormInterface {
         $file = $this->resolve($name);
         $raw = file_get_contents($file);
+        $raw = $raw === false ? throw new RuntimeException(['Failed to read JSON form file "{file}".', 'file' => $file]) : $raw;
 
         try {
             $definition = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
@@ -55,7 +61,7 @@ class JsonFormLoader extends AbstractFileFormLoader
         }
 
         if ($data !== []) {
-            $definition['data'] = array_merge($definition['data'] ?? [], $data);
+            $definition['data'] = array_merge(ArrayReader::from($definition)->map('data') ?? [], $data);
         }
 
         return $this->formFactory->create($definition);

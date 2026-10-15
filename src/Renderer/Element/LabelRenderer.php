@@ -16,6 +16,8 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\LabelInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -27,6 +29,8 @@ final class LabelRenderer implements ElementRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         UiSchemaElementInterface $element,
@@ -46,12 +50,13 @@ final class LabelRenderer implements ElementRendererInterface
         $finalOptions = array_merge($options, $element->getOptions());
 
         // Get label attributes.
-        $labelAttr = $finalOptions['label_attr'] ?? [];
-        $labelClass = $labelAttr['class'] ?? 'form-label';
+        $reader = ArrayReader::from($finalOptions);
+        $labelAttr = $reader->mapOf('label_attr', ArrayType::scalar()) ?? [];
+        $labelClass = isset($labelAttr['class']) ? (string) $labelAttr['class'] : 'form-label';
 
         // Determine if this is a heading.
-        $isHeading = isset($finalOptions['heading']) && $finalOptions['heading'];
-        $headingLevel = $finalOptions['heading_level'] ?? 3; // Default to h3
+        $isHeading = $reader->bool('heading') ?? false;
+        $headingLevel = $reader->int('heading_level') ?? 3; // Default to h3
 
         // Generate HTML.
         if ($isHeading) {

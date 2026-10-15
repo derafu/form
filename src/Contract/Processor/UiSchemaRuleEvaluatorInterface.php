@@ -34,7 +34,7 @@ interface UiSchemaRuleEvaluatorInterface
      * Returns true when the rule allows the field to be active.
      *
      * @param UiSchemaRuleInterface $rule The rule to evaluate.
-     * @param array $data The data to evaluate the rule against (associative
+     * @param array<string, mixed> $data The data to evaluate the rule against (associative
      * array of field names to values, e.g. from FormData::all() or $_POST).
      * @return bool True if the rule allows the field to be active.
      */

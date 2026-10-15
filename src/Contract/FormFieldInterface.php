@@ -121,14 +121,14 @@ interface FormFieldInterface extends JsonSerializable
     /**
      * Gets the errors for the field.
      *
-     * @return array The errors for the field.
+     * @return array<string> The errors for the field.
      */
     public function getErrors(): array;
 
     /**
      * Sets the errors for the field.
      *
-     * @param array $errors The errors for the field.
+     * @param array<string> $errors The errors for the field.
      * @return static The current instance.
      */
     public function setErrors(array $errors): static;
@@ -143,7 +143,7 @@ interface FormFieldInterface extends JsonSerializable
     /**
      * Converts the FormField to an array representation.
      *
-     * @return array The complete form field as an array.
+     * @return array<string, mixed> The complete form field as an array.
      */
     public function toArray(): array;
 

@@ -17,6 +17,9 @@ use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Support\Caster;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -35,6 +38,8 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         FormFieldInterface $field,
@@ -47,6 +52,9 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
             );
         }
 
+        $reader = ArrayReader::from($options);
+        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+
         $property = $field->getProperty();
         $control = $field->getControl();
 
@@ -58,8 +66,9 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        if (isset($options['widget_class'])) {
-            $widgetClass .= ' ' . $options['widget_class'];
+        $extraClass = $reader->string('widget_class');
+        if ($extraClass !== null) {
+            $widgetClass .= ' ' . $extraClass;
         }
 
         $name = $field->getName();
@@ -96,9 +105,7 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
 
         // Add value if present, otherwise set to middle of range
         if ($value !== null) {
-            $attrs['value'] = is_array($value) || is_object($value)
-                ? json_encode($value)
-                : (string)$value;
+            $attrs['value'] = is_scalar($value) ? (string) $value : json_encode($value);
         } else {
             // Default to middle value if no value set
             $min = (float)$attrs['min'];
@@ -115,22 +122,24 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
         $controlOptions = $control->getOptions();
 
         // Handle step from control options
-        if (!empty($controlOptions['step'])) {
-            $attrs['step'] = (string)$controlOptions['step'];
+        $controlReader = ArrayReader::from($controlOptions);
+        $step = $controlReader->get('step', ArrayType::mixed());
+        if (!empty($step)) {
+            $attrs['step'] = (string) Caster::requireNumber($step);
         }
 
         // Handle min/max from control options (override schema if present)
-        if (!empty($controlOptions['min'])) {
-            $attrs['min'] = (string)$controlOptions['min'];
+        $min = $controlReader->get('min', ArrayType::mixed());
+        if (!empty($min)) {
+            $attrs['min'] = (string) Caster::requireNumber($min);
         }
-        if (!empty($controlOptions['max'])) {
-            $attrs['max'] = (string)$controlOptions['max'];
+        $max = $controlReader->get('max', ArrayType::mixed());
+        if (!empty($max)) {
+            $attrs['max'] = (string) Caster::requireNumber($max);
         }
 
         // Merge additional attributes from options
-        if (isset($options['attr']) && is_array($options['attr'])) {
-            $attrs = array_merge($attrs, $options['attr']);
-        }
+        $attrs = array_merge($attrs, $customAttrs);
 
         // Additional slider-specific options
         $sliderOptions = [

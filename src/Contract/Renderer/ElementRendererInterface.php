@@ -28,7 +28,7 @@ interface ElementRendererInterface
      *
      * @param UiSchemaElementInterface $element The element to render.
      * @param FormInterface $form The form containing the element.
-     * @param array $options Additional rendering options.
+     * @param array<string, mixed> $options Additional rendering options.
      * @return string The rendered HTML.
      */
     public function render(

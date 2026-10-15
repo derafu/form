@@ -14,11 +14,15 @@ namespace Derafu\TestsForm\Loader;
 
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Loader\PhpFormLoader;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -66,6 +70,10 @@ use RuntimeException;
 #[UsesClass(\Derafu\Form\Type\WeekType::class)]
 #[UsesClass(\Derafu\Form\UiSchema\Control::class)]
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class PhpFormLoaderTest extends TestCase
 {
     private const FIXTURES = __DIR__ . '/../../fixtures/forms';
@@ -158,5 +166,33 @@ final class PhpFormLoaderTest extends TestCase
     private function makeFactory(): FormFactoryInterface
     {
         return new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider())));
+    }
+
+    public function testAFileThatIsNotADefinitionThrows(): void
+    {
+        $directory = sys_get_temp_dir() . '/derafu-form-' . uniqid('', true);
+        mkdir($directory);
+        file_put_contents($directory . '/scalar.form.php', '<?php return 5;');
+
+        try {
+            $loader = new PhpFormLoader($this->makeFactory());
+            $loader->addPath($directory);
+
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('must return a Closure or an array');
+            $loader->load('scalar');
+        } finally {
+            unlink($directory . '/scalar.form.php');
+            rmdir($directory);
+        }
+    }
+
+    public function testAPathThatDoesNotExistIsSkipped(): void
+    {
+        $loader = new PhpFormLoader($this->makeFactory());
+        $loader->addPath(self::FIXTURES . '/does-not-exist');
+
+        $this->expectException(RuntimeException::class);
+        $loader->load('static');
     }
 }

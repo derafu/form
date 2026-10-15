@@ -17,6 +17,8 @@ use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\GroupInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\FormRenderer;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -26,6 +28,8 @@ final class GroupRenderer implements ElementRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         UiSchemaElementInterface $element,
@@ -54,17 +58,15 @@ final class GroupRenderer implements ElementRendererInterface
         $elementsHTML = [];
 
         // Render each child element
-        foreach ($childElements as $childElement) {
+        $elementsOptions = ArrayReader::from($options)->listOf('elements_options', ArrayType::map()) ?? [];
+
+        foreach ($childElements as $elementIndex => $childElement) {
             // Check if there are element-specific options.
             $elementOptions = $options;
 
-            // Get options for this element if available (using element type and index).
-            $elementIndex = array_search($childElement, $childElements, true);
-            if (isset($options['elements_options'][$elementIndex])) {
-                $elementOptions = array_merge(
-                    $options,
-                    $options['elements_options'][$elementIndex]
-                );
+            // Get options for this element if available (using its index).
+            if (isset($elementsOptions[$elementIndex])) {
+                $elementOptions = array_merge($options, $elementsOptions[$elementIndex]);
             }
 
             $elementsHTML[] = $formRenderer->renderElement(

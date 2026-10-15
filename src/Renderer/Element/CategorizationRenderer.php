@@ -26,6 +26,8 @@ final class CategorizationRenderer implements ElementRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         UiSchemaElementInterface $element,

@@ -31,6 +31,8 @@ final class Ipv6Type extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

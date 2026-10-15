@@ -76,7 +76,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders the entire form.
      *
      * @param FormInterface $form The form to render.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered form HTML.
      */
     public function renderForm(FormInterface $form, array $options = []): Markup
@@ -91,7 +91,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders the form body: all fields with layout and CSRF token.
      *
      * @param FormInterface $form The form to render the body for.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered form body HTML.
      */
     public function renderFormBody(FormInterface $form, array $options = []): Markup
@@ -106,7 +106,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders the opening form tag.
      *
      * @param FormInterface $form The form to start rendering.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered form start HTML.
      */
     public function renderFormStart(FormInterface $form, array $options = []): Markup
@@ -121,7 +121,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders the closing form tag.
      *
      * @param FormInterface $form The form to end rendering.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered form end HTML.
      */
     public function renderFormEnd(FormInterface $form, array $options = []): Markup
@@ -137,7 +137,7 @@ final class FormTwigExtension extends AbstractExtension
      *
      * @param FormFieldInterface $field The field to render the label for.
      * @param string|null $label Optional custom label text.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered label HTML.
      */
     public function renderFormLabel(
@@ -155,7 +155,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders validation errors for a form field.
      *
      * @param FormFieldInterface $field The field to render errors for.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered errors HTML.
      */
     public function renderFormErrors(
@@ -172,7 +172,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders the widget (input element) for a form field.
      *
      * @param FormFieldInterface $field The field to render the widget for.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered widget HTML.
      */
     public function renderFormWidget(
@@ -189,7 +189,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders help text for a form field.
      *
      * @param FormFieldInterface $field The field to render help text for.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered help text HTML.
      */
     public function renderFormHelp(
@@ -206,7 +206,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders a complete form row (label, widget, errors, and help).
      *
      * @param FormFieldInterface $field The field to render.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered field HTML.
      */
     public function renderRow(
@@ -223,7 +223,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders all remaining/unrendered fields in the form.
      *
      * @param FormInterface $form The form to render remaining fields for.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered fields HTML.
      */
     public function renderRest(
@@ -255,7 +255,7 @@ final class FormTwigExtension extends AbstractExtension
      *
      * @param UiSchemaElementInterface $element The element to render.
      * @param FormInterface $form The form containing the element.
-     * @param array $options Additional rendering options.
+     * @param array<string, mixed> $options Additional rendering options.
      * @return Markup The rendered HTML.
      */
     public function renderElement(
@@ -269,10 +269,10 @@ final class FormTwigExtension extends AbstractExtension
     /**
      * Renders a collection of UI elements.
      *
-     * @param array $elements The elements to render.
+     * @param array<UiSchemaElementInterface> $elements The elements to render.
      * @param FormInterface $form The form containing the elements.
-     * @param array $options Additional rendering options.
-     * @return array The rendered HTML of each element.
+     * @param array<string, mixed> $options Additional rendering options.
+     * @return list<string> The rendered HTML of each element.
      */
     public function renderElements(
         array $elements,
@@ -309,7 +309,7 @@ final class FormTwigExtension extends AbstractExtension
      * Renders the errors of the form as a whole.
      *
      * @param FormInterface $form The form to render the errors for.
-     * @param array $options Additional options for rendering.
+     * @param array<string, mixed> $options Additional options for rendering.
      * @return Markup The rendered errors HTML.
      */
     public function renderGlobalErrors(FormInterface $form, array $options = []): Markup

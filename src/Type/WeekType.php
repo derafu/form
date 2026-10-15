@@ -30,6 +30,8 @@ final class WeekType extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
     */
     public function getJsonSchema(): array
     {
@@ -53,18 +55,8 @@ final class WeekType extends AbstractType
 
     /**
      * {@inheritDoc}
-     */
-    public function validateValue(mixed $value): bool
-    {
-        if (!is_string($value)) {
-            return false;
-        }
-
-        return preg_match($this->getRegex(), $value) === 1;
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     protected function getDefaultOptions(): array
     {

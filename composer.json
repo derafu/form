@@ -29,7 +29,8 @@
         "php": "^8.5",
         "derafu/support": "dev-main",
         "derafu/renderer": "dev-main",
-        "derafu/translation": "dev-main"
+        "derafu/translation": "dev-main",
+        "derafu/data-processor": "dev-main"
     },
     "require-dev": {
         "ext-xdebug": "*",
@@ -39,7 +40,6 @@
         "symfony/form": "^8.1",
         "symfony/validator": "^8.1",
         "symfony/yaml": "^8.1",
-        "derafu/data-processor": "dev-main",
         "nikic/php-parser": "^5.9",
         "symfony/dependency-injection": "^8.1",
         "symfony/config": "^8.1"

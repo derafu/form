@@ -33,6 +33,8 @@ final class PropertySchemaFactory implements PropertySchemaFactoryInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
      */
     public static function create(array $definition): PropertySchemaInterface
     {

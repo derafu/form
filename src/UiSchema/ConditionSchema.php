@@ -35,7 +35,7 @@ final class ConditionSchema implements ConditionSchemaInterface
     /**
      * The `enum` array, or null when absent.
      *
-     * @var array|null
+     * @var array<mixed>|null
      */
     private ?array $enum = null;
 
@@ -92,6 +92,8 @@ final class ConditionSchema implements ConditionSchemaInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<mixed>|null
      */
     public function getEnum(): ?array
     {
@@ -205,6 +207,7 @@ final class ConditionSchema implements ConditionSchemaInterface
      */
     public static function fromArray(array $definition): static
     {
+        /** @var array{const?: mixed, enum?: mixed, contains?: mixed, not?: mixed, minimum?: float|int, maximum?: float|int, exclusiveMinimum?: float|int, exclusiveMaximum?: float|int, pattern?: string} $definition */
         $schema = new static();
 
         if (array_key_exists('const', $definition)) {
@@ -217,11 +220,15 @@ final class ConditionSchema implements ConditionSchemaInterface
         }
 
         if (array_key_exists('contains', $definition) && is_array($definition['contains'])) {
-            $schema->contains = static::fromArray($definition['contains']);
+            /** @var array<string, mixed> $contains */
+            $contains = $definition['contains'];
+            $schema->contains = static::fromArray($contains);
         }
 
         if (array_key_exists('not', $definition) && is_array($definition['not'])) {
-            $schema->not = static::fromArray($definition['not']);
+            /** @var array<string, mixed> $not */
+            $not = $definition['not'];
+            $schema->not = static::fromArray($not);
         }
 
         if (array_key_exists('minimum', $definition)) {

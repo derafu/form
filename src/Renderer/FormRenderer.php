@@ -21,6 +21,8 @@ use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererRegistryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Renderer\Contract\RendererInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 
 /**
@@ -39,6 +41,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(FormInterface $form, array $options = []): string
     {
@@ -52,6 +56,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderStart(
         FormInterface $form,
@@ -73,6 +79,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderEnd(
         FormInterface $form,
@@ -88,6 +96,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderLabel(
         FormFieldInterface $field,
@@ -109,6 +119,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderErrors(
         FormFieldInterface $field,
@@ -125,6 +137,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderWidget(
         FormFieldInterface $field,
@@ -145,6 +159,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderHelp(
         FormFieldInterface $field,
@@ -161,6 +177,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderRow(
         FormFieldInterface $field,
@@ -170,18 +188,23 @@ final class FormRenderer implements FormRendererInterface
             'floating_labels' => $field->getWidget()->supportsFloatingLabel(),
         ], $options);
 
+        $reader = ArrayReader::from($options);
+        $attr = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+        $placeholder = $field->getControl()->getLabel();
         if (
-            $options['floating_labels']
-            && empty($options['attr']['placeholder'])
+            $reader->bool('floating_labels')
+            && empty($attr['placeholder'])
+            && $placeholder !== null
         ) {
-            $options['attr']['placeholder'] = $field->getControl()->getLabel();
+            $attr['placeholder'] = $placeholder;
+            $options['attr'] = $attr;
         }
 
         $context = [
             'field' => $field,
             'label' => $this->renderLabel(
                 $field,
-                $options['label'] ?? null,
+                $reader->string('label'),
                 $options
             ),
             'errors' => $this->renderErrors($field, $options),
@@ -196,6 +219,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderBody(
         FormInterface $form,
@@ -211,6 +236,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderRest(
         FormInterface $form,
@@ -247,6 +274,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderElement(
         UiSchemaElementInterface $element,
@@ -264,6 +293,10 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<UiSchemaElementInterface> $elements
+     * @param array<string, mixed> $options
+     * @return list<string>
      */
     public function renderElements(
         array $elements,
@@ -323,6 +356,8 @@ final class FormRenderer implements FormRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function renderGlobalErrors(
         FormInterface $form,

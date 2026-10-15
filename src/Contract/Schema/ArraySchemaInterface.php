@@ -68,7 +68,7 @@ interface ArraySchemaInterface extends PropertySchemaInterface
      * Gets the sub-schemas that at least one element in an array property must
      * match.
      *
-     * @return array|null
+     * @return array<string, mixed>|null
      * @link https://www.learnjsonschema.com/2020-12/applicator/contains/
      */
     public function getContains(): ?array;
@@ -77,7 +77,7 @@ interface ArraySchemaInterface extends PropertySchemaInterface
      * Sets the sub-schemas that at least one element in an array property must
      * match.
      *
-     * @param array $contains
+     * @param array<string, mixed> $contains
      * @return static The current instance.
      */
     public function setContains(array $contains): static;

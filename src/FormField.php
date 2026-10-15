@@ -64,7 +64,7 @@ final class FormField implements FormFieldInterface
     /**
      * The errors for the field.
      *
-     * @var array
+     * @var array<string>
      */
     private array $errors = [];
 
@@ -190,6 +190,8 @@ final class FormField implements FormFieldInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string>
      */
     public function getErrors(): array
     {
@@ -198,6 +200,8 @@ final class FormField implements FormFieldInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string> $errors
      */
     public function setErrors(array $errors): static
     {
@@ -216,6 +220,8 @@ final class FormField implements FormFieldInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -231,6 +237,8 @@ final class FormField implements FormFieldInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {

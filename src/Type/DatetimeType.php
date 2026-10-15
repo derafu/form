@@ -14,6 +14,7 @@ namespace Derafu\Form\Type;
 
 use DateTimeImmutable;
 use Derafu\Form\Abstract\AbstractType;
+use Derafu\Support\Caster;
 
 /**
  * Represents a datetime type in the form.
@@ -39,6 +40,8 @@ final class DatetimeType extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     protected function getDefaultOptions(): array
     {
@@ -50,25 +53,15 @@ final class DatetimeType extends AbstractType
     /**
      * {@inheritDoc}
      */
-    public function validateValue(mixed $value): bool
-    {
-        if (!is_string($value)) {
-            return false;
-        }
-
-        return preg_match($this->getRegex(), $value) === 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function castValue(mixed $value): mixed
     {
-        return new DateTimeImmutable($value);
+        return new DateTimeImmutable(Caster::requireString($value));
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

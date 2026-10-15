@@ -14,6 +14,8 @@ namespace Derafu\ExamplesForm;
 
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use InvalidArgumentException;
 
 /**
@@ -40,7 +42,7 @@ final class Example
     /**
      * Cached example data.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     private array $data;
 
@@ -79,12 +81,20 @@ final class Example
      *
      * Results are cached after the first call.
      *
-     * @return array The raw example data.
+     * @return array<string, mixed> The raw example data.
      */
     public function getData(): array
     {
         if (!isset($this->data)) {
-            $this->data = json_decode(file_get_contents($this->file), true);
+            $json = file_get_contents($this->file);
+            if ($json === false) {
+                throw new InvalidArgumentException(sprintf('Example file "%s" can not be read.', $this->file));
+            }
+
+            $this->data = ArrayType::map()->parse(
+                json_decode($json, true, flags: JSON_THROW_ON_ERROR),
+                $this->file
+            );
         }
 
         return $this->data;
@@ -98,7 +108,9 @@ final class Example
     public function getForm(): FormInterface
     {
         if (!isset($this->form)) {
-            $this->form = self::$formFactory->create($this->getData()['form']);
+            $this->form = self::$formFactory->create(
+                ArrayReader::from($this->getData())->require('form', ArrayType::map())
+            );
         }
 
         return $this->form;
@@ -179,7 +191,7 @@ final class Example
      */
     public function getName(): string
     {
-        return $this->getMeta()['name'] ?? $this->getCode();
+        return ArrayReader::from($this->getMeta())->string('name') ?? $this->getCode();
     }
 
     /**
@@ -189,27 +201,27 @@ final class Example
      */
     public function getDescription(): ?string
     {
-        return $this->getMeta()['description'] ?? null;
+        return ArrayReader::from($this->getMeta())->string('description');
     }
 
     /**
      * Get the example's tags.
      *
-     * @return array List of tags.
+     * @return list<string> List of tags.
      */
     public function getTags(): array
     {
-        return $this->getMeta()['tags'] ?? [];
+        return ArrayReader::from($this->getMeta())->stringList('tags') ?? [];
     }
 
     /**
      * Get all metadata for the example.
      *
-     * @return array Metadata as an associative array.
+     * @return array<string, mixed> Metadata as an associative array.
      */
     public function getMeta(): array
     {
-        return $this->getData()['meta'] ?? [];
+        return ArrayReader::from($this->getData())->map('meta') ?? [];
     }
 
     /**
@@ -265,7 +277,7 @@ final class Example
      */
     public static function all(): array
     {
-        $files = glob(self::EXAMPLES_DIR . '/[0-9][0-9][0-9]_*.json');
+        $files = glob(self::EXAMPLES_DIR . '/[0-9][0-9][0-9]_*.json') ?: [];
 
         $examples = [];
         foreach ($files as $file) {

@@ -18,6 +18,7 @@ use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormRulesResolver;
@@ -28,14 +29,17 @@ use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -64,6 +68,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormRulesResolverTest extends TestCase
 {
     private FormRulesResolver $resolver;
@@ -77,6 +84,10 @@ final class FormRulesResolverTest extends TestCase
     // mapSchemaToRules — pure schema derivation (no form needed)
     // =========================================================================
 
+    /**
+     * @param array<string, mixed> $expectedRules
+     * @param array<string, mixed> $schema
+     */
     #[DataProvider('stringTypeProvider')]
     public function testStringTypeMapping(array $schema, array $expectedRules): void
     {
@@ -86,28 +97,31 @@ final class FormRulesResolverTest extends TestCase
         );
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function stringTypeProvider(): array
     {
         return [
             'basic_string' => [
                 ['type' => 'string'],
-                ['cast' => 'string', 'sanitize' => ['trim']],
+                ['sanitize' => ['trim'], 'cast' => 'string'],
             ],
             'string_with_length_constraints' => [
                 ['type' => 'string', 'minLength' => 3, 'maxLength' => 100],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['min_length:3', 'max_length:100']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['min_length:3', 'max_length:100']],
             ],
             'email_string' => [
                 ['type' => 'string', 'format' => 'email', 'minLength' => 3, 'maxLength' => 80],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'transform' => ['lowercase'], 'validate' => ['min_length:3', 'max_length:80', 'email']],
+                ['transform' => ['lowercase'], 'sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['min_length:3', 'max_length:80', 'email']],
             ],
             'string_with_pattern' => [
                 ['type' => 'string', 'pattern' => '^[A-Za-z]+$'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['regex:/^[A-Za-z]+$/']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['regex:/^[A-Za-z]+$/']],
             ],
             'string_with_enum' => [
                 ['type' => 'string', 'enum' => ['pending', 'approved', 'rejected']],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['in:pending,approved,rejected']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['in:pending,approved,rejected']],
             ],
             'string_with_oneOf' => [
                 [
@@ -118,11 +132,15 @@ final class FormRulesResolverTest extends TestCase
                         ['const' => 'archived', 'title' => 'Archived'],
                     ],
                 ],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['in:draft,active,archived']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['in:draft,active,archived']],
             ],
         ];
     }
 
+    /**
+     * @param array<string, mixed> $expectedRules
+     * @param array<string, mixed> $schema
+     */
     #[DataProvider('numericTypeProvider')]
     public function testNumericTypeMapping(array $schema, array $expectedRules): void
     {
@@ -132,6 +150,9 @@ final class FormRulesResolverTest extends TestCase
         );
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function numericTypeProvider(): array
     {
         return [
@@ -154,6 +175,10 @@ final class FormRulesResolverTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<string, mixed> $expectedRules
+     * @param array<string, mixed> $schema
+     */
     #[DataProvider('arrayTypeProvider')]
     public function testArrayTypeMapping(array $schema, array $expectedRules): void
     {
@@ -163,6 +188,9 @@ final class FormRulesResolverTest extends TestCase
         );
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function arrayTypeProvider(): array
     {
         return [
@@ -178,6 +206,10 @@ final class FormRulesResolverTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<string, mixed> $expectedRules
+     * @param array<string, mixed> $schema
+     */
     #[DataProvider('booleanTypeProvider')]
     public function testBooleanTypeMapping(array $schema, array $expectedRules): void
     {
@@ -187,6 +219,9 @@ final class FormRulesResolverTest extends TestCase
         );
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function booleanTypeProvider(): array
     {
         return [
@@ -194,6 +229,10 @@ final class FormRulesResolverTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<string, mixed> $expectedRules
+     * @param array<string, mixed> $schema
+     */
     #[DataProvider('formatMappingProvider')]
     public function testFormatMapping(array $schema, array $expectedRules): void
     {
@@ -203,40 +242,71 @@ final class FormRulesResolverTest extends TestCase
         );
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function formatMappingProvider(): array
     {
         return [
             'email_format' => [
                 ['type' => 'string', 'format' => 'email'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'transform' => ['lowercase'], 'validate' => ['email']],
+                ['transform' => ['lowercase'], 'sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['email']],
+            ],
+            'url_format' => [
+                ['type' => 'string', 'format' => 'url'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['url']],
             ],
             'uri_format' => [
                 ['type' => 'string', 'format' => 'uri'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['url']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['url']],
             ],
             'date_format' => [
                 ['type' => 'string', 'format' => 'date'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['date_format:Y-m-d']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['date_format:Y-m-d']],
             ],
             'date_time_format' => [
                 ['type' => 'string', 'format' => 'date-time'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['date_format:Y-m-d H:i:s']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['date_format:Y-m-d H:i:s']],
             ],
             'tel_format' => [
                 ['type' => 'string', 'format' => 'tel'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['regex:/^[\+]?[0-9\s\-\(\)]+$/']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['regex:/^[\+]?[0-9\s\-\(\)]+$/']],
             ],
             'base64_format' => [
                 ['type' => 'string', 'format' => 'base64'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['base64']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['base64']],
             ],
             'json_format' => [
                 ['type' => 'string', 'format' => 'json'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['json']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['json']],
             ],
             'json_content_media_type' => [
                 ['type' => 'string', 'contentMediaType' => 'application/json'],
-                ['cast' => 'string', 'sanitize' => ['trim'], 'validate' => ['json']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['json']],
+            ],
+            'time' => [
+                ['type' => 'string', 'format' => 'time'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['date_format:H:i:s']],
+            ],
+            'hostname' => [
+                ['type' => 'string', 'format' => 'hostname'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['hostname']],
+            ],
+            'ipv4' => [
+                ['type' => 'string', 'format' => 'ipv4'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['ip']],
+            ],
+            'ipv6' => [
+                ['type' => 'string', 'format' => 'ipv6'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['ip']],
+            ],
+            'uuid' => [
+                ['type' => 'string', 'format' => 'uuid'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['uuid']],
+            ],
+            'text_json_content_media_type' => [
+                ['type' => 'string', 'contentMediaType' => 'text/json'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['json']],
             ],
         ];
     }
@@ -245,6 +315,10 @@ final class FormRulesResolverTest extends TestCase
     // resolve() — UI control options via real Form objects
     // =========================================================================
 
+    /**
+     * @param array<string, mixed> $controlOptions
+     * @param array<string, mixed> $schemaProperty
+     */
     private function formWith(string $fieldName, array $schemaProperty, array $controlOptions = []): Form
     {
         $element = ['type' => 'Control', 'scope' => "#/properties/{$fieldName}"];
@@ -264,6 +338,10 @@ final class FormRulesResolverTest extends TestCase
         ]);
     }
 
+    /**
+     * @param array<string, mixed> $controlOptions
+     * @param array<string, mixed> $schemaProperty
+     */
     private function formWithRequired(string $fieldName, array $schemaProperty, array $controlOptions = []): Form
     {
         $element = ['type' => 'Control', 'scope' => "#/properties/{$fieldName}"];
@@ -499,6 +577,12 @@ final class FormRulesResolverTest extends TestCase
     // resolve() — explicit rules section (merge logic)
     // =========================================================================
 
+    /**
+     * @param array<string, mixed> $properties
+     * @param list<string> $required
+     * @param array<string, mixed> $rules
+     * @param list<array<string, mixed>> $uiElements
+     */
     private function formWithRules(array $properties, array $uiElements, array $rules, array $required = []): Form
     {
         $schema = ['type' => 'object', 'properties' => $properties];
@@ -663,7 +747,6 @@ final class FormRulesResolverTest extends TestCase
         $rules = $form->getRules();
 
         $fieldRules = $rules['name'];
-        $this->assertIsArray($fieldRules);
         $this->assertArrayHasKey('cast', $fieldRules);
         $this->assertArrayHasKey('validate', $fieldRules);
     }
@@ -703,5 +786,20 @@ final class FormRulesResolverTest extends TestCase
 
         $this->expectException(\BadMethodCallException::class);
         unset($rules['name']);
+    }
+
+    public function testExplicitRulesCanBeStringsSeparatedByPipes(): void
+    {
+        $form = $this->formWithRules(
+            ['sku' => ['type' => 'string', 'title' => 'SKU']],
+            [['type' => 'Control', 'scope' => '#/properties/sku']],
+            ['sku' => ['sanitize' => 'spaces|strip_tags', 'validate' => 'alpha_num']]
+        );
+
+        $this->resolver->resolve($form);
+        $rules = $form->getRules();
+
+        $this->assertSame(['trim', 'spaces', 'strip_tags'], $rules->getSanitizeRules('sku'));
+        $this->assertSame(['alpha_num'], $rules->getValidateRules('sku'));
     }
 }

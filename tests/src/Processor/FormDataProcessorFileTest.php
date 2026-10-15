@@ -17,11 +17,14 @@ use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractType;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
+use Derafu\Form\Contract\Processor\ProcessResultInterface;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
@@ -30,6 +33,7 @@ use Derafu\Form\Processor\ProcessResult;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -54,11 +58,13 @@ use Derafu\Form\Type\UrlType;
 use Derafu\Form\Type\UuidType;
 use Derafu\Form\Type\WeekType;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -113,6 +119,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(WidgetFactory::class)]
 #[CoversClass(Widget::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormDataProcessorFileTest extends TestCase
 {
     private FormDataProcessorInterface $processor;
@@ -162,6 +172,8 @@ final class FormDataProcessorFileTest extends TestCase
 
     /**
      * Returns a valid $_FILES-style array for a single file upload.
+     *
+     * @return array<string, mixed>
      */
     private function validFileArray(string $filename, string $mime = 'image/jpeg'): array
     {
@@ -176,6 +188,8 @@ final class FormDataProcessorFileTest extends TestCase
 
     /**
      * Returns a $_FILES-style array that represents an upload error.
+     *
+     * @return array<string, mixed>
      */
     private function errorFileArray(int $errorCode = UPLOAD_ERR_NO_FILE): array
     {
@@ -290,7 +304,7 @@ final class FormDataProcessorFileTest extends TestCase
         $this->assertTrue($result->isValid());
         $this->assertEmpty($result->getErrors());
         // The processed value should be the original file array, unchanged.
-        $this->assertSame($file, $result->getProcessedData()['avatar']);
+        $this->assertSame($file, $this->processedData($result)['avatar']);
     }
 
     // -------------------------------------------------------------------------
@@ -416,8 +430,19 @@ final class FormDataProcessorFileTest extends TestCase
 
         $this->assertTrue($result->isValid());
         // The text field must still be trimmed.
-        $this->assertSame('John Doe', $result->getProcessedData()['name']);
+        $this->assertSame('John Doe', $this->processedData($result)['name']);
         // The file field must pass through unchanged.
-        $this->assertSame($file, $result->getProcessedData()['avatar']);
+        $this->assertSame($file, $this->processedData($result)['avatar']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function processedData(ProcessResultInterface $result): array
+    {
+        $data = $result->getProcessedData();
+        $this->assertIsArray($data);
+
+        return $data;
     }
 }

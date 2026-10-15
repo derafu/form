@@ -16,6 +16,9 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Support\Caster;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -28,6 +31,8 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(FormFieldInterface $field, array $options = []): string
     {
@@ -38,6 +43,9 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
                 'The "renderer" option in SelectWidgetRenderer must be an instance of FormRendererInterface.'
             );
         }
+
+        $reader = ArrayReader::from($options);
+        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
 
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -53,8 +61,9 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        if (isset($options['widget_class'])) {
-            $widgetClass .= ' ' . $options['widget_class'];
+        $extraClass = $reader->string('widget_class');
+        if ($extraClass !== null) {
+            $widgetClass .= ' ' . $extraClass;
         }
 
         // Get field name.
@@ -105,8 +114,9 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         }
 
         // Add size attribute if specified.
-        if (isset($options['size']) && is_numeric($options['size'])) {
-            $attrs['size'] = (string)$options['size'];
+        $size = $reader->get('size', ArrayType::mixed());
+        if ($size !== null) {
+            $attrs['size'] = (string) Caster::requireNumber($size);
         }
 
         // Add placeholder from control options if available.
@@ -126,9 +136,7 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         }
 
         // Apply custom attributes from options.
-        if (isset($options['attr']) && is_array($options['attr'])) {
-            $attrs = array_merge($attrs, $options['attr']);
-        }
+        $attrs = array_merge($attrs, $customAttrs);
 
         // Prepare context for template.
         $context = [

@@ -78,13 +78,13 @@ final class CsrfServicesTest extends TestCase
     public function theManagerOfTheApplicationIsUsedToRenderAndToProcess(): void
     {
         $container = $this->container(withManager: true);
-        $manager = $container->get(InMemoryCsrfTokenManager::class);
+        $manager = $this->service($container, InMemoryCsrfTokenManager::class);
         $this->assertInstanceOf(InMemoryCsrfTokenManager::class, $manager);
 
-        $html = $container->get(FormRendererInterface::class)->render($this->form());
+        $html = $this->service($container, FormRendererInterface::class)->render($this->form());
         $this->assertStringContainsString('value="' . $manager->getToken('form') . '"', $html);
 
-        $processor = $container->get(FormDataProcessorInterface::class);
+        $processor = $this->service($container, FormDataProcessorInterface::class);
         $this->assertFalse($processor->process($this->form(), ['email' => 'a@b.cl'])->isValid());
         $this->assertTrue($processor->process($this->form(), ['email' => 'a@b.cl', '_token' => $manager->getToken('form')])->isValid());
     }
@@ -95,14 +95,14 @@ final class CsrfServicesTest extends TestCase
         $container = $this->container(withManager: false);
 
         try {
-            $container->get(FormRendererInterface::class)->render($this->form());
+            $this->service($container, FormRendererInterface::class)->render($this->form());
             $this->fail('A protected form was rendered without a CSRF token manager.');
         } catch (RuntimeError $e) {
             $this->assertInstanceOf(TranslatableLogicException::class, $e->getPrevious());
         }
 
         $this->expectException(TranslatableLogicException::class);
-        $container->get(FormDataProcessorInterface::class)->process($this->form(), ['email' => 'a@b.cl']);
+        $this->service($container, FormDataProcessorInterface::class)->process($this->form(), ['email' => 'a@b.cl']);
     }
 
     #[Test]
@@ -110,8 +110,21 @@ final class CsrfServicesTest extends TestCase
     {
         $container = $this->container(withManager: false);
 
-        $html = $container->get(FormRendererInterface::class)->render($this->form(protected: false));
+        $html = $this->service($container, FormRendererInterface::class)->render($this->form(protected: false));
         $this->assertStringNotContainsString('_token', $html);
-        $this->assertTrue($container->get(FormDataProcessorInterface::class)->process($this->form(protected: false), ['email' => 'a@b.cl'])->isValid());
+        $this->assertTrue($this->service($container, FormDataProcessorInterface::class)->process($this->form(protected: false), ['email' => 'a@b.cl'])->isValid());
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $id
+     * @return T
+     */
+    private function service(ContainerBuilder $container, string $id): object
+    {
+        $service = $container->get($id);
+        $this->assertInstanceOf($id, $service);
+
+        return $service;
     }
 }

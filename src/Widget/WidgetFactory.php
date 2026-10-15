@@ -17,6 +17,7 @@ use Derafu\Form\Contract\Schema\ArraySchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use Derafu\Form\Contract\Widget\WidgetFactoryInterface;
 use Derafu\Form\Contract\Widget\WidgetInterface;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Factory class for creating widget instances.
@@ -38,6 +39,7 @@ final class WidgetFactory implements WidgetFactoryInterface
      *
      * @param FormFieldInterface $field The form field.
      * @return string The widget type (e.g., 'text', 'email', 'select', etc.).
+     * @throws InvalidArgumentException If the "widget" option is not a string.
      */
     private function determineWidgetType(FormFieldInterface $field): string
     {
@@ -47,7 +49,11 @@ final class WidgetFactory implements WidgetFactoryInterface
         // Check if the control has a specific widget type defined in options.
         $options = $control->getOptions();
         if (isset($options['widget'])) {
-            return $options['widget'];
+            return is_string($options['widget']) ? $options['widget'] : throw new InvalidArgumentException([
+                'The "widget" option of the control "{scope}" must be a string, {given} given.',
+                'scope' => $control->getScope(),
+                'given' => get_debug_type($options['widget']),
+            ]);
         }
 
         // Determine widget type based on property type and format.

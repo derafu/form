@@ -175,7 +175,7 @@ interface FormAttributesInterface extends JsonSerializable
     /**
      * Converts the object to an associative array.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function toArray(): array;
 
@@ -189,7 +189,7 @@ interface FormAttributesInterface extends JsonSerializable
     /**
      * Creates a FormAttributes instance from an associative array.
      *
-     * @param array $attributes Associative array of form attributes.
+     * @param array<string, mixed> $attributes Associative array of form attributes.
      * @return static
      */
     public static function fromArray(array $attributes): static;

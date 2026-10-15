@@ -15,10 +15,12 @@ namespace Derafu\Form\Tests\Processor;
 use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
+use Derafu\Form\Contract\Processor\ProcessResultInterface;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
@@ -27,13 +29,16 @@ use Derafu\Form\Processor\ProcessResult;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -70,6 +75,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormDataProcessorPatternTest extends TestCase
 {
     private FormDataProcessor $processor;
@@ -130,7 +138,7 @@ final class FormDataProcessorPatternTest extends TestCase
         $result = $this->processor->process($form, ['code' => 'P1Y2M3DT4H5M6S']);
 
         $this->assertTrue($result->isValid());
-        $this->assertSame('P1Y2M3DT4H5M6S', $result->getProcessedData()['code']);
+        $this->assertSame('P1Y2M3DT4H5M6S', $this->processedData($result)['code']);
         $this->assertArrayNotHasKey('code', $result->getErrors());
     }
 
@@ -162,7 +170,7 @@ final class FormDataProcessorPatternTest extends TestCase
         $result = $this->processor->process($form, ['code' => 'abcd1234']);
 
         $this->assertTrue($result->isValid());
-        $this->assertSame('abcd1234', $result->getProcessedData()['code']);
+        $this->assertSame('abcd1234', $this->processedData($result)['code']);
     }
 
     /**
@@ -254,7 +262,7 @@ final class FormDataProcessorPatternTest extends TestCase
         $result = $this->processor->process($form, ['code' => 'HelloWorld']);
 
         $this->assertTrue($result->isValid());
-        $this->assertSame('HelloWorld', $result->getProcessedData()['code']);
+        $this->assertSame('HelloWorld', $this->processedData($result)['code']);
     }
 
     /**
@@ -269,5 +277,16 @@ final class FormDataProcessorPatternTest extends TestCase
 
         $this->assertFalse($result->isValid());
         $this->assertArrayHasKey('code', $result->getErrors());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function processedData(ProcessResultInterface $result): array
+    {
+        $data = $result->getProcessedData();
+        $this->assertIsArray($data);
+
+        return $data;
     }
 }

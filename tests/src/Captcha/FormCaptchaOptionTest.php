@@ -13,6 +13,9 @@ declare(strict_types=1);
 namespace Derafu\TestsForm\Captcha;
 
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
+use Derafu\Form\Schema\PropertyDefinition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -36,6 +39,9 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\Schema\StringSchema::class)]
 #[UsesClass(\Derafu\Form\UiSchema\Control::class)]
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormCaptchaOptionTest extends TestCase
 {
     /**

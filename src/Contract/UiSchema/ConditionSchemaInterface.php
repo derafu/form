@@ -59,6 +59,8 @@ interface ConditionSchemaInterface
      *
      * Per JSON Schema spec, `enum` is always a plain array of values.
      * Use the `oneOf`/`const`+`title` pattern for labelled choices.
+     *
+     * @return array<mixed>|null
      */
     public function getEnum(): ?array;
 

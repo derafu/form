@@ -31,9 +31,28 @@ final class FormRendererFactory implements FormRendererFactoryInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public static function create(array $options = []): FormRendererInterface
     {
+        /**
+         * @var array{
+         *     renderer: array{
+         *         paths?: array<string>,
+         *         engines?: array<\Derafu\Renderer\Contract\EngineInterface|string>,
+         *         formatters?: array<string, mixed>,
+         *         extensions?: array<\Twig\Extension\ExtensionInterface>,
+         *         extra?: bool,
+         *         components?: \Derafu\Twig\Contract\ComponentProviderInterface,
+         *         pdf?: array<string, mixed>
+         *     },
+         *     element_renderers?: array<string, \Derafu\Form\Contract\Renderer\ElementRendererInterface>|\Derafu\Form\Contract\Renderer\ElementRendererProviderInterface,
+         *     widget_renderers?: array<string, \Derafu\Form\Contract\Renderer\WidgetRendererInterface>|\Derafu\Form\Contract\Renderer\WidgetRendererProviderInterface,
+         *     csrf_token_manager?: \Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface|null,
+         *     captcha_provider?: \Derafu\Form\Contract\Captcha\CaptchaProviderInterface|null
+         * } $options
+         */
         $options['renderer']['paths'] = array_merge(
             $options['renderer']['paths'] ?? [],
             [__DIR__ . '/../../resources/templates']

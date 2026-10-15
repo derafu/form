@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
+use Derafu\Support\Caster;
 
 /**
  * Represents a money type in the form.
@@ -42,15 +43,13 @@ final class MoneyType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        if ((int)$value == $value) {
-            return (int)$value;
-        }
-
-        return (float)$value;
+        return Caster::requireNumber($value);
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getJsonSchema(): array
     {

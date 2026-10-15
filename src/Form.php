@@ -30,6 +30,7 @@ use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Widget\WidgetFactory;
 use Derafu\Support\JsonSerializer;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Represents a form defined using a declarative approach.
@@ -51,6 +52,11 @@ final class Form implements FormInterface
     private array $fields;
 
     /**
+     * The factory of the widgets of the fields.
+     */
+    private WidgetFactoryInterface $widgetFactory;
+
+    /**
      * Creates a new Form.
      *
      * @param FormSchemaInterface $schema
@@ -58,7 +64,7 @@ final class Form implements FormInterface
      * @param FormRulesInterface $rules Explicit processing rules.
      * @param FormDataInterface|null $data
      * @param FormOptionsInterface|null $options
-     * @param array<string, array>|null $errors Optional errors for each field (by name)
+     * @param array<string, array<string>>|null $errors Optional errors for each field (by name)
      * @param WidgetFactoryInterface|null $widgetFactory Optional widget factory.
      * @param array<string>|null $formErrors Optional errors of the form as a whole.
      */
@@ -69,12 +75,10 @@ final class Form implements FormInterface
         private readonly ?FormDataInterface $data = null,
         private readonly ?FormOptionsInterface $options = null,
         private readonly ?array $errors = null,
-        private ?WidgetFactoryInterface $widgetFactory = null,
+        ?WidgetFactoryInterface $widgetFactory = null,
         private readonly ?array $formErrors = null,
     ) {
-        if ($this->widgetFactory === null) {
-            $this->widgetFactory = new WidgetFactory();
-        }
+        $this->widgetFactory = $widgetFactory ?? new WidgetFactory();
     }
 
     /**
@@ -233,6 +237,8 @@ final class Form implements FormInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, array<string>>|null $errors
      */
     public function withData(
         FormDataInterface $data,
@@ -253,6 +259,8 @@ final class Form implements FormInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -267,6 +275,8 @@ final class Form implements FormInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -296,6 +306,8 @@ final class Form implements FormInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toJsonFormDefinition(): array
     {
@@ -310,16 +322,22 @@ final class Form implements FormInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If a key of the first level has a wrong
+     * type.
      */
     public static function fromArray(array $definition): static
     {
-        $schema   = FormSchema::fromArray($definition['schema'] ?? []);
-        $uischema = FormUiSchemaFactory::create($definition['uischema'] ?? []);
-        $rules    = FormRules::fromArray($definition['rules'] ?? []);
-        $data     = isset($definition['data']) ? FormData::fromArray($definition['data']) : null;
-        $options  = FormOptions::fromArray($definition['options'] ?? []);
-        $errors   = $definition['errors'] ?? null;
+        $form = FormDefinition::fromArray($definition);
 
-        return new static($schema, $uischema, $rules, $data, $options, $errors);
+        return new static(
+            FormSchema::fromArray($form->schema),
+            FormUiSchemaFactory::create($form->uischema),
+            FormRules::fromArray($form->rules),
+            $form->data !== null ? FormData::fromArray($form->data) : null,
+            FormOptions::fromArray($form->options),
+            $form->errors
+        );
     }
 }

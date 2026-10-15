@@ -16,8 +16,11 @@ use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Data\FormData;
 use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Renderer\FormTwigExtension;
+use Derafu\Form\Schema\PropertyDefinition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
 use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -63,6 +66,9 @@ use Twig\Error\RuntimeError;
 #[UsesClass(\Derafu\Form\Widget\Widget::class)]
 #[UsesClass(\Derafu\Form\Widget\WidgetFactory::class)]
 #[UsesClass(\Derafu\Form\Data\FormData::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormCsrfRenderingTest extends TestCase
 {
     private InMemoryCsrfTokenManager $manager;

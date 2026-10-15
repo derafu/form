@@ -31,7 +31,7 @@ interface FormRendererInterface
      * Renders the HTML of the entire form.
      *
      * @param FormInterface $form The form to render.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered form HTML.
      */
     public function render(FormInterface $form, array $options = []): string;
@@ -40,7 +40,7 @@ interface FormRendererInterface
      * Renders the opening form tag with appropriate attributes.
      *
      * @param FormInterface $form The form to render the start tag for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered opening form tag.
      */
     public function renderStart(
@@ -52,7 +52,7 @@ interface FormRendererInterface
      * Renders the closing form tag and optionally renders remaining fields.
      *
      * @param FormInterface $form The form to render the end tag for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered closing form tag.
      */
     public function renderEnd(
@@ -65,7 +65,7 @@ interface FormRendererInterface
      *
      * @param FormFieldInterface $field The form field to render the label for.
      * @param string|null $label Optional override for the label text.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered label HTML.
      */
     public function renderLabel(
@@ -78,7 +78,7 @@ interface FormRendererInterface
      * Renders any errors for the given field.
      *
      * @param FormFieldInterface $field The form field to render errors for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered errors HTML.
      */
     public function renderErrors(
@@ -90,7 +90,7 @@ interface FormRendererInterface
      * Renders the widget (input field) for a form element.
      *
      * @param FormFieldInterface $field The form field to render the widget for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered widget HTML.
      */
     public function renderWidget(
@@ -102,7 +102,7 @@ interface FormRendererInterface
      * Renders the help text for a form element.
      *
      * @param FormFieldInterface $field The form field to render help text for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered help text HTML.
      */
     public function renderHelp(
@@ -114,7 +114,7 @@ interface FormRendererInterface
      * Renders a complete form row (label, widget, errors, and help text).
      *
      * @param FormFieldInterface $field The form field to render the row for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered row HTML.
      */
     public function renderRow(
@@ -129,7 +129,7 @@ interface FormRendererInterface
      * This is the content between the opening and closing form tags.
      *
      * @param FormInterface $form The form to render the body for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered form body HTML.
      */
     public function renderBody(
@@ -141,7 +141,7 @@ interface FormRendererInterface
      * Renders all unrendered fields in the form.
      *
      * @param FormInterface $form The form to render remaining fields for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered remaining fields HTML.
      */
     public function renderRest(
@@ -165,7 +165,7 @@ interface FormRendererInterface
      *
      * @param UiSchemaElementInterface $element The element to render.
      * @param FormInterface $form The form containing the element.
-     * @param array $options Additional rendering options.
+     * @param array<string, mixed> $options Additional rendering options.
      * @return string The rendered HTML.
      */
     public function renderElement(
@@ -177,10 +177,10 @@ interface FormRendererInterface
     /**
      * Renders a collection of UI elements.
      *
-     * @param array $elements The elements to render.
+     * @param array<UiSchemaElementInterface> $elements The elements to render.
      * @param FormInterface $form The form containing the elements.
-     * @param array $options Additional rendering options.
-     * @return array The rendered HTML of each element.
+     * @param array<string, mixed> $options Additional rendering options.
+     * @return list<string> The rendered HTML of each element.
      */
     public function renderElements(
         array $elements,
@@ -217,7 +217,7 @@ interface FormRendererInterface
      * any field (see FormInterface::getErrors()).
      *
      * @param FormInterface $form The form to render the errors for.
-     * @param array $options Additional options for the rendering.
+     * @param array<string, mixed> $options Additional options for the rendering.
      * @return string The rendered errors HTML, nothing if there are none.
      */
     public function renderGlobalErrors(

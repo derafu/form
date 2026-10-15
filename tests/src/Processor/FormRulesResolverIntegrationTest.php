@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Tests\Processor;
 
+use Derafu\DataProcessor\Contract\ProcessorInterface;
 use Derafu\DataProcessor\Exception\ValidationException;
 use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Abstract\AbstractPropertySchema;
@@ -20,6 +21,7 @@ use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormRulesResolver;
@@ -30,13 +32,16 @@ use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -67,11 +72,14 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormRulesResolverIntegrationTest extends TestCase
 {
     private FormRulesResolver $resolver;
 
-    private $processor;
+    private ProcessorInterface $processor;
 
     protected function setUp(): void
     {

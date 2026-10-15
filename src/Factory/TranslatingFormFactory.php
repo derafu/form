@@ -14,7 +14,10 @@ namespace Derafu\Form\Factory;
 
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Translation\FormTexts;
+use Derafu\Support\ArrayReader;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -49,13 +52,16 @@ final class TranslatingFormFactory implements FormFactoryInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If a key of the first level of the
+     * definition has a wrong type.
      */
     public function create(array $definition): FormInterface
     {
-        $options = $definition['options'] ?? null;
-        $domain = is_array($options) ? ($options['translation_domain'] ?? null) : null;
+        $domain = ArrayReader::from(FormDefinition::fromArray($definition)->options)->string('translation_domain');
 
-        if (is_string($domain) && $domain !== '') {
+        if ($domain !== null && $domain !== '') {
             $definition = $this->texts->map(
                 $definition,
                 fn (string $text): string => $this->translator->trans($text, [], $domain)

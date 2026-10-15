@@ -75,6 +75,11 @@ final class FormAttributes implements FormAttributesInterface
     private const DEFAULT_TARGET = '_self';
 
     /**
+     * The id of the form: the one that is given, or a unique one.
+     */
+    private string $id;
+
+    /**
      * Constructor.
      *
      * @param string $acceptCharset The character encoding for the form.
@@ -93,7 +98,7 @@ final class FormAttributes implements FormAttributesInterface
         private ?string $action = self::DEFAULT_ACTION,
         private bool $autocomplete = self::DEFAULT_AUTOCOMPLETE,
         private ?string $enctype = self::DEFAULT_ENCTYPE,
-        private ?string $id = self::DEFAULT_ID,
+        ?string $id = self::DEFAULT_ID,
         private string $method = self::DEFAULT_METHOD,
         private ?string $name = self::DEFAULT_NAME,
         private bool $novalidate = self::DEFAULT_NOVALIDATE,
@@ -300,6 +305,8 @@ final class FormAttributes implements FormAttributesInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -319,6 +326,8 @@ final class FormAttributes implements FormAttributesInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -335,9 +344,12 @@ final class FormAttributes implements FormAttributesInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $attributes
      */
     public static function fromArray(array $attributes): static
     {
+        /** @var array{'accept-charset'?: string, action?: string|null, autocomplete?: bool, enctype?: string|null, id?: string|null, method?: string, name?: string|null, novalidate?: bool, rel?: string|null, target?: string} $attributes */
         return new static(
             $attributes['accept-charset'] ?? self::DEFAULT_ACCEPT_CHARSET,
             $attributes['action'] ?? self::DEFAULT_ACTION,

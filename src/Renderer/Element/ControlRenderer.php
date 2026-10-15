@@ -20,6 +20,8 @@ use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\Support\InputActionResolver;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -59,6 +61,8 @@ final class ControlRenderer implements ElementRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         UiSchemaElementInterface $element,
@@ -123,7 +127,9 @@ final class ControlRenderer implements ElementRendererInterface
                 !$initiallyActive
                 && ($effect === UiSchemaRuleEffect::ENABLE || $effect === UiSchemaRuleEffect::DISABLE)
             ) {
-                $fieldOptions['attr']['disabled'] = true;
+                $attr = ArrayReader::from($fieldOptions)->mapOf('attr', ArrayType::scalar()) ?? [];
+                $attr['disabled'] = true;
+                $fieldOptions['attr'] = $attr;
             }
         }
 

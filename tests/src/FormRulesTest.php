@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm;
 
+use Derafu\DataProcessor\Exception\ProcessorException;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\Rules\FormRulesInterface;
@@ -20,19 +21,23 @@ use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Form::class)]
@@ -53,12 +58,18 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormRulesTest extends TestCase
 {
     // -------------------------------------------------------------------------
     // Minimal valid definition reused across tests
     // -------------------------------------------------------------------------
 
+    /**
+     * @return array<string, mixed>
+     */
     private function baseDefinition(): array
     {
         return [
@@ -214,5 +225,60 @@ final class FormRulesTest extends TestCase
         ]));
 
         $this->assertSame(array_keys($without->getFields()), array_keys($with->getFields()));
+    }
+
+    // -------------------------------------------------------------------------
+    // The rules are validated when they are read
+    // -------------------------------------------------------------------------
+
+    public function testTheCategoriesCanBeListsOrStringsSeparatedByPipes(): void
+    {
+        $rules = FormRules::fromArray(['name' => ['validate' => 'required|email', 'sanitize' => ['trim'], 'cast' => 'string']]);
+
+        $this->assertSame(['required', 'email'], $rules->getValidateRules('name'));
+        $this->assertSame(['trim'], $rules->getSanitizeRules('name'));
+        $this->assertSame('string', $rules->getCastRule('name'));
+        $this->assertSame([], $rules->getTransformRules('name'));
+        $this->assertNull($rules->getCastRule('other'));
+        $this->assertSame([], $rules->getValidateRules('other'));
+        $this->assertSame(['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['required', 'email']], $rules['name']);
+        $this->assertSame([], $rules['other']);
+    }
+
+    public function testRulesOfAFieldWithACategoryThatDoesNotExistAreRejected(): void
+    {
+        $this->expectException(ProcessorException::class);
+        $this->expectExceptionMessage('The rules have a category that is not known: validat.');
+
+        FormRules::fromArray(['name' => ['validat' => ['required']]]);
+    }
+
+    public function testTheRulesThatAreFilledAreValidatedToo(): void
+    {
+        $rules = new FormRules();
+
+        $this->expectException(ProcessorException::class);
+        $this->expectExceptionMessage('The rules of the category "validate" must be a string or a list of strings, int given.');
+
+        $rules->fill(['name' => ['validate' => 5]]);
+    }
+
+    public function testAFormWithRulesThatAreNotValidIsRejected(): void
+    {
+        $definition = $this->baseDefinition();
+        $definition['rules'] = ['name' => ['cast' => ['string']]];
+
+        $this->expectException(ProcessorException::class);
+        $this->expectExceptionMessage('The rule of the category "cast" must be a string, array given.');
+
+        Form::fromArray($definition);
+    }
+
+    public function testIsWrittenAsJson(): void
+    {
+        $rules = FormRules::fromArray(['name' => ['transform' => ['uppercase']]]);
+
+        $this->assertSame($rules->toArray(), $rules->jsonSerialize());
+        $this->assertJsonStringEqualsJsonString((string) json_encode($rules->toArray()), $rules->toJson());
     }
 }

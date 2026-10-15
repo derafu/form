@@ -52,14 +52,14 @@ interface UiSchemaElementInterface extends JsonSerializable
     /**
      * Gets the options of the UI element.
      *
-     * @return array The options of the UI element.
+     * @return array<string, mixed> The options of the UI element.
      */
     public function getOptions(): array;
 
     /**
      * Converts the UI Element to an array representation.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function toArray(): array;
 
@@ -73,7 +73,7 @@ interface UiSchemaElementInterface extends JsonSerializable
     /**
      * Create a UiSchemaElement instance from an array.
      *
-     * @param array $definition The UI schema element definition as an array.
+     * @param array<string, mixed> $definition The UI schema element definition as an array.
      * @return static
      */
     public static function fromArray(array $definition): static;

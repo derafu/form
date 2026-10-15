@@ -53,6 +53,8 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
     /**
      * Builds a rule with a simple condition:
      *   scope = "#/properties/trigger", schema = $schema
+     *
+     * @param array<string, mixed> $schema
      */
     private function simpleRule(UiSchemaRuleEffect $effect, array $schema): UiSchemaRule
     {
@@ -211,6 +213,9 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
         $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => $failing]));
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function numericKeywordProvider(): array
     {
         return [
@@ -247,7 +252,50 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
     {
         $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '[invalid']);
         $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('Invalid PCRE pattern in rule condition: "[invalid": ');
         $this->evaluator->isActive($rule, ['trigger' => 'anything']);
+    }
+
+    public function testInvalidPatternReportsWhatPcreSaid(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '[invalid']);
+
+        try {
+            $this->evaluator->isActive($rule, ['trigger' => 'anything']);
+            $this->fail('A pattern that is not valid must throw.');
+        } catch (\LogicException $e) {
+            $this->assertStringContainsString('preg_match()', $e->getMessage());
+        }
+    }
+
+    public function testPatternDoesNotMatchAValueThatIsNotText(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '.*']);
+
+        $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => ['a', 'b']]));
+        $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => new \stdClass()]));
+    }
+
+    public function testPatternReadsNullAsEmptyTextAndANumberAsItsText(): void
+    {
+        $empty = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '^$']);
+        $number = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '^12$']);
+
+        $this->assertTrue($this->evaluator->isActive($empty, ['trigger' => null]));
+        $this->assertTrue($this->evaluator->isActive($number, ['trigger' => 12]));
+    }
+
+    public function testPatternReadsAnObjectWithTextAsItsText(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '^text$']);
+        $text = new class () implements \Stringable {
+            public function __toString(): string
+            {
+                return 'text';
+            }
+        };
+
+        $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => $text]));
     }
 
     // =========================================================================
@@ -347,5 +395,26 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
         $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => 7]));
         $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 3]));
         $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 12]));
+    }
+
+    public function testAConditionWithoutKeywordsIsNotMet(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, []);
+
+        $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'yes']));
+    }
+
+    public function testAScopeThatIsNotAPointerIsTheNameOfTheField(): void
+    {
+        $rule = new UiSchemaRule(
+            UiSchemaRuleEffect::SHOW,
+            new UiSchemaCompositeCondition(
+                UiSchemaCompositeConditionType::AND,
+                [new UiSchemaCondition('trigger', ConditionSchema::fromArray(['const' => 'yes']))]
+            )
+        );
+
+        $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => 'yes']));
+        $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => 'no']));
     }
 }

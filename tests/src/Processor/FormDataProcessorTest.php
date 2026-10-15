@@ -20,6 +20,7 @@ use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
@@ -31,13 +32,16 @@ use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 use Symfony\Component\Translation\Translator;
@@ -65,6 +69,9 @@ use Symfony\Component\Translation\Translator;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormDataProcessorTest extends TestCase
 {
     private FormDataProcessor $processor;
@@ -81,6 +88,10 @@ final class FormDataProcessorTest extends TestCase
     // Helpers
     // =========================================================================
 
+    /**
+     * @param array<string, mixed> $extraProps
+     * @param list<string> $required
+     */
     private function simpleForm(array $extraProps = [], array $required = []): Form
     {
         $properties = array_merge([
@@ -123,6 +134,8 @@ final class FormDataProcessorTest extends TestCase
         $this->assertEmpty($result->getErrors());
 
         $data = $result->getProcessedData();
+
+        $this->assertIsArray($data);
         $this->assertSame('John Doe', $data['name']);
         $this->assertSame('john@example.com', $data['email']);
     }
@@ -145,6 +158,7 @@ final class FormDataProcessorTest extends TestCase
 
         // Original values preserved for invalid fields.
         $data = $result->getProcessedData();
+        $this->assertIsArray($data);
         $this->assertSame('', $data['name']);
         $this->assertSame('invalid-email', $data['email']);
     }
@@ -164,6 +178,8 @@ final class FormDataProcessorTest extends TestCase
         $this->assertArrayNotHasKey('name', $errors);
 
         $data = $result->getProcessedData();
+
+        $this->assertIsArray($data);
         $this->assertSame('John Doe', $data['name']);
     }
 
@@ -179,6 +195,7 @@ final class FormDataProcessorTest extends TestCase
 
         $this->assertTrue($result->isValid());
         $data = $result->getProcessedData();
+        $this->assertIsArray($data);
         $this->assertArrayHasKey('extra_field', $data);
         $this->assertSame('extra value', $data['extra_field']);
     }
@@ -212,6 +229,7 @@ final class FormDataProcessorTest extends TestCase
 
         $this->assertFalse($result->isValid());
         $data = $result->getProcessedData();
+        $this->assertIsArray($data);
         $this->assertSame('invalid', $data['email']);
         $this->assertSame('not-a-number', $data['age']);
     }
@@ -235,6 +253,7 @@ final class FormDataProcessorTest extends TestCase
 
         $this->assertFalse($result->isValid());
         $data = $result->getProcessedData();
+        $this->assertIsArray($data);
         $this->assertSame('John Doe', $data['name']);
         $this->assertSame('invalid-email', $data['email']);
         $this->assertSame(25, $data['age']);
@@ -271,6 +290,7 @@ final class FormDataProcessorTest extends TestCase
 
         $this->assertTrue($result->isValid());
         $data = $result->getProcessedData();
+        $this->assertIsArray($data);
         $this->assertSame(25, $data['age']);
         $this->assertTrue($data['active']);
         $this->assertSame(9.5, $data['score']);
@@ -308,6 +328,7 @@ final class FormDataProcessorTest extends TestCase
 
         $this->assertTrue($result->isValid());
         $data = $result->getProcessedData();
+        $this->assertIsArray($data);
         $this->assertSame(3, $data['sort_order']);
         $this->assertSame('WBH-001-BLK', $data['sku']);
     }

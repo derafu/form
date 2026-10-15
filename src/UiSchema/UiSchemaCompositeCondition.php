@@ -77,6 +77,8 @@ final class UiSchemaCompositeCondition implements UiSchemaCompositeConditionInte
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -96,6 +98,7 @@ final class UiSchemaCompositeCondition implements UiSchemaCompositeConditionInte
      */
     public static function fromArray(array $definition): static
     {
+        /** @var array{type?: int|string, conditions?: list<array{type?: int|string, ...<string, mixed>}>} $definition */
         if (!isset($definition['type'])) {
             throw new InvalidArgumentException(
                 'A UiSchemaCompositeCondition definition requires a "type" key.'

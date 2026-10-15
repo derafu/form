@@ -16,6 +16,9 @@ use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\CategorizationInterface;
 use Derafu\Form\Contract\UiSchema\CategoryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Represents a categorization in a UI Schema.
@@ -94,6 +97,8 @@ final class Categorization extends AbstractUiSchemaElement implements Categoriza
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -115,15 +120,19 @@ final class Categorization extends AbstractUiSchemaElement implements Categoriza
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If a key is missing or has a wrong type.
      */
     public static function fromArray(array $definition): static
     {
-        $categories = [];
+        $reader = ArrayReader::from($definition);
 
-        foreach ($definition['elements'] as $categoryDefinition) {
+        $categories = [];
+        foreach ($reader->require('elements', ArrayType::listOf(ArrayType::map())) as $categoryDefinition) {
             $categories[] = Category::fromArray($categoryDefinition);
         }
 
-        return new static($categories, $definition['options'] ?? []);
+        return new static($categories, $reader->map('options') ?? []);
     }
 }

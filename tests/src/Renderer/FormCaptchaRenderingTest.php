@@ -15,8 +15,11 @@ namespace Derafu\TestsForm\Renderer;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Renderer\FormTwigExtension;
+use Derafu\Form\Schema\PropertyDefinition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\TestsForm\Captcha\InMemoryCaptchaProvider;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
 use Derafu\Translation\Exception\Core\TranslatableLogicException;
@@ -61,6 +64,9 @@ use Twig\Error\RuntimeError;
 #[UsesClass(\Derafu\Form\UiSchema\VerticalLayout::class)]
 #[UsesClass(\Derafu\Form\Widget\Widget::class)]
 #[UsesClass(\Derafu\Form\Widget\WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormCaptchaRenderingTest extends TestCase
 {
     private function renderer(?InMemoryCaptchaProvider $captcha): FormRendererInterface

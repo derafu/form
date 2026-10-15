@@ -14,8 +14,11 @@ namespace Derafu\Form\Abstract;
 
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\UiSchemaRule;
+use Derafu\Support\ArrayReader;
 use Derafu\Support\JsonSerializer;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Abstract base class for UI Schema elements.
@@ -33,12 +36,19 @@ abstract class AbstractUiSchemaElement implements UiSchemaElementInterface
     private ?string $generatedId = null;
 
     /**
-     * Creates a new Control UI Element from its definition.
-     *
-     * @param array $definition
+     * The definition of the element.
      */
-    public function __construct(protected readonly array $definition)
+    protected readonly UiSchemaElementDefinition $definition;
+
+    /**
+     * Creates a new UI Element from its definition.
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If a known key has a wrong type.
+     */
+    public function __construct(array $definition)
     {
+        $this->definition = UiSchemaElementDefinition::fromArray($definition);
     }
 
     /**
@@ -46,8 +56,9 @@ abstract class AbstractUiSchemaElement implements UiSchemaElementInterface
      */
     public function getId(): string
     {
-        if (isset($this->definition['options']['id'])) {
-            return $this->definition['options']['id'];
+        $id = ArrayReader::from($this->definition->options)->string('id');
+        if ($id !== null) {
+            return $id;
         }
 
         return $this->generatedId
@@ -56,10 +67,12 @@ abstract class AbstractUiSchemaElement implements UiSchemaElementInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getOptions(): array
     {
-        return $this->definition['options'] ?? [];
+        return $this->definition->options;
     }
 
     /**
@@ -67,13 +80,15 @@ abstract class AbstractUiSchemaElement implements UiSchemaElementInterface
      */
     public function getRule(): ?UiSchemaRuleInterface
     {
-        $rule = $this->definition['rule'] ?? null;
+        $rule = $this->definition->rule;
 
         return $rule !== null ? UiSchemaRule::fromArray($rule) : null;
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {

@@ -18,6 +18,9 @@ use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Support\Caster;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -36,6 +39,8 @@ final class InputWidgetRenderer implements WidgetRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         FormFieldInterface $field,
@@ -49,6 +54,9 @@ final class InputWidgetRenderer implements WidgetRendererInterface
             );
         }
 
+        $reader = ArrayReader::from($options);
+        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+
         $property = $field->getProperty();
         $control = $field->getControl();
 
@@ -56,7 +64,9 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         $hasErrors = !$field->isValid();
 
         // Determine the type of input to render.
-        $type = $options['attr']['type'] ?? $options['type'] ?? $this->type;
+        $type = isset($customAttrs['type'])
+            ? (string) $customAttrs['type']
+            : ($reader->string('type') ?? $this->type);
 
         // Prepare CSS classes.
         $widgetClass = 'form-control';
@@ -69,8 +79,9 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        if (isset($options['widget_class'])) {
-            $widgetClass .= ' ' . $options['widget_class'];
+        $extraClass = $reader->string('widget_class');
+        if ($extraClass !== null) {
+            $widgetClass .= ' ' . $extraClass;
         }
 
         // Get field name.
@@ -102,7 +113,7 @@ final class InputWidgetRenderer implements WidgetRendererInterface
                     $attrs['checked'] = 'checked';
                 }
             } elseif ($type === 'datetime-local') {
-                $date = new \DateTime($value);
+                $date = new \DateTime(Caster::requireString($value));
                 $attrs['value'] = $date->format('Y-m-d\TH:i:s');
             } else {
                 if (is_array($value) || is_object($value)) {
@@ -174,9 +185,7 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         }
 
         // Apply custom attributes from options.
-        if (isset($options['attr']) && is_array($options['attr'])) {
-            $attrs = array_merge($attrs, $options['attr']);
-        }
+        $attrs = array_merge($attrs, $customAttrs);
 
         if (
             $type === 'checkbox'

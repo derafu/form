@@ -25,8 +25,10 @@ use Derafu\Form\Schema\BooleanSchema;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
@@ -56,6 +58,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(VerticalLayout::class)]
 #[UsesClass(Widget::class)]
 #[UsesClass(WidgetFactory::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
 final class ProcessResultTest extends TestCase
 {
     private FormInterface $form;

@@ -26,7 +26,7 @@ interface WidgetRendererInterface
      * Renders a form widget.
      *
      * @param FormFieldInterface $field The form field to render the widget for.
-     * @param array $options Additional rendering options.
+     * @param array<string, mixed> $options Additional rendering options.
      * @return string The rendered HTML.
      */
     public function render(FormFieldInterface $field, array $options = []): string;

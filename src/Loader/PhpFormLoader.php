@@ -67,6 +67,9 @@ class PhpFormLoader extends AbstractFileFormLoader
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $context
+     * @param array<string, mixed> $data
      */
     public function load(
         string $name,

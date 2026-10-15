@@ -19,6 +19,8 @@ use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Form;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
+use Derafu\Form\Schema\PropertyDefinition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
@@ -57,6 +59,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\Renderer\Widget\InputWidgetRenderer::class)]
 #[UsesClass(\Derafu\Form\Renderer\Widget\RadioWidgetRenderer::class)]
 #[UsesClass(\Derafu\Form\Renderer\Widget\SliderWidgetRenderer::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
 final class FormRendererValueInconsistencyTest extends TestCase
 {
     /**

@@ -16,13 +16,17 @@ use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractType;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
+use Derafu\Form\Contract\FormFieldInterface;
+use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Data\FormData;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
 use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormAttributes;
 use Derafu\Form\Options\FormOptions;
@@ -56,6 +60,7 @@ use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -84,11 +89,15 @@ use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\HorizontalLayout;
 use Derafu\Form\UiSchema\Label;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -177,6 +186,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FormRulesResolver::class)]
 #[CoversClass(FormRules::class)]
 #[CoversClass(ProcessResult::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormSchemaDefaultTest extends TestCase
 {
     private FormFactory $formFactory;
@@ -194,6 +207,8 @@ final class FormSchemaDefaultTest extends TestCase
 
     /**
      * Minimal form definition with a single string field.
+     *
+     * @return array<string, mixed>
      */
     private function stringFieldDef(
         string $name,
@@ -227,6 +242,8 @@ final class FormSchemaDefaultTest extends TestCase
 
     /**
      * Minimal form definition with a single boolean field.
+     *
+     * @return array<string, mixed>
      */
     private function boolFieldDef(string $name, ?bool $default = null, ?bool $dataValue = null, bool $dataKeyPresent = false): array
     {
@@ -256,6 +273,8 @@ final class FormSchemaDefaultTest extends TestCase
 
     /**
      * Minimal form definition with a single integer field.
+     *
+     * @return array<string, mixed>
      */
     private function intFieldDef(string $name, ?int $default = null, ?int $dataValue = null, bool $dataKeyPresent = false): array
     {
@@ -299,21 +318,21 @@ final class FormSchemaDefaultTest extends TestCase
     {
         $form = $this->formFactory->create($this->stringFieldDef('name', 'John'));
 
-        $this->assertSame('John', $form->getField('name')->getData());
+        $this->assertSame('John', $this->field($form, 'name')->getData());
     }
 
     public function testIntegerDefaultAppliedWhenNoDataProvided(): void
     {
         $form = $this->formFactory->create($this->intFieldDef('count', 42));
 
-        $this->assertSame(42, $form->getField('count')->getData());
+        $this->assertSame(42, $this->field($form, 'count')->getData());
     }
 
     public function testBooleanDefaultTrueAppliedWhenNoDataProvided(): void
     {
         $form = $this->formFactory->create($this->boolFieldDef('active', true));
 
-        $this->assertTrue($form->getField('active')->getData());
+        $this->assertTrue($this->field($form, 'active')->getData());
     }
 
     public function testBooleanDefaultFalseAppliedWhenNoDataProvided(): void
@@ -323,14 +342,14 @@ final class FormSchemaDefaultTest extends TestCase
         $form = $this->formFactory->create($this->boolFieldDef('active', false));
 
         // false is explicitly not null, so setData(false) must be called.
-        $this->assertFalse($form->getField('active')->getData());
+        $this->assertFalse($this->field($form, 'active')->getData());
     }
 
     public function testFieldWithNoDefaultAndNoDataHasNullData(): void
     {
         $form = $this->formFactory->create($this->stringFieldDef('name'));
 
-        $this->assertNull($form->getField('name')->getData());
+        $this->assertNull($this->field($form, 'name')->getData());
     }
 
     public function testMultipleFields_OnlyFieldsWithDefaultArePreFilled(): void
@@ -353,8 +372,8 @@ final class FormSchemaDefaultTest extends TestCase
             ],
         ]);
 
-        $this->assertSame('hello', $form->getField('with_default')->getData());
-        $this->assertNull($form->getField('no_default')->getData());
+        $this->assertSame('hello', $this->field($form, 'with_default')->getData());
+        $this->assertNull($this->field($form, 'no_default')->getData());
     }
 
     // =========================================================================
@@ -367,7 +386,7 @@ final class FormSchemaDefaultTest extends TestCase
             $this->stringFieldDef('name', 'John', 'Jane', dataKeyPresent: true)
         );
 
-        $this->assertSame('Jane', $form->getField('name')->getData());
+        $this->assertSame('Jane', $this->field($form, 'name')->getData());
     }
 
     public function testDataSectionFalseOverridesBooleanDefaultTrue(): void
@@ -378,7 +397,7 @@ final class FormSchemaDefaultTest extends TestCase
             $this->boolFieldDef('active', true, false, dataKeyPresent: true)
         );
 
-        $this->assertFalse($form->getField('active')->getData());
+        $this->assertFalse($this->field($form, 'active')->getData());
     }
 
     public function testDataSectionZeroOverridesIntegerDefault(): void
@@ -388,7 +407,7 @@ final class FormSchemaDefaultTest extends TestCase
             $this->intFieldDef('count', 42, 0, dataKeyPresent: true)
         );
 
-        $this->assertSame(0, $form->getField('count')->getData());
+        $this->assertSame(0, $this->field($form, 'count')->getData());
     }
 
     public function testDataSectionEmptyStringOverridesStringDefault(): void
@@ -398,7 +417,7 @@ final class FormSchemaDefaultTest extends TestCase
             $this->stringFieldDef('name', 'John', '', dataKeyPresent: true)
         );
 
-        $this->assertSame('', $form->getField('name')->getData());
+        $this->assertSame('', $this->field($form, 'name')->getData());
     }
 
     // =========================================================================
@@ -437,7 +456,7 @@ final class FormSchemaDefaultTest extends TestCase
         $result = $this->processor()->process($form, $postData);
 
         $reRenderedForm = $result->getForm();
-        $field = $reRenderedForm->getField('newsletter');
+        $field = $this->field($reRenderedForm, 'newsletter');
 
         $this->assertFalse(
             $field->getData(),
@@ -470,7 +489,7 @@ final class FormSchemaDefaultTest extends TestCase
         $postData = ['name' => ''];
         $result = $this->processor()->process($form, $postData);
 
-        $field = $result->getForm()->getField('name');
+        $field = $this->field($result->getForm(), 'name');
         $this->assertSame(
             '',
             $field->getData(),
@@ -500,7 +519,7 @@ final class FormSchemaDefaultTest extends TestCase
         $postData = ['city' => 'Barcelona'];
         $result = $this->processor()->process($form, $postData);
 
-        $this->assertSame('Barcelona', $result->getForm()->getField('city')->getData());
+        $this->assertSame('Barcelona', $this->field($result->getForm(), 'city')->getData());
     }
 
     public function testMultipleFieldsRerenderPreservesEachSubmittedValue(): void
@@ -536,9 +555,9 @@ final class FormSchemaDefaultTest extends TestCase
         $result = $this->processor()->process($form, $postData);
 
         $fields = $result->getForm();
-        $this->assertSame('Jane', $fields->getField('name')->getData());
-        $this->assertFalse($fields->getField('newsletter')->getData());
-        $this->assertSame(25, $fields->getField('age')->getData());
+        $this->assertSame('Jane', $this->field($fields, 'name')->getData());
+        $this->assertFalse($this->field($fields, 'newsletter')->getData());
+        $this->assertSame(25, $this->field($fields, 'age')->getData());
     }
 
     // =========================================================================
@@ -637,5 +656,79 @@ final class FormSchemaDefaultTest extends TestCase
 
         // terms checkbox must NOT be checked in the re-rendered form.
         $this->assertStringNotContainsString('checked', $html);
+    }
+
+    private function field(FormInterface $form, string $name): FormFieldInterface
+    {
+        $field = $form->getField($name);
+        $this->assertNotNull($field);
+
+        return $field;
+    }
+
+    // =========================================================================
+    // The first level of the definition
+    // =========================================================================
+
+    /**
+     * @return array<string, array{array<string, mixed>, string}>
+     */
+    public static function wrongDefinitionsProvider(): array
+    {
+        $schema = ['type' => 'object', 'properties' => ['a' => ['type' => 'string']]];
+
+        return [
+            'schema' => [['schema' => 'x'], 'The key "schema" must be of type object, string given.'],
+            'uischema' => [['schema' => $schema, 'uischema' => 'x'], 'The key "uischema" must be of type object, string given.'],
+            'data' => [['schema' => $schema, 'data' => 'x'], 'The key "data" must be of type object, string given.'],
+            'rules' => [['schema' => $schema, 'rules' => 'x'], 'The key "rules" must be of type object<array>, string given.'],
+            'errors' => [['schema' => $schema, 'errors' => 'x'], 'The key "errors" must be of type object<list<string>>, string given.'],
+            'an error that is not a list of strings' => [['schema' => $schema, 'errors' => ['a' => [5]]], 'The key "errors.a.0" must be of type string, int given.'],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $definition
+     */
+    #[DataProvider('wrongDefinitionsProvider')]
+    public function testADefinitionWithAKeyOfAnotherTypeIsRejected(array $definition, string $message): void
+    {
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        $this->formFactory->create($definition);
+    }
+
+    public function testASchemaWithoutPropertiesHasAnEmptyUiSchema(): void
+    {
+        $form = $this->formFactory->create(['schema' => ['type' => 'object']]);
+
+        $this->assertSame([], $form->getFields());
+        $this->assertSame([], $form->getUiSchema()->toArray()['elements'] ?? []);
+    }
+
+    public function testAFormWithNeitherSchemaNorDataIsRejected(): void
+    {
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The form schema definition must be assigned if form data is not provided.');
+
+        $this->formFactory->create(['options' => ['csrf_protection' => false]]);
+    }
+
+    public function testNullDataOfAStringFieldIsAnEmptyString(): void
+    {
+        $form = $this->formFactory->create([
+            'options' => ['csrf_protection' => false],
+            'schema' => [
+                'type' => 'object',
+                'properties' => ['name' => ['type' => 'string'], 'age' => ['type' => 'integer']],
+            ],
+            'data' => ['name' => null, 'age' => null],
+        ]);
+
+        $data = $form->getData();
+        $this->assertNotNull($data);
+        $this->assertSame('', $data->get('name'));
+        $this->assertNull($data->get('age'));
     }
 }

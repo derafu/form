@@ -1,0 +1,4 @@
+data: not an object
+schema:
+  type: object
+  properties: {}

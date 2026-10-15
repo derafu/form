@@ -17,6 +17,9 @@ use Derafu\Form\Contract\UiSchema\CategoryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Form\Factory\UiSchemaElementFactory;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
  * Represents a category in a UI Schema.
@@ -111,6 +114,8 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -137,19 +142,26 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $definition
+     * @throws InvalidArgumentException If a key is missing or has a wrong type.
      */
     public static function fromArray(array $definition): static
     {
+        $reader = ArrayReader::from($definition);
+
         $elements = [];
-        foreach ($definition['elements'] as $element) {
+        foreach ($reader->require('elements', ArrayType::listOf(ArrayType::map())) as $element) {
             $elements[] = UiSchemaElementFactory::create($element);
         }
 
+        $rule = $reader->map('rule');
+
         return new static(
-            $definition['label'],
+            $reader->require('label', ArrayType::string()),
             $elements,
-            isset($definition['rule']) ? UiSchemaRule::fromArray($definition['rule']) : null,
-            $definition['options'] ?? [],
+            $rule !== null ? UiSchemaRule::fromArray($rule) : null,
+            $reader->map('options') ?? [],
         );
     }
 }

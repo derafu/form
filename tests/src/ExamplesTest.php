@@ -18,12 +18,14 @@ use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Data\FormData;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
 use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormAttributes;
 use Derafu\Form\Options\FormOptions;
@@ -56,6 +58,7 @@ use Derafu\Form\Schema\IntegerSchema;
 use Derafu\Form\Schema\NumberSchema;
 use Derafu\Form\Schema\ObjectSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -88,6 +91,7 @@ use Derafu\Form\UiSchema\Label;
 use Derafu\Form\UiSchema\UiSchemaCompositeCondition;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaCondition;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\UiSchemaRule;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
 use Derafu\Form\UiSchema\VerticalLayout;
@@ -97,6 +101,7 @@ use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(FormFactory::class)]
@@ -177,6 +182,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UiSchemaCompositeCondition::class)]
 #[CoversClass(UiSchemaCompositeConditionType::class)]
 #[CoversClass(UiSchemaRuleEvaluator::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class ExamplesTest extends TestCase
 {
     private FormRendererInterface $renderer;
@@ -206,6 +215,9 @@ final class ExamplesTest extends TestCase
         $this->assertNotEmpty($html);
     }
 
+    /**
+     * @return array<int|string, array<int, mixed>>
+     */
     public static function provideExamples(): array
     {
         $examples = [];

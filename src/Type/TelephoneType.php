@@ -40,18 +40,8 @@ final class TelephoneType extends AbstractType
 
     /**
      * {@inheritDoc}
-     */
-    public function validateValue(mixed $value): bool
-    {
-        if (!is_string($value)) {
-            return false;
-        }
-
-        return preg_match($this->getRegex(), $value) === 1;
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     protected function getDefaultOptions(): array
     {

@@ -37,9 +37,18 @@ use JsonSerializable;
  * for that field (same shape as the Data Processor expects) or [] when no
  * rules exist for that field. offsetSet() and offsetUnset() throw
  * BadMethodCallException; use fill() to replace the contents in bulk.
+ *
+ * @extends ArrayAccess<string, array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>}>
  */
 interface FormRulesInterface extends ArrayAccess, JsonSerializable
 {
+    /**
+     * Returns the complete rules array for the given field, or [] if none.
+     *
+     * @return array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>}
+     */
+    public function offsetGet(mixed $offset): mixed;
+
     /**
      * Returns the explicit cast rule for a field, or null if none is defined.
      *
@@ -80,7 +89,7 @@ interface FormRulesInterface extends ArrayAccess, JsonSerializable
      * that $form->getRules() always reflects the current resolved state
      * without creating a second object.
      *
-     * @param array<string, array> $resolvedRules Complete per-field rules keyed by field name.
+     * @param array<string, array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>}> $resolvedRules Complete per-field rules keyed by field name.
      */
     public function fill(array $resolvedRules): void;
 
@@ -91,14 +100,14 @@ interface FormRulesInterface extends ArrayAccess, JsonSerializable
      * field names as keys, each value being an array with optional 'cast',
      * 'sanitize', 'transform', and 'validate' entries.
      *
-     * @return array<string, array> Rules keyed by field name.
+     * @return array<string, array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>}> Rules keyed by field name.
      */
     public function toArray(): array;
 
     /**
      * Creates a FormRules instance from a plain array.
      *
-     * @param array<string, array> $rules Rules keyed by field name.
+     * @param array<string, array{transform?: list<string>, sanitize?: list<string>, cast?: string, validate?: list<string>}> $rules Rules keyed by field name.
      * @return static
      */
     public static function fromArray(array $rules): static;

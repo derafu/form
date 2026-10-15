@@ -18,11 +18,14 @@ use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractType;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
+use Derafu\Form\Contract\Processor\ProcessResultInterface;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Processor\FormDataProcessor;
@@ -31,6 +34,7 @@ use Derafu\Form\Processor\ProcessResult;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -54,11 +58,13 @@ use Derafu\Form\Type\UrlType;
 use Derafu\Form\Type\UuidType;
 use Derafu\Form\Type\WeekType;
 use Derafu\Form\UiSchema\Control;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -106,6 +112,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(VerticalLayout::class)]
 #[CoversClass(WidgetFactory::class)]
 #[CoversClass(Widget::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[UsesClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormDataProcessorStringCastTest extends TestCase
 {
     private FormDataProcessorInterface $processor;
@@ -157,7 +167,7 @@ final class FormDataProcessorStringCastTest extends TestCase
 
         $this->assertTrue($result->isValid());
         $this->assertEmpty($result->getErrors());
-        $this->assertSame('John Doe', $result->getProcessedData()['name']);
+        $this->assertSame('John Doe', $this->processedData($result)['name']);
     }
 
     public function testStringFieldWithEmptyValueShouldNotThrowCasterError(): void
@@ -194,7 +204,7 @@ final class FormDataProcessorStringCastTest extends TestCase
         $this->assertFalse($result->isValid());
         $this->assertTrue($result->hasErrors());
         $this->assertArrayHasKey('name', $result->getErrors());
-        $this->assertSame('', $result->getProcessedData()['name']);
+        $this->assertSame('', $this->processedData($result)['name']);
     }
 
     public function testStringFieldWithNullValueShouldNotThrowCasterError(): void
@@ -231,7 +241,7 @@ final class FormDataProcessorStringCastTest extends TestCase
         $this->assertFalse($result->isValid());
         $this->assertTrue($result->hasErrors());
         $this->assertArrayHasKey('name', $result->getErrors());
-        $this->assertNull($result->getProcessedData()['name']);
+        $this->assertNull($this->processedData($result)['name']);
     }
 
     public function testStringFieldWithMissingValueShouldNotThrowCasterError(): void
@@ -268,8 +278,8 @@ final class FormDataProcessorStringCastTest extends TestCase
         $this->assertFalse($result->isValid());
         $this->assertTrue($result->hasErrors());
         $this->assertArrayHasKey('name', $result->getErrors());
-        $this->assertArrayHasKey('name', $result->getProcessedData());
-        $this->assertNull($result->getProcessedData()['name']);
+        $this->assertArrayHasKey('name', $this->processedData($result));
+        $this->assertNull($this->processedData($result)['name']);
     }
 
     public function testOptionalStringFieldShouldNotThrowCasterError(): void
@@ -305,8 +315,19 @@ final class FormDataProcessorStringCastTest extends TestCase
 
         $this->assertTrue($result->isValid());
         $this->assertEmpty($result->getErrors());
-        $this->assertArrayHasKey('name', $result->getProcessedData());
-        $value = $result->getProcessedData()['name'];
+        $this->assertArrayHasKey('name', $this->processedData($result));
+        $value = $this->processedData($result)['name'];
         $this->assertTrue($value === '' || $value === null, 'El campo opcional debe ser string vacío o null');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function processedData(ProcessResultInterface $result): array
+    {
+        $data = $result->getProcessedData();
+        $this->assertIsArray($data);
+
+        return $data;
     }
 }

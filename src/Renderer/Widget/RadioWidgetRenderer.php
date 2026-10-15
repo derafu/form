@@ -15,6 +15,8 @@ namespace Derafu\Form\Renderer\Widget;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -33,6 +35,8 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         FormFieldInterface $field,
@@ -45,6 +49,9 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             );
         }
 
+        $reader = ArrayReader::from($options);
+        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+
         $property = $field->getProperty();
         $control = $field->getControl();
 
@@ -56,8 +63,9 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        if (isset($options['widget_class'])) {
-            $widgetClass .= ' ' . $options['widget_class'];
+        $extraClass = $reader->string('widget_class');
+        if ($extraClass !== null) {
+            $widgetClass .= ' ' . $extraClass;
         }
 
         $name = $field->getName();
@@ -89,9 +97,7 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             $attrs['placeholder'] = $controlOptions['placeholder'];
         }
 
-        if (isset($options['attr']) && is_array($options['attr'])) {
-            $attrs = array_merge($attrs, $options['attr']);
-        }
+        $attrs = array_merge($attrs, $customAttrs);
 
         // Build choices from the property schema (oneOf or enum).
         $choices = $property->getChoices() ?? [];

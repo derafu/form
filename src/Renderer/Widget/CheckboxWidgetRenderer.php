@@ -16,6 +16,7 @@ use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -28,6 +29,8 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         FormFieldInterface $field,
@@ -41,6 +44,8 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
             );
         }
 
+        $reader = ArrayReader::from($options);
+
         $property = $field->getProperty();
         $control = $field->getControl();
 
@@ -52,8 +57,9 @@ final class CheckboxWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        if (isset($options['widget_class'])) {
-            $widgetClass .= ' ' . $options['widget_class'];
+        $extraClass = $reader->string('widget_class');
+        if ($extraClass !== null) {
+            $widgetClass .= ' ' . $extraClass;
         }
 
         // Get field name.

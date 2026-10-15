@@ -26,6 +26,7 @@ use Derafu\Form\Form;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
+use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -41,6 +42,8 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param array<string, mixed> $options
      */
     public function render(
         FormFieldInterface $field,
@@ -63,8 +66,9 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         $itemsSchema = $property->getItems();
         $controlOptions = $field->getControl()->getOptions();
 
-        $detailUiSchema = isset($controlOptions['detail'])
-            ? FormUiSchemaFactory::create($controlOptions['detail'])
+        $detail = ArrayReader::from($controlOptions)->map('detail');
+        $detailUiSchema = $detail !== null
+            ? FormUiSchemaFactory::create($detail)
             : ($itemsSchema !== null
                 ? $this->buildDefaultDetail($itemsSchema)
                 : new VerticalLayout());
@@ -134,6 +138,8 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
 
     /**
      * Builds a sub-form for a single row and applies the name pattern.
+     *
+     * @param array<string, mixed> $rowData
      */
     private function buildSubForm(
         ?PropertySchemaInterface $itemsSchema,
@@ -193,6 +199,9 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
 
     /**
      * Renders a simple row as an array of widget HTML strings (table mode).
+     *
+     * @param array<string, mixed> $rowData
+     * @return list<string>
      */
     private function renderSimpleRow(
         FormRendererInterface $formRenderer,
@@ -238,6 +247,8 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
 
     /**
      * Extracts header labels from items schema in detail element order.
+     *
+     * @return list<string>
      */
     private function extractHeaders(
         ?PropertySchemaInterface $itemsSchema,

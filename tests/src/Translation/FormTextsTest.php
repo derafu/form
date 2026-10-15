@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\TestsForm\Translation;
 
 use Derafu\Form\Translation\FormTexts;
+use Derafu\Support\Arr;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -113,6 +114,22 @@ final class FormTextsTest extends TestCase
     }
 
     #[Test]
+    public function ignoresACascadeThatIsNotAnArray(): void
+    {
+        $definition = [
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [
+                    ['type' => 'Control', 'scope' => '#/properties/a', 'options' => ['cascade' => 'Text']],
+                    ['type' => 'Control', 'scope' => '#/properties/b', 'options' => ['cascade' => ['choices' => 'Text']]],
+                ],
+            ],
+        ];
+
+        $this->assertSame([], (new FormTexts())->collect($definition));
+    }
+
+    #[Test]
     public function findsEveryTextAndNothingElse(): void
     {
         $paths = array_column((new FormTexts())->collect($this->definition()), 'path');
@@ -163,12 +180,12 @@ final class FormTextsTest extends TestCase
         foreach ((new FormTexts())->collect($mapped) as $found) {
             $this->assertStringStartsWith('T:', $found['text'], $found['path']);
         }
-        $this->assertSame('Text', $mapped['schema']['properties']['name']['default']);
+        $this->assertSame('Text', Arr::getAtPath($mapped, 'schema.properties.name.default'));
 
         // The keys of the choices are values, not texts.
         $this->assertSame(
             ['Text' => 'T:Text', 'other' => '', 'list' => 'T:Text'],
-            $mapped['uischema']['elements'][0]['options']['choices']
+            Arr::getAtPath($mapped, 'uischema.elements.0.options.choices')
         );
     }
 
@@ -191,5 +208,28 @@ final class FormTextsTest extends TestCase
     public function aDefinitionWithoutSchemaOrUiSchemaHasNoTexts(): void
     {
         $this->assertSame([], (new FormTexts())->collect(['data' => ['name' => 'Text'], 'options' => ['translation_domain' => 'x']]));
+    }
+
+    #[Test]
+    public function readsTheItemsThatAreAListOfSchemas(): void
+    {
+        $definition = [
+            'schema' => [
+                'type' => 'array',
+                'items' => [['title' => 'First'], 'not a schema', ['description' => 'Second']],
+            ],
+        ];
+
+        $texts = new FormTexts();
+        $this->assertSame(
+            ['schema.items.0.title', 'schema.items.2.description'],
+            array_column($texts->collect($definition), 'path')
+        );
+
+        $mapped = $texts->map($definition, fn (string $text) => strtoupper($text));
+        $this->assertSame(
+            [['title' => 'FIRST'], 'not a schema', ['description' => 'SECOND']],
+            Arr::getAtPath($mapped, 'schema.items')
+        );
     }
 }

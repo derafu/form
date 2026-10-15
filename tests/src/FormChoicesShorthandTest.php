@@ -15,18 +15,24 @@ namespace Derafu\TestsForm;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractType;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
+use Derafu\Form\Contract\FormFieldInterface;
+use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
+use Derafu\Form\Contract\Schema\ObjectSchemaInterface;
+use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
 use Derafu\Form\Form;
+use Derafu\Form\FormDefinition;
 use Derafu\Form\FormField;
 use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\ArraySchema;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Schema\ObjectSchemaTrait;
+use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\Schema\StringSchema;
 use Derafu\Form\Type\BooleanType;
 use Derafu\Form\Type\ChoiceType;
@@ -51,12 +57,17 @@ use Derafu\Form\Type\UuidType;
 use Derafu\Form\Type\WeekType;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\HorizontalLayout;
+use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -112,6 +123,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UrlType::class)]
 #[CoversClass(UuidType::class)]
 #[CoversClass(WeekType::class)]
+#[UsesClass(PropertyDefinition::class)]
+#[UsesClass(\Derafu\Form\Schema\ObjectSchema::class)]
+#[UsesClass(UiSchemaElementDefinition::class)]
+#[CoversClass(ChoicesShorthand::class)]
+#[UsesClass(FormDefinition::class)]
 final class FormChoicesShorthandTest extends TestCase
 {
     private FormFactory $factory;
@@ -130,9 +146,9 @@ final class FormChoicesShorthandTest extends TestCase
     /**
      * Builds a minimal single-field form definition.
      *
-     * @param array $propertyDef  The JSON Schema property definition.
-     * @param array $controlOpts  The UI schema control options.
-     * @return array
+     * @param array<string, mixed> $propertyDef  The JSON Schema property definition.
+     * @param array<string, mixed> $controlOpts  The UI schema control options.
+     * @return array<string, mixed>
      */
     private function def(array $propertyDef, array $controlOpts = []): array
     {
@@ -173,7 +189,7 @@ final class FormChoicesShorthandTest extends TestCase
             ['type' => 'choice', 'choices' => ['active' => 'Active', 'inactive' => 'Inactive']]
         ));
 
-        $choices = $form->getField('field')->getProperty()->getChoices();
+        $choices = $this->field($form, 'field')->getProperty()->getChoices();
 
         $this->assertSame(['active' => 'Active', 'inactive' => 'Inactive'], $choices);
     }
@@ -189,7 +205,7 @@ final class FormChoicesShorthandTest extends TestCase
             ['type' => 'choice', 'choices' => ['a' => 'A', 'b' => 'B']]
         ));
 
-        $options = $form->getField('field')->getControl()->getOptions();
+        $options = $this->field($form, 'field')->getControl()->getOptions();
 
         $this->assertArrayNotHasKey('choices', $options);
         // Other options are preserved.
@@ -207,7 +223,7 @@ final class FormChoicesShorthandTest extends TestCase
             ['choices' => ['x' => 'X']]
         ));
 
-        $options = $form->getField('field')->getControl()->getOptions();
+        $options = $this->field($form, 'field')->getControl()->getOptions();
 
         $this->assertSame([], $options);
     }
@@ -225,7 +241,7 @@ final class FormChoicesShorthandTest extends TestCase
 
         $this->assertSame(
             ['c' => 'C', 'a' => 'A', 'b' => 'B'],
-            $form->getField('field')->getProperty()->getChoices()
+            $this->field($form, 'field')->getProperty()->getChoices()
         );
     }
 
@@ -244,7 +260,7 @@ final class FormChoicesShorthandTest extends TestCase
             ['choices' => ['php' => 'PHP', 'js' => 'JavaScript']]
         ));
 
-        $property = $form->getField('field')->getProperty();
+        $property = $this->field($form, 'field')->getProperty();
 
         // The array property itself has no choices.
         $this->assertNull($property->getChoices());
@@ -268,7 +284,7 @@ final class FormChoicesShorthandTest extends TestCase
             ['choices' => ['x' => 'X', 'y' => 'Y']]
         ));
 
-        $property = $form->getField('field')->getProperty();
+        $property = $this->field($form, 'field')->getProperty();
 
         $this->assertInstanceOf(ArraySchemaInterface::class, $property);
         $this->assertNotNull($property->getItems());
@@ -285,11 +301,13 @@ final class FormChoicesShorthandTest extends TestCase
             ['choices' => ['a' => 'A', 'b' => 'B']]
         ));
 
-        $property = $form->getField('field')->getProperty();
+        $property = $this->field($form, 'field')->getProperty();
 
         $this->assertInstanceOf(ArraySchemaInterface::class, $property);
-        $this->assertSame('string', $property->getItems()->getType());
-        $this->assertSame(['a' => 'A', 'b' => 'B'], $property->getItems()->getChoices());
+        $items = $property->getItems();
+        $this->assertNotNull($items);
+        $this->assertSame('string', $items->getType());
+        $this->assertSame(['a' => 'A', 'b' => 'B'], $items->getChoices());
     }
 
     /**
@@ -304,7 +322,7 @@ final class FormChoicesShorthandTest extends TestCase
 
         $this->assertArrayNotHasKey(
             'choices',
-            $form->getField('field')->getControl()->getOptions()
+            $this->field($form, 'field')->getControl()->getOptions()
         );
     }
 
@@ -350,11 +368,11 @@ final class FormChoicesShorthandTest extends TestCase
 
         $this->assertSame(
             ['red' => 'Red', 'blue' => 'Blue'],
-            $form->getField('color')->getProperty()->getChoices()
+            $this->field($form, 'color')->getProperty()->getChoices()
         );
         $this->assertSame(
             ['s' => 'Small', 'l' => 'Large'],
-            $form->getField('size')->getProperty()->getChoices()
+            $this->field($form, 'size')->getProperty()->getChoices()
         );
     }
 
@@ -395,11 +413,11 @@ final class FormChoicesShorthandTest extends TestCase
 
         $this->assertSame(
             ['draft' => 'Draft', 'active' => 'Active'],
-            $form->getField('status')->getProperty()->getChoices()
+            $this->field($form, 'status')->getProperty()->getChoices()
         );
         $this->assertSame(
             ['books' => 'Books', 'music' => 'Music'],
-            $form->getField('category')->getProperty()->getChoices()
+            $this->field($form, 'category')->getProperty()->getChoices()
         );
     }
 
@@ -417,8 +435,8 @@ final class FormChoicesShorthandTest extends TestCase
             ['type' => 'choice', 'placeholder' => 'Select…']
         ));
 
-        $this->assertNull($form->getField('field')->getProperty()->getChoices());
-        $this->assertSame('choice', $form->getField('field')->getControl()->getOptions()['type']);
+        $this->assertNull($this->field($form, 'field')->getProperty()->getChoices());
+        $this->assertSame('choice', $this->field($form, 'field')->getControl()->getOptions()['type']);
     }
 
     /**
@@ -550,5 +568,98 @@ final class FormChoicesShorthandTest extends TestCase
             ],
             ['choices' => ['y' => 'Y']]
         ));
+    }
+
+    private function field(FormInterface $form, string $name): FormFieldInterface
+    {
+        $field = $form->getField($name);
+        $this->assertNotNull($field);
+
+        return $field;
+    }
+
+    // =========================================================================
+    // What choices must be
+    // =========================================================================
+
+    public function testChoicesThatAreNotAnArrayAreRejected(): void
+    {
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "choices" must be of type array<bool|float|int|string>, string given.');
+
+        $this->factory->create($this->def(['type' => 'string'], ['choices' => 'a,b']));
+    }
+
+    public function testAChoiceThatIsNotTextNorANumberNorABooleanIsRejected(): void
+    {
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "choices.b" must be of type bool|float|int|string, array given.');
+
+        $this->factory->create($this->def(['type' => 'string'], ['choices' => ['a' => 'A', 'b' => ['B']]]));
+    }
+
+    public function testChoicesThatAreAListAreAccepted(): void
+    {
+        $form = $this->factory->create($this->def(['type' => 'string'], ['choices' => ['No', 'Yes']]));
+
+        $this->assertSame(['0' => 'No', '1' => 'Yes'], $this->field($form, 'field')->getProperty()->getChoices());
+    }
+
+    public function testTheTitleOfAChoiceThatIsANumberOrABooleanIsText(): void
+    {
+        $form = $this->factory->create($this->def(['type' => 'string'], ['choices' => ['a' => 5, 'b' => 1.5, 'c' => true]]));
+
+        $this->assertSame(['a' => '5', 'b' => '1.5', 'c' => '1'], $this->field($form, 'field')->getProperty()->getChoices());
+    }
+
+    public function testChoicesInTheDetailOfAControlThatIsNotAnObjectAreRejected(): void
+    {
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "elements" must be of type list<object>, string given.');
+
+        $this->factory->create($this->def(
+            ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['a' => ['type' => 'string']]]],
+            ['detail' => ['elements' => 'x']]
+        ));
+    }
+
+    public function testChoicesOfTheDetailOfAnArrayControlArePromotedToTheItemsOfItsProperty(): void
+    {
+        $form = $this->factory->create($this->def(
+            ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['kind' => ['type' => 'string']]]],
+            ['detail' => [
+                'type' => 'VerticalLayout',
+                'elements' => [[
+                    'type' => 'Control',
+                    'scope' => '#/properties/kind',
+                    'options' => ['choices' => ['a' => 'A', 'b' => 'B'], 'placeholder' => 'Kind'],
+                ]],
+            ]]
+        ));
+
+        $property = $form->getSchema()->getProperty('field');
+        $this->assertInstanceOf(ArraySchemaInterface::class, $property);
+        $items = $property->getItems();
+        $this->assertInstanceOf(ObjectSchemaInterface::class, $items);
+        $this->assertSame(['a' => 'A', 'b' => 'B'], $items->getProperty('kind')?->getChoices());
+
+        // The shorthand does not reach the control, and its other options stay.
+        $detail = ArrayReader::from($this->field($form, 'field')->getControl()->getOptions())->map('detail');
+        $this->assertNotNull($detail);
+        $elements = ArrayReader::from($detail)->listOf('elements', ArrayType::map());
+        $this->assertNotNull($elements);
+        $this->assertSame(['placeholder' => 'Kind'], $elements[0]['options'] ?? null);
+    }
+
+    public function testTheDetailOfAControlWhoseArrayHasNoItemsIsLeftAsItIs(): void
+    {
+        $form = $this->factory->create($this->def(
+            ['type' => 'array'],
+            ['detail' => ['type' => 'VerticalLayout', 'elements' => [['type' => 'Label', 'text' => 'Item']]]]
+        ));
+
+        $detail = ArrayReader::from($this->field($form, 'field')->getControl()->getOptions())->map('detail');
+        $this->assertNotNull($detail);
+        $this->assertSame([['type' => 'Label', 'text' => 'Item']], $detail['elements'] ?? null);
     }
 }

@@ -468,11 +468,12 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     /**
      * Builds a form with an array-type trigger field and a string dependent.
      * The dependent is shown when the trigger array contains $containsValue.
+     * The trigger is required unless $triggerRequired is false.
      *
      * Mirrors the 010_config pattern:
      *   enabledDocuments (array) → SHOW invoice-specific fields when array contains "invoice".
      */
-    private function formWithArrayTrigger(string $containsValue): Form
+    private function formWithArrayTrigger(string $containsValue, bool $triggerRequired = true): Form
     {
         return Form::fromArray([
             'options' => ['csrf_protection' => false],
@@ -486,7 +487,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
                     ],
                     'dependent' => ['type' => 'string', 'title' => 'Dependent'],
                 ],
-                'required' => ['trigger'],
+                'required' => $triggerRequired ? ['trigger'] : [],
             ],
             'uischema' => [
                 'type' => 'VerticalLayout',
@@ -542,7 +543,7 @@ final class FormDataProcessorCompositeRuleTest extends TestCase
     public function testContainsEmptyArrayFieldIsSkipped(): void
     {
         $result = $this->processor->process(
-            $this->formWithArrayTrigger('invoice'),
+            $this->formWithArrayTrigger('invoice', triggerRequired: false),
             ['trigger' => [], 'dependent' => 'value']
         );
 

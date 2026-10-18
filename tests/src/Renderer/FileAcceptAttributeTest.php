@@ -159,4 +159,41 @@ final class FileAcceptAttributeTest extends TestCase
     {
         $this->assertStringNotContainsString('accept=', $this->input(['accept' => '.xml'], 'text'));
     }
+
+    #[Test]
+    public function theSizesAreTheDataAttributesOfTheInputInBytes(): void
+    {
+        $input = $this->input(['min_size' => 0, 'max_size' => '2M']);
+
+        $this->assertStringContainsString('data-min-size="0"', $input);
+        $this->assertStringContainsString('data-max-size="2000000"', $input);
+
+        $input = $this->input(['min_size' => '1Ki', 'max_size' => 4096], 'image');
+
+        $this->assertStringContainsString('data-min-size="1024"', $input);
+        $this->assertStringContainsString('data-max-size="4096"', $input);
+    }
+
+    #[Test]
+    public function aSizeThatIsNotValidIsNotAnAttribute(): void
+    {
+        foreach (['big', -1, true, ['2M']] as $size) {
+            $input = $this->input(['min_size' => $size, 'max_size' => $size]);
+
+            $this->assertStringNotContainsString('data-min-size', $input);
+            $this->assertStringNotContainsString('data-max-size', $input);
+        }
+    }
+
+    #[Test]
+    public function aFileInputWithoutSizesHasNoDataAttributes(): void
+    {
+        $this->assertStringNotContainsString('data-m', $this->input());
+    }
+
+    #[Test]
+    public function theSizesAreNotAppliedToOtherInputs(): void
+    {
+        $this->assertStringNotContainsString('data-m', $this->input(['min_size' => 0, 'max_size' => '2M'], 'text'));
+    }
 }

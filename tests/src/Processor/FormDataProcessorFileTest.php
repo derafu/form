@@ -175,16 +175,52 @@ final class FormDataProcessorFileTest extends TestCase
     /**
      * Returns a valid $_FILES-style array for a single file upload.
      *
+     * The content is a real file of the fixtures that has the type that is
+     * declared (a PDF for `application/pdf`, an image for any other), so its
+     * type is detected from its content.
+     *
      * @return array<string, mixed>
      */
     private function validFileArray(string $filename, string $mime = 'image/jpeg'): array
     {
+        $file = $this->fixtureFileArray($mime === 'application/pdf' ? 'document.pdf' : 'image.jpeg', $filename);
+        $file['type'] = $mime;
+
+        return $file;
+    }
+
+    /**
+     * Returns a $_FILES-style array for a file of the fixtures.
+     *
+     * @return array<string, mixed>
+     */
+    private function fixtureFileArray(string $fixture, ?string $filename = null): array
+    {
+        $content = (string) file_get_contents(dirname(__DIR__, 2) . '/fixtures/files/' . $fixture);
+        $filename ??= $fixture;
+
         return [
             'name'     => $filename,
-            'type'     => $mime,
-            'tmp_name' => $this->createTempFile($filename),
+            'type'     => 'application/octet-stream',
+            'tmp_name' => $this->createTempFile($filename, $content),
             'error'    => UPLOAD_ERR_OK,
-            'size'     => 1024,
+            'size'     => strlen($content),
+        ];
+    }
+
+    /**
+     * Returns a $_FILES-style array for a file that is empty.
+     *
+     * @return array<string, mixed>
+     */
+    private function emptyFileArray(string $filename = 'empty.pdf'): array
+    {
+        return [
+            'name'     => $filename,
+            'type'     => 'application/pdf',
+            'tmp_name' => $this->createTempFile($filename, ''),
+            'error'    => UPLOAD_ERR_OK,
+            'size'     => 0,
         ];
     }
 
@@ -208,8 +244,9 @@ final class FormDataProcessorFileTest extends TestCase
      * Creates a form with a single file field.
      *
      * @param bool $required Whether the file field is required.
+     * @param array<string, mixed> $options Options of the control.
      */
-    private function createFormWithFileField(bool $required = false): \Derafu\Form\Contract\FormInterface
+    private function createFormWithFileField(bool $required = false, array $options = []): \Derafu\Form\Contract\FormInterface
     {
         $definition = [
             'options' => ['csrf_protection' => false],
@@ -227,9 +264,7 @@ final class FormDataProcessorFileTest extends TestCase
                     [
                         'type'    => 'Control',
                         'scope'   => '#/properties/avatar',
-                        'options' => [
-                            'type' => 'file',
-                        ],
+                        'options' => ['type' => 'file'] + $options,
                     ],
                 ],
             ],
@@ -244,8 +279,11 @@ final class FormDataProcessorFileTest extends TestCase
 
     /**
      * Creates a form with a single image field.
+     *
+     * @param bool $required Whether the image field is required.
+     * @param array<string, mixed> $options Options of the control.
      */
-    private function createFormWithImageField(bool $required = false): \Derafu\Form\Contract\FormInterface
+    private function createFormWithImageField(bool $required = false, array $options = []): \Derafu\Form\Contract\FormInterface
     {
         $definition = [
             'options' => ['csrf_protection' => false],
@@ -263,9 +301,7 @@ final class FormDataProcessorFileTest extends TestCase
                     [
                         'type'    => 'Control',
                         'scope'   => '#/properties/photo',
-                        'options' => [
-                            'type' => 'image',
-                        ],
+                        'options' => ['type' => 'image'] + $options,
                     ],
                 ],
             ],
@@ -391,6 +427,117 @@ final class FormDataProcessorFileTest extends TestCase
 
         $this->assertFalse($result->isValid());
         $this->assertArrayHasKey('photo', $result->getErrors());
+    }
+
+    // -------------------------------------------------------------------------
+    // The rules that the options of the control derive
+    // -------------------------------------------------------------------------
+
+    public function testEmptyFileIsInvalidByDefault(): void
+    {
+        $form = $this->createFormWithFileField();
+
+        $result = $this->processor->process($form, ['avatar' => $this->emptyFileArray()]);
+
+        $this->assertFalse($result->isValid());
+        $this->assertArrayHasKey('avatar', $result->getErrors());
+    }
+
+    public function testEmptyFileIsValidWithAMinimumSizeOfZero(): void
+    {
+        $form = $this->createFormWithFileField(options: ['min_size' => 0]);
+
+        $result = $this->processor->process($form, ['avatar' => $this->emptyFileArray()]);
+
+        $this->assertTrue($result->isValid());
+    }
+
+    public function testEmptyFileIsValidWithAMinimumSizeOfZeroAndAnAcceptedType(): void
+    {
+        $form = $this->createFormWithFileField(options: ['min_size' => 0, 'accept' => '.pdf']);
+
+        $result = $this->processor->process($form, ['avatar' => $this->emptyFileArray()]);
+
+        $this->assertTrue($result->isValid());
+    }
+
+    public function testEmptyFileIsInvalidWithAnAcceptedTypeAndNoMinimumSize(): void
+    {
+        $form = $this->createFormWithFileField(options: ['accept' => '.pdf']);
+
+        $result = $this->processor->process($form, ['avatar' => $this->emptyFileArray()]);
+
+        $this->assertFalse($result->isValid());
+    }
+
+    public function testFileOfAnAcceptedTypeIsValid(): void
+    {
+        $form = $this->createFormWithFileField(options: ['accept' => '.pdf,image/png']);
+
+        $result = $this->processor->process($form, ['avatar' => $this->fixtureFileArray('document.pdf')]);
+
+        $this->assertTrue($result->isValid());
+    }
+
+    public function testFileOfATypeThatIsNotAcceptedIsInvalidWhateverTheClientSays(): void
+    {
+        $form = $this->createFormWithFileField(options: ['accept' => '.pdf']);
+        $file = $this->fixtureFileArray('image.jpeg', 'document.pdf');
+        $file['type'] = 'application/pdf';
+
+        $result = $this->processor->process($form, ['avatar' => $file]);
+
+        $this->assertFalse($result->isValid());
+        $this->assertArrayHasKey('avatar', $result->getErrors());
+    }
+
+    public function testAcceptWithAWildcardDoesNotRestrictTheTypes(): void
+    {
+        $form = $this->createFormWithFileField(options: ['accept' => '.pdf,image/*']);
+
+        $result = $this->processor->process($form, ['avatar' => $this->fixtureFileArray('image.jpeg')]);
+
+        $this->assertTrue($result->isValid());
+    }
+
+    public function testFileLargerThanTheMaximumSizeIsInvalid(): void
+    {
+        $form = $this->createFormWithFileField(options: ['max_size' => 100]);
+        $file = $this->fixtureFileArray('document.pdf');
+
+        $result = $this->processor->process($form, ['avatar' => $file]);
+
+        $this->assertGreaterThan(100, $file['size']);
+        $this->assertFalse($result->isValid());
+        $this->assertArrayHasKey('avatar', $result->getErrors());
+    }
+
+    public function testFileSmallerThanTheMinimumSizeIsInvalid(): void
+    {
+        $form = $this->createFormWithFileField(options: ['min_size' => '1M']);
+
+        $result = $this->processor->process($form, ['avatar' => $this->fixtureFileArray('document.pdf')]);
+
+        $this->assertFalse($result->isValid());
+    }
+
+    public function testFileThatIsNotAnImageIsInvalidInAnImageControl(): void
+    {
+        $form = $this->createFormWithImageField();
+
+        $result = $this->processor->process($form, ['photo' => $this->fixtureFileArray('text.txt', 'photo.jpg')]);
+
+        $this->assertFalse($result->isValid());
+        $this->assertArrayHasKey('photo', $result->getErrors());
+    }
+
+    public function testImageIsValidInAnImageControlWithSizes(): void
+    {
+        $form = $this->createFormWithImageField(options: ['min_size' => 0, 'max_size' => '1M']);
+
+        $result = $this->processor->process($form, ['photo' => $this->fixtureFileArray('image.jpeg')]);
+
+        $this->assertTrue($result->isValid());
     }
 
     // -------------------------------------------------------------------------

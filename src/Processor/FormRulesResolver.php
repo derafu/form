@@ -25,6 +25,7 @@ use Derafu\Form\Contract\Schema\PropertySchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Schema\Pattern;
+use Derafu\Support\File;
 
 /**
  * Resolves the complete, merged processing rules for every field in a form.
@@ -396,18 +397,79 @@ final class FormRulesResolver implements FormRulesResolverInterface
      */
     private function derivesControlValidateRules(ControlInterface $control): array
     {
-        $rules = [];
+        $type = $control->getControlType();
+        if ($type !== 'file' && $type !== 'image') {
+            return [];
+        }
 
-        switch ($control->getControlType()) {
-            case 'file':
-                $rules[] = 'file';
-                break;
-            case 'image':
-                $rules[] = 'image';
-                break;
+        $options = $control->getOptions();
+
+        // The rule of the control, with the size limits that the control says.
+        $parameters = [];
+        foreach (['max_size', 'min_size'] as $option) {
+            $size = $options[$option] ?? null;
+            if (is_int($size) || is_string($size)) {
+                $parameters[] = $option . '=' . $size;
+            }
+        }
+        $rules = [$parameters === [] ? $type : $type . ':' . implode(',', $parameters)];
+
+        // The types that the control offers (`accept`) are the only ones that
+        // it receives, and an empty file has the type of an empty file.
+        $types = $this->derivesTypesFromAccept($options['accept'] ?? null);
+        if ($types !== []) {
+            $minSize = $options['min_size'] ?? null;
+            if ((is_int($minSize) || is_string($minSize)) && File::parseSize((string) $minSize) === 0) {
+                $types[] = 'application/x-empty';
+            }
+            $rules[] = 'mimetype:' . implode(',', $types);
         }
 
         return $rules;
+    }
+
+    /**
+     * Derives the MIME types that a file control receives from its `accept`.
+     *
+     * The types are exact only: each element of `accept` is a MIME type or an
+     * extension with the types that it is known to have. If one of them is not
+     * (a type with a wildcard as `image/*`, or an extension that is not known),
+     * nothing is derived, because the types of the rest would be fewer than the
+     * ones that the control offers.
+     *
+     * @param mixed $accept The option `accept` of the control.
+     * @return list<string> The types, or an empty list if they can not be
+     * derived.
+     */
+    private function derivesTypesFromAccept(mixed $accept): array
+    {
+        if (!is_string($accept)) {
+            return [];
+        }
+
+        $types = [];
+        foreach (explode(',', $accept) as $element) {
+            $element = strtolower(trim($element));
+            if ($element === '') {
+                continue;
+            }
+
+            if (str_starts_with($element, '.')) {
+                $elementTypes = File::mimetypesFromExtension($element);
+            } elseif (str_contains($element, '/') && !str_ends_with($element, '/*')) {
+                $elementTypes = [$element];
+            } else {
+                $elementTypes = [];
+            }
+
+            if ($elementTypes === []) {
+                return [];
+            }
+
+            array_push($types, ...$elementTypes);
+        }
+
+        return array_values(array_unique($types));
     }
 
     // =========================================================================

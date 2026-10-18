@@ -22,6 +22,7 @@ use Derafu\Form\Renderer\Support\RequiredField;
 use Derafu\Support\ArrayReader;
 use Derafu\Support\ArrayType;
 use Derafu\Support\Caster;
+use Derafu\Support\File;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -173,6 +174,18 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         // like `.xml` or `.p12,.pfx`. It replaces the one of the image controls.
         if ($type === 'file' && !empty($controlOptions['accept'])) {
             $attrs['accept'] = $controlOptions['accept'];
+        }
+
+        // The sizes (in bytes) that the server asks of the files, for a script
+        // of the page that wants to check them before the file is sent.
+        if ($type === 'file') {
+            foreach (['min_size' => 'data-min-size', 'max_size' => 'data-max-size'] as $option => $attribute) {
+                $size = $controlOptions[$option] ?? null;
+                $bytes = is_int($size) || is_string($size) ? File::parseSize((string) $size) : null;
+                if ($bytes !== null) {
+                    $attrs[$attribute] = (string) $bytes;
+                }
+            }
         }
 
         // Handle readonly from schema property or control options.

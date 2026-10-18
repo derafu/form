@@ -36,6 +36,7 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\Support\File;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -734,6 +735,75 @@ final class FormRulesResolverTest extends TestCase
         $this->assertContains('image', $validate);
         $this->assertContains('mimetype:image/png,image/jpeg', $validate);
         $this->assertNull($rules->getCastRule('photo'));
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @param list<string> $expected
+     */
+    #[DataProvider('fileControlRulesProvider')]
+    public function testFileControlRulesComeFromItsOptions(array $options, array $expected): void
+    {
+        $form = $this->formWithRules(
+            ['document' => ['type' => 'string']],
+            [['type' => 'Control', 'scope' => '#/properties/document', 'options' => $options]],
+            []
+        );
+
+        $this->resolver->resolve($form);
+
+        $this->assertSame($expected, $form->getRules()->getValidateRules('document'));
+    }
+
+    /**
+     * @return array<string, array{array<string, mixed>, list<string>}>
+     */
+    public static function fileControlRulesProvider(): array
+    {
+        // The types that an extension has are the ones that `File` knows.
+        $pdf = implode(',', File::mimetypesFromExtension('pdf'));
+        $jpg = implode(',', File::mimetypesFromExtension('jpg'));
+        $png = implode(',', File::mimetypesFromExtension('png'));
+
+        return [
+            'file without options' => [['type' => 'file'], ['file']],
+            'maximum size' => [['type' => 'file', 'max_size' => '2M'], ['file:max_size=2M']],
+            'both sizes' => [['type' => 'file', 'min_size' => 0, 'max_size' => '2M'], ['file:max_size=2M,min_size=0']],
+            'sizes that are not text or integers' => [['type' => 'file', 'min_size' => true, 'max_size' => ['2M']], ['file']],
+            'image control' => [['type' => 'image', 'max_size' => 1024], ['image:max_size=1024']],
+            'accept with a type' => [['type' => 'file', 'accept' => 'application/pdf'], ['file', 'mimetype:application/pdf']],
+            'accept with an extension' => [['type' => 'file', 'accept' => '.pdf'], ['file', 'mimetype:' . $pdf]],
+            'accept with several' => [
+                ['type' => 'file', 'accept' => ' .pdf, application/pdf ,Image/PNG,'],
+                ['file', 'mimetype:' . $pdf . ',image/png'],
+            ],
+            'accept with the types of an extension' => [['type' => 'file', 'accept' => '.jpg'], ['file', 'mimetype:' . $jpg]],
+            'accept with a wildcard' => [['type' => 'file', 'accept' => '.pdf,image/*'], ['file']],
+            'accept with an extension that is not known' => [['type' => 'file', 'accept' => '.pdf,.derafu'], ['file']],
+            'accept with a word' => [['type' => 'file', 'accept' => 'pdf'], ['file']],
+            'accept that is empty' => [['type' => 'file', 'accept' => ' , '], ['file']],
+            'accept that is not text' => [['type' => 'file', 'accept' => ['.pdf']], ['file']],
+            'accept and a minimum size of zero' => [
+                ['type' => 'file', 'accept' => '.pdf', 'min_size' => 0],
+                ['file:min_size=0', 'mimetype:' . $pdf . ',application/x-empty'],
+            ],
+            'accept and a minimum size that is zero with a unit' => [
+                ['type' => 'file', 'accept' => '.pdf', 'min_size' => '0K'],
+                ['file:min_size=0K', 'mimetype:' . $pdf . ',application/x-empty'],
+            ],
+            'accept and a minimum size that is not zero' => [
+                ['type' => 'file', 'accept' => '.pdf', 'min_size' => '1K'],
+                ['file:min_size=1K', 'mimetype:' . $pdf],
+            ],
+            'wildcard and a minimum size of zero' => [
+                ['type' => 'file', 'accept' => 'image/*', 'min_size' => 0],
+                ['file:min_size=0'],
+            ],
+            'image control with accept' => [
+                ['type' => 'image', 'accept' => '.png'],
+                ['image', 'mimetype:' . $png],
+            ],
+        ];
     }
 
     // =========================================================================

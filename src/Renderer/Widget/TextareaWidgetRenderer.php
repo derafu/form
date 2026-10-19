@@ -95,9 +95,7 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         }
 
         // Add validation attributes from property.
-        foreach (RequiredField::attributes($field, $options) as $name => $value) {
-            $attrs[$name] = $value;
-        }
+        $attrs = array_merge($attrs, RequiredField::attributes($field, $options));
 
         if ($property instanceof StringSchemaInterface) {
             if ($property->getMinLength() !== null) {

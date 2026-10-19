@@ -110,9 +110,7 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         }
 
         // Add validation attributes from property
-        foreach (RequiredField::attributes($field, $options) as $name => $value) {
-            $attrs[$name] = $value;
-        }
+        $attrs = array_merge($attrs, RequiredField::attributes($field, $options));
 
         // Add size attribute if specified.
         $size = $reader->get('size', ArrayType::mixed());
@@ -129,9 +127,16 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         // Emit cascade configuration for client-side dependent select handling.
         // The 'cascade' key may contain either 'choices' (static map) or 'url'
         // (AJAX endpoint) — the renderer is agnostic to which one is present.
+        // The current value travels in the 'value' key, because the options of
+        // a cascade select are loaded by the client and the select arrives
+        // without them: the client selects it once they are loaded.
         if (isset($controlOptions['cascade']) && is_array($controlOptions['cascade'])) {
+            $cascade = $controlOptions['cascade'];
+            if ($value !== null && $value !== '') {
+                $cascade['value'] = $value;
+            }
             $attrs['data-cascade'] = json_encode(
-                $controlOptions['cascade'],
+                $cascade,
                 JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             );
         }

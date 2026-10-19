@@ -90,7 +90,7 @@ export const UiSchemaCascade = {
             const triggerValue = this.getFieldValue(triggerName, form);
             if (triggerValue) {
                 const choices = await this.resolveChoices(cascade, triggerValue);
-                this.populateSelect(select, choices);
+                this.populateSelect(select, choices, cascade.value);
             }
         }
     },
@@ -144,9 +144,12 @@ export const UiSchemaCascade = {
      *
      * @param {HTMLSelectElement} select  The select element to update.
      * @param {Object}            choices Map of { value: label } pairs.
+     * @param {string}            [initialValue] Value the server rendered for
+     *   the field (the `value` key of data-cascade). The select arrives
+     *   without options, so it is the one to keep on the initial population.
      */
-    populateSelect(select, choices) {
-        const previousValue = select.value;
+    populateSelect(select, choices, initialValue = '') {
+        const previousValue = select.value || initialValue;
 
         // Remove all non-placeholder options (placeholder has value="").
         Array.from(select.options).forEach(opt => {

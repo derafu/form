@@ -70,7 +70,7 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
         }
 
         $name = $field->getName();
-        $value = $options['value'] ?? null;
+        $value = $options['value'] ?? $field->getData();
 
         // Build HTML attributes for the radio.
         $attrs = [
@@ -79,15 +79,6 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             'name' => $name,
             'class' => $widgetClass,
         ];
-
-        // Add value if present.
-        if ($value !== null) {
-            $attrs['value'] = is_array($value)
-                || is_object($value)
-                ? json_encode($value)
-                : $value
-            ;
-        }
 
         $controlOptions = $control->getOptions();
         if (!empty($controlOptions['placeholder'])) {

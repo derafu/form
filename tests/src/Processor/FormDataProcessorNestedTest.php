@@ -133,14 +133,14 @@ final class FormDataProcessorNestedTest extends TestCase
     {
         $result = $this->processor->process($this->form(), [
             'nombre' => ' Ana ',
-            'datos_de_contacto' => ['direccion' => ' Calle 1 ', 'comuna' => 'Lima', 'ciudad' => ''],
+            'datos_de_contacto' => ['direccion' => ' Calle 1 ', 'comuna' => 'Lima', 'ciudad' => null],
         ]);
 
         $this->assertTrue($result->isValid());
         $this->assertSame(
             [
                 'nombre' => 'Ana',
-                'datos_de_contacto' => ['direccion' => 'Calle 1', 'comuna' => 'Lima', 'ciudad' => ''],
+                'datos_de_contacto' => ['direccion' => 'Calle 1', 'comuna' => 'Lima', 'ciudad' => null],
             ],
             $result->getProcessedData()
         );
@@ -150,7 +150,7 @@ final class FormDataProcessorNestedTest extends TestCase
     {
         $result = $this->processor->process($this->form(), [
             'nombre' => '',
-            'datos_de_contacto' => ['direccion' => '', 'comuna' => '', 'ciudad' => ''],
+            'datos_de_contacto' => ['direccion' => '', 'comuna' => '', 'ciudad' => null],
         ]);
 
         $this->assertFalse($result->isValid());
@@ -211,12 +211,11 @@ final class FormDataProcessorNestedTest extends TestCase
         $result = $this->processor->process($form, [
             'nombre' => 'no',
             'datos_de_contacto' => ['direccion' => 'Calle 1', 'comuna' => 'Lima', 'ciudad' => 'Secret'],
-            'other' => 'kept',
         ]);
 
         $this->assertTrue($result->isValid());
         $this->assertSame(
-            ['nombre' => 'no', 'datos_de_contacto' => ['direccion' => 'Calle 1', 'comuna' => 'Lima'], 'other' => 'kept'],
+            ['nombre' => 'no', 'datos_de_contacto' => ['direccion' => 'Calle 1', 'comuna' => 'Lima']],
             $result->getProcessedData()
         );
     }
@@ -235,5 +234,138 @@ final class FormDataProcessorNestedTest extends TestCase
         $this->assertIsArray($hidden);
         $this->assertArrayHasKey('nombre', $shown);
         $this->assertArrayNotHasKey('nombre', $hidden);
+    }
+
+    /**
+     * @param bool|array<string, mixed>|null $root The `additionalProperties` of the root.
+     * @param bool|array<string, mixed>|null $contact The `additionalProperties` of the object.
+     * @param array<string, mixed> $rule The rule of the UI schema of the control `city`.
+     */
+    private function openForm(bool|array|null $root, bool|array|null $contact, array $rule = []): Form
+    {
+        $city = ['type' => 'Control', 'scope' => '#/properties/contact/properties/city'];
+        if ($rule !== []) {
+            $city['rule'] = $rule;
+        }
+
+        $schema = [
+            'type' => 'object',
+            'properties' => [
+                'name' => ['type' => 'string'],
+                'contact' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'address' => ['type' => 'string'],
+                        'city' => ['type' => 'string'],
+                    ],
+                ],
+            ],
+        ];
+        if ($root !== null) {
+            $schema['additionalProperties'] = $root;
+        }
+        if ($contact !== null) {
+            $schema['properties']['contact']['additionalProperties'] = $contact;
+        }
+
+        return Form::fromArray([
+            'options' => ['csrf_protection' => false],
+            'schema' => $schema,
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [
+                    ['type' => 'Control', 'scope' => '#/properties/name'],
+                    ['type' => 'Control', 'scope' => '#/properties/contact/properties/address'],
+                    $city,
+                ],
+            ],
+        ]);
+    }
+
+    public function testTheFieldsThatAreNotInAnObjectAreDroppedUnlessItIsOpen(): void
+    {
+        $data = [
+            'name' => 'Ana',
+            'extra' => 'x',
+            'contact' => ['address' => 'Calle 1', 'city' => '', 'zip' => '123'],
+        ];
+
+        $result = $this->processor->process($this->openForm(null, null), $data);
+        $this->assertSame(
+            ['name' => 'Ana', 'contact' => ['address' => 'Calle 1', 'city' => null]],
+            $result->getProcessedData()
+        );
+
+        foreach ([true, ['type' => 'string']] as $open) {
+            $result = $this->processor->process($this->openForm(null, $open), $data);
+            $this->assertSame(
+                ['name' => 'Ana', 'contact' => ['address' => 'Calle 1', 'city' => null, 'zip' => '123']],
+                $result->getProcessedData()
+            );
+        }
+
+        $result = $this->processor->process($this->openForm(true, true), $data);
+        $this->assertSame(
+            ['name' => 'Ana', 'contact' => ['address' => 'Calle 1', 'city' => null, 'zip' => '123'], 'extra' => 'x'],
+            $result->getProcessedData()
+        );
+    }
+
+    public function testAnOpenObjectDoesNotGiveBackTheFieldThatIsNotActive(): void
+    {
+        $form = $this->openForm(null, true, [
+            'effect' => 'SHOW',
+            'condition' => ['scope' => '#/properties/name', 'schema' => ['const' => 'yes']],
+        ]);
+
+        $result = $this->processor->process($form, [
+            'name' => 'no',
+            'contact' => ['address' => 'Calle 1', 'city' => 'Secret', 'zip' => '123'],
+        ]);
+
+        $this->assertSame(
+            ['name' => 'no', 'contact' => ['address' => 'Calle 1', 'zip' => '123']],
+            $result->getProcessedData()
+        );
+    }
+
+    public function testAnOpenObjectThatDidNotComeIsNotCreated(): void
+    {
+        $result = $this->processor->process($this->openForm(null, true), ['name' => 'Ana']);
+
+        $this->assertSame(['name' => 'Ana', 'contact' => ['address' => null, 'city' => null]], $result->getProcessedData());
+    }
+
+    public function testAnObjectWhoseFieldsAreNotActiveIsNotGivenBackAsAnExtra(): void
+    {
+        $form = Form::fromArray([
+            'options' => ['csrf_protection' => false],
+            'schema' => [
+                'type' => 'object',
+                'additionalProperties' => true,
+                'properties' => [
+                    'name' => ['type' => 'string'],
+                    'contact' => ['type' => 'object', 'properties' => ['city' => ['type' => 'string']]],
+                ],
+            ],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [
+                    ['type' => 'Control', 'scope' => '#/properties/name'],
+                    [
+                        'type' => 'Control',
+                        'scope' => '#/properties/contact/properties/city',
+                        'rule' => [
+                            'effect' => 'SHOW',
+                            'condition' => ['scope' => '#/properties/name', 'schema' => ['const' => 'yes']],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $result = $this->processor->process($form, ['name' => 'no', 'contact' => ['city' => 'Secret'], 'extra' => 'x']);
+
+        $this->assertSame(['name' => 'no', 'extra' => 'x'], $result->getProcessedData());
     }
 }

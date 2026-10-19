@@ -20,8 +20,10 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
 use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
+use Derafu\Form\Contract\Schema\ObjectSchemaInterface;
 use Derafu\Form\Data\FieldPath;
 use Derafu\Form\Exception\CaptchaUnavailableException;
+use Derafu\Support\Value;
 use Derafu\Translation\Contract\TranslatableInterface;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 use Derafu\Translation\TranslatableMessage;
@@ -139,11 +141,15 @@ final class FormDataProcessor implements FormDataProcessorInterface
         // Resolve the complete, merged rules into the form's own FormRules instance.
         $this->resolver->resolve($form);
 
-        // The first level of the names of the fields that are in an object.
-        $objectRoots = [];
+        // A read-only field is not what was sent: it is the value that the form
+        // has (the same that was drawn), which is also the one that the rules
+        // of the UI schema see.
+        $readOnlyValues = [];
         foreach ($form->getFields() as $fieldName => $field) {
-            if (str_contains($fieldName, '.')) {
-                $objectRoots[FieldPath::root($fieldName)] = true;
+            if ($field->getProperty()->isReadOnly() === true) {
+                $readOnlyValues[$fieldName] = $field->getData();
+                unset($data[$fieldName]);
+                $data = FieldPath::set($data, $fieldName, $readOnlyValues[$fieldName]);
             }
         }
 
@@ -157,8 +163,25 @@ final class FormDataProcessor implements FormDataProcessorInterface
                 continue;
             }
 
+            // A read-only field has no rules to apply: its value is not an
+            // input of the visitor.
+            if (array_key_exists($fieldName, $readOnlyValues)) {
+                $processedData = FieldPath::set($processedData, $fieldName, $readOnlyValues[$fieldName]);
+                continue;
+            }
+
             $fieldValue = FieldPath::get($data, $fieldName);
             $fieldRules = $form->getRules()[$fieldName];
+
+            // A checkbox that is not checked is not sent by the browser: the
+            // field that is a boolean and has no value is `false`, not a value
+            // that is missing (which the processor leaves as `null`).
+            if (
+                in_array($fieldRules['cast'] ?? null, ['boolean', 'bool'], true)
+                && ($fieldValue === null || $fieldValue === '')
+            ) {
+                $fieldValue = false;
+            }
 
             try {
                 // Process the field value through all rules.
@@ -176,19 +199,36 @@ final class FormDataProcessor implements FormDataProcessorInterface
             }
         }
 
-        // Add any fields from data that weren't in the schema, excluding
-        // fields that were intentionally skipped due to an inactive rule.
-        // The key of an object that has fields of the form is not an extra one:
-        // its fields are the ones that were processed.
-        foreach ($data as $fieldName => $fieldValue) {
-            if (
-                !isset($processedData[$fieldName])
-                && !isset($skippedFields[$fieldName])
-                && !isset($objectRoots[$fieldName])
-            ) {
-                $processedData[$fieldName] = $fieldValue;
+        // The fields that an object requires when another one has a value
+        // (`dependentRequired`). The error is the one of `required`, in each
+        // field that is missing.
+        $missingDependents = $this->missingDependents(
+            $form->getSchema(),
+            '',
+            $processedData,
+            $form->getFields(),
+            $skippedFields
+        );
+        foreach ($missingDependents as $name) {
+            try {
+                $this->processor->process(null, ['validate' => ['required']]);
+            } catch (Throwable $e) {
+                $errors[$name] = [$this->resolveErrorMessage($e)];
+                $isValid = false;
             }
         }
+
+        // The form is closed: what was sent and is not a field of the form is
+        // not in the result, unless the object that has it says
+        // `additionalProperties` (`true`, or the schema of the properties).
+        $processedData = $this->withAdditionalProperties(
+            $form->getSchema(),
+            '',
+            $data,
+            $processedData,
+            array_keys($form->getFields()),
+            $skippedFields
+        );
 
         if ($captchaProvider !== null && $isValid) {
             $captchaError = $this->checkCaptcha($captchaProvider, $captchaResponse, $form->getId());
@@ -199,6 +239,151 @@ final class FormDataProcessor implements FormDataProcessorInterface
         }
 
         return new ProcessResult($form, $processedData, $errors, $isValid, $formErrors);
+    }
+
+    /**
+     * Adds to the result what was sent in the objects that are open.
+     *
+     * An object is open when it has `additionalProperties` with `true` or with
+     * a schema. The key of an object that has fields of the form is not an
+     * extra one: its fields are the ones that were processed. A field that was
+     * skipped due to an inactive rule is not added back, and a field that is
+     * `null` was processed (an empty value is `null`), so it is not replaced
+     * with what was sent.
+     *
+     * @param ObjectSchemaInterface $object The object of the schema.
+     * @param string $path The path of the object (`''` is the root).
+     * @param array<array-key, mixed> $data What was sent.
+     * @param array<array-key, mixed> $processedData The processed data.
+     * @param list<string> $fieldNames The names of the fields of the form.
+     * @param array<string, true> $skippedFields The fields that were skipped.
+     * @return array<array-key, mixed> The processed data with what was added.
+     */
+    private function withAdditionalProperties(
+        ObjectSchemaInterface $object,
+        string $path,
+        array $data,
+        array $processedData,
+        array $fieldNames,
+        array $skippedFields
+    ): array {
+        $prefix = $path === '' ? '' : $path . '.';
+
+        $sent = $path === '' ? $data : FieldPath::get($data, $path);
+        if ($object->getAdditionalProperties() !== false && is_array($sent)) {
+            $level = $path === '' ? $processedData : FieldPath::get($processedData, $path);
+            $level = is_array($level) ? $level : [];
+
+            foreach ($sent as $key => $value) {
+                $name = $prefix . $key;
+                if (
+                    !array_key_exists($key, $level)
+                    && !isset($skippedFields[$name])
+                    && !$this->hasFieldsIn($name, $fieldNames)
+                ) {
+                    $level[$key] = $value;
+                }
+            }
+
+            $processedData = $path === '' ? $level : FieldPath::set($processedData, $path, $level);
+        }
+
+        foreach ($object->getProperties() as $name => $property) {
+            if ($property instanceof ObjectSchemaInterface) {
+                $processedData = $this->withAdditionalProperties(
+                    $property,
+                    $prefix . $name,
+                    $data,
+                    $processedData,
+                    $fieldNames,
+                    $skippedFields
+                );
+            }
+        }
+
+        return $processedData;
+    }
+
+    /**
+     * Whether an object of the schema has fields of the form.
+     *
+     * @param string $path The path of the object.
+     * @param list<string> $fieldNames The names of the fields of the form.
+     */
+    private function hasFieldsIn(string $path, array $fieldNames): bool
+    {
+        foreach ($fieldNames as $fieldName) {
+            if (str_starts_with($fieldName, $path . '.')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The fields that are required because of `dependentRequired`, and that
+     * have no value.
+     *
+     * The names in the object are the ones of its path (in `contact`, the
+     * field `card` is `contact.card`). A field that is not a field of the form,
+     * or that was skipped due to an inactive rule, has no value and is not
+     * required. A trigger that is a checkbox that is not checked (`false`) has
+     * no value either.
+     *
+     * @param ObjectSchemaInterface $object The object of the schema.
+     * @param string $path The path of the object (`''` is the root).
+     * @param array<array-key, mixed> $processedData The processed data.
+     * @param array<string, FormFieldInterface> $fields The fields of the form.
+     * @param array<string, true> $skippedFields The fields that were skipped.
+     * @return list<string> The names of the fields.
+     */
+    private function missingDependents(
+        ObjectSchemaInterface $object,
+        string $path,
+        array $processedData,
+        array $fields,
+        array $skippedFields
+    ): array {
+        $prefix = $path === '' ? '' : $path . '.';
+        $missing = [];
+
+        foreach ($object->getDependentRequired() ?? [] as $trigger => $dependents) {
+            $triggerName = $prefix . $trigger;
+            if (
+                !isset($fields[$triggerName])
+                || isset($skippedFields[$triggerName])
+                || Value::isBlank(FieldPath::get($processedData, $triggerName))
+                || FieldPath::get($processedData, $triggerName) === false
+            ) {
+                continue;
+            }
+
+            foreach ($dependents as $dependent) {
+                $name = $prefix . $dependent;
+                if (
+                    isset($fields[$name])
+                    && !isset($skippedFields[$name])
+                    && Value::isBlank(FieldPath::get($processedData, $name))
+                ) {
+                    $missing[] = $name;
+                }
+            }
+        }
+
+        foreach ($object->getProperties() as $name => $property) {
+            if ($property instanceof ObjectSchemaInterface) {
+                array_push($missing, ...$this->missingDependents(
+                    $property,
+                    $prefix . $name,
+                    $processedData,
+                    $fields,
+                    $skippedFields
+                ));
+            }
+        }
+
+        return $missing;
     }
 
     /**

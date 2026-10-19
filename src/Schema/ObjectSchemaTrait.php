@@ -58,11 +58,13 @@ trait ObjectSchemaTrait
     protected array $required = [];
 
     /**
-     * Whether additional properties are allowed.
+     * Whether additional properties are allowed, as the schema says. A form is
+     * closed unless it says otherwise: without the keyword (`null`) it is
+     * `false`.
      *
-     * @var bool|array<string, mixed> mixed>
+     * @var bool|array<string, mixed>|null
      */
-    protected bool|array $additionalProperties = true;
+    protected bool|array|null $additionalProperties = null;
 
     /**
      * {@inheritDoc}
@@ -212,7 +214,7 @@ trait ObjectSchemaTrait
      */
     public function getAdditionalProperties(): bool|array
     {
-        return $this->additionalProperties;
+        return $this->additionalProperties ?? false;
     }
 
     /**

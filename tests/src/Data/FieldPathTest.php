@@ -45,11 +45,4 @@ final class FieldPathTest extends TestCase
 
         $this->assertSame(['name' => 'Eva', 'address' => ['city' => 'Lima', 'zip' => '123']], $data);
     }
-
-    #[Test]
-    public function shouldGiveTheFirstLevelOfTheName(): void
-    {
-        $this->assertSame('address', FieldPath::root('address.city'));
-        $this->assertSame('name', FieldPath::root('name'));
-    }
 }

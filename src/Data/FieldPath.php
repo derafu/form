@@ -52,12 +52,4 @@ final class FieldPath
     {
         return Arr::setAtPath($data, $name, $value);
     }
-
-    /**
-     * The first level of the name of a field: the key of the data that has it.
-     */
-    public static function root(string $name): string
-    {
-        return explode('.', $name)[0];
-    }
 }

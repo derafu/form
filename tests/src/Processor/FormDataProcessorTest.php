@@ -74,6 +74,12 @@ use Symfony\Component\Translation\Translator;
 #[UsesClass(FormDefinition::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Options\FormAttributes::class)]
 #[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Data\FieldPath::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Processor\UiSchemaRuleEvaluator::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\UiSchema\ConditionSchema::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\UiSchema\UiSchemaCompositeCondition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\UiSchema\UiSchemaCondition::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\UiSchema\UiSchemaRule::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Schema\ObjectSchema::class)]
 final class FormDataProcessorTest extends TestCase
 {
     private FormDataProcessor $processor;
@@ -93,8 +99,9 @@ final class FormDataProcessorTest extends TestCase
     /**
      * @param array<string, mixed> $extraProps
      * @param list<string> $required
+     * @param bool|array<string, mixed>|null $additionalProperties
      */
-    private function simpleForm(array $extraProps = [], array $required = []): Form
+    private function simpleForm(array $extraProps = [], array $required = [], bool|array|null $additionalProperties = null): Form
     {
         $properties = array_merge([
             'name' => ['type' => 'string', 'title' => 'Name'],
@@ -109,6 +116,9 @@ final class FormDataProcessorTest extends TestCase
         $schema = ['type' => 'object', 'properties' => $properties];
         if (!empty($required)) {
             $schema['required'] = $required;
+        }
+        if ($additionalProperties !== null) {
+            $schema['additionalProperties'] = $additionalProperties;
         }
 
         return Form::fromArray([
@@ -185,21 +195,41 @@ final class FormDataProcessorTest extends TestCase
         $this->assertSame('John Doe', $data['name']);
     }
 
-    public function testProcessDataWithExtraFields(): void
+    public function testProcessDataDropsTheFieldsThatAreNotInTheForm(): void
     {
-        $form = $this->simpleForm(required: ['name']);
+        foreach ([null, false] as $additionalProperties) {
+            $form = $this->simpleForm(required: ['name'], additionalProperties: $additionalProperties);
 
-        $result = $this->processor->process($form, [
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-            'extra_field' => 'extra value',
-        ]);
+            $result = $this->processor->process($form, [
+                'name' => 'John Doe',
+                'email' => 'john@example.com',
+                'extra_field' => 'extra value',
+            ]);
 
-        $this->assertTrue($result->isValid());
-        $data = $result->getProcessedData();
-        $this->assertIsArray($data);
-        $this->assertArrayHasKey('extra_field', $data);
-        $this->assertSame('extra value', $data['extra_field']);
+            $this->assertTrue($result->isValid());
+            $this->assertSame(
+                ['name' => 'John Doe', 'email' => 'john@example.com'],
+                $result->getProcessedData()
+            );
+        }
+    }
+
+    public function testProcessDataKeepsTheExtraFieldsWhenAdditionalPropertiesIsOpen(): void
+    {
+        foreach ([true, ['type' => 'string']] as $additionalProperties) {
+            $form = $this->simpleForm(required: ['name'], additionalProperties: $additionalProperties);
+
+            $result = $this->processor->process($form, [
+                'name' => 'John Doe',
+                'email' => 'john@example.com',
+                'extra_field' => 'extra value',
+            ]);
+
+            $this->assertTrue($result->isValid());
+            $data = $result->getProcessedData();
+            $this->assertIsArray($data);
+            $this->assertSame('extra value', $data['extra_field']);
+        }
     }
 
     public function testGetFormReturnsNewInstanceWithProcessedData(): void
@@ -375,5 +405,113 @@ final class FormDataProcessorTest extends TestCase
             ['Formato de correo electrónico inválido.'],
             $result->getErrors()['email']
         );
+    }
+
+    /**
+     * @param array<string, mixed> $code The schema of the field `code`.
+     * @param array<string, mixed>|null $data The data of the form.
+     */
+    private function readOnlyForm(array $code, ?array $data = null, bool $required = false): Form
+    {
+        $definition = [
+            'options' => ['csrf_protection' => false],
+            'schema' => [
+                'type' => 'object',
+                'properties' => [
+                    'name' => ['type' => 'string'],
+                    'code' => $code + ['type' => 'string', 'readOnly' => true],
+                    'other' => ['type' => 'string'],
+                ],
+            ],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [
+                    ['type' => 'Control', 'scope' => '#/properties/name'],
+                    ['type' => 'Control', 'scope' => '#/properties/code'],
+                    [
+                        'type' => 'Control',
+                        'scope' => '#/properties/other',
+                        'rule' => [
+                            'effect' => 'SHOW',
+                            'condition' => ['scope' => '#/properties/code', 'schema' => ['const' => 'yes']],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        if ($required) {
+            $definition['schema']['required'] = ['code'];
+        }
+        if ($data !== null) {
+            $definition['data'] = $data;
+        }
+
+        return Form::fromArray($definition);
+    }
+
+    public function testAReadOnlyFieldIsTheValueOfTheForm(): void
+    {
+        $result = $this->processor->process(
+            $this->readOnlyForm([], ['code' => 'A-1']),
+            ['name' => 'Ana', 'code' => 'HACK']
+        );
+
+        $this->assertTrue($result->isValid());
+        $this->assertSame(['name' => 'Ana', 'code' => 'A-1'], $result->getProcessedData());
+    }
+
+    public function testAReadOnlyFieldIsTheDefaultWhenTheFormHasNoData(): void
+    {
+        $result = $this->processor->process(
+            $this->readOnlyForm(['default' => 'D-1']),
+            ['name' => 'Ana', 'code' => 'HACK']
+        );
+
+        $this->assertSame(['name' => 'Ana', 'code' => 'D-1'], $result->getProcessedData());
+    }
+
+    public function testAReadOnlyFieldWithoutValueIsNullAndItsRulesDoNotRun(): void
+    {
+        $result = $this->processor->process(
+            $this->readOnlyForm(['minLength' => 5], required: true),
+            ['name' => 'Ana', 'code' => 'HACK']
+        );
+
+        $this->assertTrue($result->isValid());
+        $this->assertSame(['name' => 'Ana', 'code' => null], $result->getProcessedData());
+    }
+
+    public function testAReadOnlyFieldOfAnObjectCanNotBeSentWithTheWholeName(): void
+    {
+        $form = Form::fromArray([
+            'options' => ['csrf_protection' => false],
+            'schema' => [
+                'type' => 'object',
+                'properties' => [
+                    'contact' => [
+                        'type' => 'object',
+                        'properties' => ['code' => ['type' => 'string', 'readOnly' => true]],
+                    ],
+                ],
+            ],
+            'uischema' => [
+                'type' => 'VerticalLayout',
+                'elements' => [['type' => 'Control', 'scope' => '#/properties/contact/properties/code']],
+            ],
+            'data' => ['contact' => ['code' => 'A-1']],
+        ]);
+
+        $result = $this->processor->process($form, ['contact.code' => 'HACK', 'contact' => ['code' => 'HACK']]);
+
+        $this->assertSame(['contact' => ['code' => 'A-1']], $result->getProcessedData());
+    }
+
+    public function testTheRulesOfTheUiSchemaSeeTheValueOfTheFormInAReadOnlyField(): void
+    {
+        $form = $this->readOnlyForm([], ['code' => 'locked']);
+
+        $result = $this->processor->process($form, ['name' => 'Ana', 'code' => 'yes', 'other' => 'x']);
+
+        $this->assertSame(['name' => 'Ana', 'code' => 'locked'], $result->getProcessedData());
     }
 }

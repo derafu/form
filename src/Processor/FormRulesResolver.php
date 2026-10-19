@@ -155,10 +155,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
         // Their only relevant processing is file/image validation.
         $uploadControls = ['file', 'image'];
         if (in_array($control->getControlType(), $uploadControls, true)) {
-            return $this->mergeAdditionalRules(
-                new RuleSet(validate: $this->derivesControlValidateRules($control)),
-                $additionalRules
-            );
+            return $this->resolveUploadRules($control, $additionalRules);
         }
 
         // Start with schema-based rules.
@@ -166,11 +163,19 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
         // Apply UI-specific transformations and validations based on control
         // options.
+        // The control of a password does not trim it either.
+        $sanitize = $control->getControlType() === 'password'
+            ? array_values(array_diff($rules->sanitize, ['trim']))
+            : $rules->sanitize
+        ;
         $rules = new RuleSet(
             cast: $rules->cast,
             transform: array_merge($rules->transform, $this->derivesControlTransformRules($control)),
-            sanitize: $rules->sanitize,
-            validate: array_merge($rules->validate, $this->derivesControlValidateRules($control)),
+            sanitize: $sanitize,
+            validate: array_values(array_unique(array_merge(
+                $rules->validate,
+                $this->derivesControlValidateRules($control)
+            ))),
         );
 
         // Merge explicit rules from the form's 'rules' section on top.
@@ -251,7 +256,8 @@ final class FormRulesResolver implements FormRulesResolverInterface
     {
         $rules = [];
 
-        if ($property instanceof StringSchemaInterface) {
+        // A password is not trimmed: its spaces at the ends are part of it.
+        if ($property instanceof StringSchemaInterface && $property->getFormat() !== 'password') {
             $rules[] = 'trim';
         }
 
@@ -291,8 +297,12 @@ final class FormRulesResolver implements FormRulesResolverInterface
                 $rules[] = "max_length:{$property->getMaxLength()}";
             }
 
-            if ($property->getFormat() !== null) {
-                $rules[] = $this->mapFormatToValidationRule($property->getFormat());
+            $formatRule = $property->getFormat() !== null
+                ? $this->mapFormatToValidationRule($property->getFormat())
+                : null
+            ;
+            if ($formatRule !== null) {
+                $rules[] = $formatRule;
             }
 
             if ($property->getPattern() !== null) {
@@ -301,10 +311,12 @@ final class FormRulesResolver implements FormRulesResolverInterface
                 $rules[] = 'regex:' . Pattern::toRegex($property->getPattern());
             }
 
-            if ($property->getContentMediaType() !== null) {
-                $rules[] = $this->mapContentMediaTypeToValidationRule(
-                    $property->getContentMediaType()
-                );
+            $mediaTypeRule = $property->getContentMediaType() !== null
+                ? $this->mapContentMediaTypeToValidationRule($property->getContentMediaType())
+                : null
+            ;
+            if ($mediaTypeRule !== null) {
+                $rules[] = $mediaTypeRule;
             }
         }
 
@@ -321,8 +333,11 @@ final class FormRulesResolver implements FormRulesResolverInterface
             }
         } else {
             $choices = $property->getChoices();
+            $const = $property->getConst();
             if ($choices !== null) {
-                $rules[] = 'in:' . implode(',', array_keys($choices));
+                $rules[] = $this->inRule(array_keys($choices));
+            } elseif (is_string($const) || is_int($const) || is_float($const)) {
+                $rules[] = $this->inRule([$const]);
             }
         }
 
@@ -337,6 +352,8 @@ final class FormRulesResolver implements FormRulesResolverInterface
             if ($property->getMaximum() !== null) {
                 $rules[] = "lte:{$property->getMaximum()}";
             }
+
+            array_push($rules, ...$this->derivesNumericLimitRules($property));
         }
 
         // Number (float) validations.
@@ -350,6 +367,8 @@ final class FormRulesResolver implements FormRulesResolverInterface
             if ($property->getMaximum() !== null) {
                 $rules[] = "lte:{$property->getMaximum()}";
             }
+
+            array_push($rules, ...$this->derivesNumericLimitRules($property));
         }
 
         // Array validations.
@@ -365,9 +384,135 @@ final class FormRulesResolver implements FormRulesResolverInterface
             if ($property->needUniqueItems() === true) {
                 $rules[] = 'unique';
             }
+
+            // The elements must be some of the choices (a multiple selection).
+            $itemChoices = $property->getItems()?->getChoices();
+            if ($itemChoices !== null) {
+                $rules[] = $this->inRule(array_keys($itemChoices));
+            }
+
+            array_push($rules, ...$this->derivesContainsRules($property));
         }
 
         return $rules;
+    }
+
+    /**
+     * The rules of `contains`, `minContains` and `maxContains`.
+     *
+     * Only a `contains` with `const` or `enum` can be derived, because the
+     * rules compare the elements with a list of values. Without `minContains`
+     * at least one element must match; `minContains: 0` allows none.
+     *
+     * @param ArraySchemaInterface $property
+     * @return list<string>
+     */
+    private function derivesContainsRules(ArraySchemaInterface $property): array
+    {
+        $values = $this->containsValues($property->getContains());
+        if ($values === null) {
+            return [];
+        }
+
+        $list = $this->escapedList($values);
+        $rules = [];
+
+        $min = $property->getMinContains();
+        if ($min === null) {
+            $rules[] = "contains:{$list}";
+        } elseif ($min > 0) {
+            $rules[] = "min_contains:{$min},{$list}";
+        }
+
+        $max = $property->getMaxContains();
+        if ($max !== null) {
+            $rules[] = "max_contains:{$max},{$list}";
+        }
+
+        return $rules;
+    }
+
+    /**
+     * The values of a `contains` schema, when it is a `const` or an `enum`.
+     *
+     * @param array<string, mixed>|null $contains
+     * @return list<string|int|float>|null Null if the values can not be compared.
+     */
+    private function containsValues(?array $contains): ?array
+    {
+        if ($contains === null) {
+            return null;
+        }
+
+        if (array_key_exists('const', $contains)) {
+            $values = [$contains['const']];
+        } elseif (isset($contains['enum']) && is_array($contains['enum'])) {
+            $values = array_values($contains['enum']);
+        } else {
+            return null;
+        }
+
+        // The rules never match a boolean, null or array, and an empty text
+        // is not a parameter.
+        foreach ($values as $value) {
+            if ((!is_string($value) && !is_int($value) && !is_float($value)) || $value === '') {
+                return null;
+            }
+        }
+
+        return $values !== [] ? $values : null;
+    }
+
+    /**
+     * The limits that exclude their value and the multiple of a number.
+     *
+     * @param IntegerSchemaInterface|NumberSchemaInterface $property
+     * @return list<string>
+     */
+    private function derivesNumericLimitRules(IntegerSchemaInterface|NumberSchemaInterface $property): array
+    {
+        $rules = [];
+
+        if ($property->getExclusiveMinimum() !== null) {
+            $rules[] = "gt:{$property->getExclusiveMinimum()}";
+        }
+
+        if ($property->getExclusiveMaximum() !== null) {
+            $rules[] = "lt:{$property->getExclusiveMaximum()}";
+        }
+
+        if ($property->getMultipleOf() !== null) {
+            $rules[] = "multiple_of:{$property->getMultipleOf()}";
+        }
+
+        return $rules;
+    }
+
+    /**
+     * The rule `in` with some choices.
+     *
+     * A comma that is in a choice is escaped, because it would split it.
+     *
+     * @param list<string|int|float> $choices The values that are valid.
+     * @return string The rule.
+     */
+    private function inRule(array $choices): string
+    {
+        return 'in:' . $this->escapedList($choices);
+    }
+
+    /**
+     * The values as the parameters of a rule.
+     *
+     * @param list<string|int|float> $values
+     * @return string The values separated by commas.
+     */
+    private function escapedList(array $values): string
+    {
+        return implode(',', array_map(
+            static fn (string|int|float $value): string => str_replace(',', '\\,', (string) $value),
+            $values
+        ));
     }
 
     // =========================================================================
@@ -392,19 +537,41 @@ final class FormRulesResolver implements FormRulesResolverInterface
     }
 
     /**
+     * The rules of the controls that are not an upload, from their type.
+     *
      * @param ControlInterface $control The UI control element.
      * @return list<string>
      */
     private function derivesControlValidateRules(ControlInterface $control): array
     {
-        $type = $control->getControlType();
-        if ($type !== 'file' && $type !== 'image') {
-            return [];
-        }
+        $rule = match ($control->getControlType()) {
+            'ipv4' => 'ip:v4',
+            'ipv6' => 'ip:v6',
+            'hostname', 'uuid', 'url', 'time', 'color', 'month', 'week' => $control->getControlType(),
+            default => null,
+        };
 
+        return $rule !== null ? [$rule] : [];
+    }
+
+    /**
+     * Resolves the rules of an upload control (`file` or `image`).
+     *
+     * The rule of the control has the size limits that the control says. The
+     * types of files are the union of the ones that the control offers
+     * (`accept`) and the ones of the rule `mimetype` that is written in the
+     * `rules` of the form, and an empty file has the type of an empty file if
+     * the control accepts it (`min_size` is 0).
+     *
+     * @param ControlInterface $control The upload control.
+     * @param RuleSet $additionalRules The extra rules from the form's 'rules' section.
+     * @return RuleSet The rules of the field.
+     */
+    private function resolveUploadRules(ControlInterface $control, RuleSet $additionalRules): RuleSet
+    {
+        $type = (string) $control->getControlType();
         $options = $control->getOptions();
 
-        // The rule of the control, with the size limits that the control says.
         $parameters = [];
         foreach (['max_size', 'min_size'] as $option) {
             $size = $options[$option] ?? null;
@@ -412,30 +579,59 @@ final class FormRulesResolver implements FormRulesResolverInterface
                 $parameters[] = $option . '=' . $size;
             }
         }
-        $rules = [$parameters === [] ? $type : $type . ':' . implode(',', $parameters)];
+        $validate = [$parameters === [] ? $type : $type . ':' . implode(',', $parameters)];
 
-        // The types that the control offers (`accept`) are the only ones that
-        // it receives, and an empty file has the type of an empty file.
+        // The `mimetype` that was written is not another rule: its types are
+        // joined with the ones of `accept`.
         $types = $this->derivesTypesFromAccept($options['accept'] ?? null);
+        $explicit = [];
+        foreach ($additionalRules->validate as $rule) {
+            $written = explode(':', $rule, 2);
+            $writtenTypes = $written[0] === 'mimetype'
+                ? array_filter(
+                    array_map('trim', explode(',', $written[1] ?? '')),
+                    static fn (string $mimetype): bool => $mimetype !== ''
+                )
+                : []
+            ;
+
+            // A rule that has no types is left as it is, to fail as it is.
+            if ($writtenTypes === []) {
+                $explicit[] = $rule;
+                continue;
+            }
+
+            array_push($types, ...$writtenTypes);
+        }
+        $types = array_values(array_unique($types));
+
         if ($types !== []) {
             $minSize = $options['min_size'] ?? null;
             if ((is_int($minSize) || is_string($minSize)) && File::parseSize((string) $minSize) === 0) {
                 $types[] = 'application/x-empty';
             }
-            $rules[] = 'mimetype:' . implode(',', $types);
+            $validate[] = 'mimetype:' . implode(',', array_unique($types));
         }
 
-        return $rules;
+        return $this->mergeAdditionalRules(
+            new RuleSet(validate: $validate),
+            new RuleSet(
+                cast: $additionalRules->cast,
+                transform: $additionalRules->transform,
+                sanitize: $additionalRules->sanitize,
+                validate: $explicit,
+            )
+        );
     }
 
     /**
      * Derives the MIME types that a file control receives from its `accept`.
      *
-     * The types are exact only: each element of `accept` is a MIME type or an
-     * extension with the types that it is known to have. If one of them is not
-     * (a type with a wildcard as `image/*`, or an extension that is not known),
-     * nothing is derived, because the types of the rest would be fewer than the
-     * ones that the control offers.
+     * Each element of `accept` is a MIME type, a whole type (`image/*`, that the
+     * rule `mimetype` understands), or an extension with the types that it is
+     * known to have. If one of them is none of those (an extension that is not
+     * known, or a wildcard that is not `type/*`), nothing is derived, because the types of the
+     * rest would be fewer than the ones that the control offers.
      *
      * @param mixed $accept The option `accept` of the control.
      * @return list<string> The types, or an empty list if they can not be
@@ -456,7 +652,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
             if (str_starts_with($element, '.')) {
                 $elementTypes = File::mimetypesFromExtension($element);
-            } elseif (str_contains($element, '/') && !str_ends_with($element, '/*')) {
+            } elseif (preg_match('~^[a-z0-9][a-z0-9!#$&^_.+-]*/(?:\*|[a-z0-9][a-z0-9!#$&^_.+-]*)$~', $element)) {
                 $elementTypes = [$element];
             } else {
                 $elementTypes = [];
@@ -478,39 +674,44 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
     /**
      * @param string $format JSON Schema format.
-     * @return string Data Processor validation rule.
+     * @return string|null Data Processor validation rule, or `null` if the
+     * format has no rule (as `password`, that accepts any text).
      */
-    private function mapFormatToValidationRule(string $format): string
+    private function mapFormatToValidationRule(string $format): ?string
     {
         return match ($format) {
             'email' => 'email',
             'uri' => 'url',
             'url' => 'url',
             'date' => 'date_format:Y-m-d',
-            'date-time' => 'date_format:Y-m-d H:i:s',
-            'time' => 'date_format:H:i:s',
+            'date-time' => 'datetime_local',
+            'time' => 'time',
+            'color' => 'color',
+            'month' => 'month',
+            'week' => 'week',
             'tel' => 'regex:/^[\+]?[0-9\s\-\(\)]+$/',
             'hostname' => 'hostname',
-            'ipv4' => 'ip',
-            'ipv6' => 'ip',
+            'ipv4' => 'ip:v4',
+            'ipv6' => 'ip:v6',
             'uuid' => 'uuid',
             'regex' => 'regex_pattern',
             'base64' => 'base64',
             'json' => 'json',
-            default => 'string',
+            default => null,
         };
     }
 
     /**
      * @param string $contentMediaType JSON Schema contentMediaType.
-     * @return string Data Processor validation rule.
+     * @return string|null Data Processor validation rule, or `null` if the
+     * media type has no rule.
      */
-    private function mapContentMediaTypeToValidationRule(string $contentMediaType): string
+    private function mapContentMediaTypeToValidationRule(string $contentMediaType): ?string
     {
         return match ($contentMediaType) {
             'application/json' => 'json',
             'text/json' => 'json',
-            default => 'string',
+            default => null,
         };
     }
 }

@@ -469,7 +469,8 @@ final class FormSchemaDefaultTest extends TestCase
     public function testStringFieldSubmittedEmptyDoesNotFallBackToDefaultOnRerender(): void
     {
         // Scenario: string field has default='John'. User clears the field
-        // and submits empty string. Re-render must show '', not 'John'.
+        // and submits empty string. Re-render must show it empty (an empty
+        // value is `null`), not 'John'.
 
         $def = [
             'options' => ['csrf_protection' => false],
@@ -492,8 +493,7 @@ final class FormSchemaDefaultTest extends TestCase
         $result = $this->processor()->process($form, $postData);
 
         $field = $this->field($result->getForm(), 'name');
-        $this->assertSame(
-            '',
+        $this->assertNull(
             $field->getData(),
             'Empty string submitted by user must not fall back to schema default.'
         );

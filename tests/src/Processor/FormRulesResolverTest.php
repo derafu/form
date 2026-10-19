@@ -175,6 +175,22 @@ final class FormRulesResolverTest extends TestCase
                 ['type' => 'number', 'minimum' => 0.0, 'maximum' => 100.0],
                 ['cast' => 'float', 'validate' => ['numeric', 'gte:0', 'lte:100']],
             ],
+            'integer_with_exclusive_limits' => [
+                ['type' => 'integer', 'exclusiveMinimum' => 0, 'exclusiveMaximum' => 10],
+                ['cast' => 'integer', 'validate' => ['int', 'gt:0', 'lt:10']],
+            ],
+            'integer_multiple_of' => [
+                ['type' => 'integer', 'multipleOf' => 5],
+                ['cast' => 'integer', 'validate' => ['int', 'multiple_of:5']],
+            ],
+            'number_with_exclusive_limits' => [
+                ['type' => 'number', 'exclusiveMinimum' => 0.5, 'exclusiveMaximum' => 9.5],
+                ['cast' => 'float', 'validate' => ['numeric', 'gt:0.5', 'lt:9.5']],
+            ],
+            'number_multiple_of' => [
+                ['type' => 'number', 'multipleOf' => 0.25],
+                ['cast' => 'float', 'validate' => ['numeric', 'multiple_of:0.25']],
+            ],
         ];
     }
 
@@ -205,6 +221,74 @@ final class FormRulesResolverTest extends TestCase
             'array_with_unique_items' => [
                 ['type' => 'array', 'uniqueItems' => true],
                 ['validate' => ['unique']],
+            ],
+            'array_of_choices' => [
+                ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['a', 'b']]],
+                ['validate' => ['in:a,b']],
+            ],
+            'array_of_items_without_choices' => [
+                ['type' => 'array', 'items' => ['type' => 'string']],
+                [],
+            ],
+            'array_contains_const' => [
+                ['type' => 'array', 'contains' => ['const' => 'terms']],
+                ['validate' => ['contains:terms']],
+            ],
+            'array_contains_enum' => [
+                ['type' => 'array', 'contains' => ['enum' => ['a', 'b']]],
+                ['validate' => ['contains:a,b']],
+            ],
+            'array_contains_escapes_commas' => [
+                ['type' => 'array', 'contains' => ['const' => 'a,b']],
+                ['validate' => ['contains:a\\,b']],
+            ],
+            'array_contains_number' => [
+                ['type' => 'array', 'contains' => ['const' => 2]],
+                ['validate' => ['contains:2']],
+            ],
+            'array_min_contains' => [
+                ['type' => 'array', 'contains' => ['const' => 'a'], 'minContains' => 2],
+                ['validate' => ['min_contains:2,a']],
+            ],
+            'array_min_contains_zero' => [
+                ['type' => 'array', 'contains' => ['const' => 'a'], 'minContains' => 0],
+                [],
+            ],
+            'array_max_contains' => [
+                ['type' => 'array', 'contains' => ['const' => 'a'], 'maxContains' => 3],
+                ['validate' => ['contains:a', 'max_contains:3,a']],
+            ],
+            'array_min_contains_zero_and_max_contains' => [
+                ['type' => 'array', 'contains' => ['const' => 'a'], 'minContains' => 0, 'maxContains' => 1],
+                ['validate' => ['max_contains:1,a']],
+            ],
+            'array_min_and_max_contains' => [
+                ['type' => 'array', 'contains' => ['enum' => ['a', 'b']], 'minContains' => 1, 'maxContains' => 2],
+                ['validate' => ['min_contains:1,a,b', 'max_contains:2,a,b']],
+            ],
+            'array_contains_without_const_or_enum' => [
+                ['type' => 'array', 'contains' => ['type' => 'string']],
+                [],
+            ],
+            'array_contains_boolean' => [
+                ['type' => 'array', 'contains' => ['const' => true]],
+                [],
+            ],
+            'array_contains_enum_with_null' => [
+                ['type' => 'array', 'contains' => ['enum' => ['a', null]]],
+                [],
+            ],
+            'array_contains_empty_text' => [
+                ['type' => 'array', 'contains' => ['const' => '']],
+                [],
+            ],
+            'array_contains_empty_enum' => [
+                ['type' => 'array', 'contains' => ['enum' => []]],
+                [],
+            ],
+            'array_min_contains_without_contains' => [
+                ['type' => 'array', 'minContains' => 2, 'maxContains' => 3],
+                [],
             ],
         ];
     }
@@ -278,7 +362,7 @@ final class FormRulesResolverTest extends TestCase
             ],
             'date_time_format' => [
                 ['type' => 'string', 'format' => 'date-time'],
-                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['date_format:Y-m-d H:i:s']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['datetime_local']],
             ],
             'tel_format' => [
                 ['type' => 'string', 'format' => 'tel'],
@@ -298,7 +382,7 @@ final class FormRulesResolverTest extends TestCase
             ],
             'time' => [
                 ['type' => 'string', 'format' => 'time'],
-                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['date_format:H:i:s']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['time']],
             ],
             'hostname' => [
                 ['type' => 'string', 'format' => 'hostname'],
@@ -306,11 +390,59 @@ final class FormRulesResolverTest extends TestCase
             ],
             'ipv4' => [
                 ['type' => 'string', 'format' => 'ipv4'],
-                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['ip']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['ip:v4']],
             ],
             'ipv6' => [
                 ['type' => 'string', 'format' => 'ipv6'],
-                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['ip']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['ip:v6']],
+            ],
+            'color' => [
+                ['type' => 'string', 'format' => 'color'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['color']],
+            ],
+            'month' => [
+                ['type' => 'string', 'format' => 'month'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['month']],
+            ],
+            'week' => [
+                ['type' => 'string', 'format' => 'week'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['week']],
+            ],
+            'password_is_not_trimmed' => [
+                ['type' => 'string', 'format' => 'password'],
+                ['cast' => 'string'],
+            ],
+            'format_without_rule' => [
+                ['type' => 'string', 'format' => 'duration'],
+                ['sanitize' => ['trim'], 'cast' => 'string'],
+            ],
+            'content_media_type_without_rule' => [
+                ['type' => 'string', 'contentMediaType' => 'text/plain'],
+                ['sanitize' => ['trim'], 'cast' => 'string'],
+            ],
+            'const_string' => [
+                ['type' => 'string', 'const' => 'yes'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['in:yes']],
+            ],
+            'const_with_a_comma' => [
+                ['type' => 'string', 'const' => 'a,b'],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['in:a\\,b']],
+            ],
+            'enum_with_a_comma' => [
+                ['type' => 'string', 'enum' => ['a,b', 'c']],
+                ['sanitize' => ['trim'], 'cast' => 'string', 'validate' => ['in:a\\,b,c']],
+            ],
+            'const_integer' => [
+                ['type' => 'integer', 'const' => 5],
+                ['cast' => 'integer', 'validate' => ['in:5', 'int']],
+            ],
+            'const_number' => [
+                ['type' => 'number', 'const' => 1.5],
+                ['cast' => 'float', 'validate' => ['in:1.5', 'numeric']],
+            ],
+            'const_that_is_not_scalar' => [
+                ['type' => 'string', 'const' => ['a']],
+                ['sanitize' => ['trim'], 'cast' => 'string'],
             ],
             'uuid' => [
                 ['type' => 'string', 'format' => 'uuid'],
@@ -555,14 +687,50 @@ final class FormRulesResolverTest extends TestCase
         $this->assertContains('trim', $rules->getSanitizeRules('name'));
     }
 
-    public function testPasswordControlHasCastAndSanitize(): void
+    public function testPasswordControlHasCastButItIsNotTrimmed(): void
     {
         $form = $this->formWith('pass', ['type' => 'string'], ['type' => 'password']);
         $this->resolver->resolve($form);
         $rules = $form->getRules();
 
         $this->assertSame('string', $rules->getCastRule('pass'));
-        $this->assertContains('trim', $rules->getSanitizeRules('pass'));
+        $this->assertNotContains('trim', $rules->getSanitizeRules('pass'));
+    }
+
+    /**
+     * @param array<string, mixed> $schema
+     * @param list<string> $expected
+     */
+    #[DataProvider('controlTypeRulesProvider')]
+    public function testControlTypeDerivesItsValidateRule(array $schema, string $controlType, array $expected): void
+    {
+        $form = $this->formWith('field', $schema, ['type' => $controlType]);
+        $this->resolver->resolve($form);
+
+        $this->assertSame($expected, $form->getRules()->getValidateRules('field'));
+    }
+
+    /**
+     * @return array<string, array{array<string, mixed>, string, list<string>}>
+     */
+    public static function controlTypeRulesProvider(): array
+    {
+        $string = ['type' => 'string'];
+
+        return [
+            'ipv4' => [$string, 'ipv4', ['ip:v4']],
+            'ipv6' => [$string, 'ipv6', ['ip:v6']],
+            'hostname' => [$string, 'hostname', ['hostname']],
+            'uuid' => [$string, 'uuid', ['uuid']],
+            'url' => [$string, 'url', ['url']],
+            'time' => [$string, 'time', ['time']],
+            'color' => [$string, 'color', ['color']],
+            'month' => [$string, 'month', ['month']],
+            'week' => [$string, 'week', ['week']],
+            'control and format of the same rule' => [['type' => 'string', 'format' => 'ipv4'], 'ipv4', ['ip:v4']],
+            'control with the rules of the schema' => [['type' => 'string', 'minLength' => 3], 'uuid', ['min_length:3', 'uuid']],
+            'control without rule' => [$string, 'text', []],
+        ];
     }
 
     public function testIntegerControlHasCastButNoSanitize(): void
@@ -756,6 +924,81 @@ final class FormRulesResolverTest extends TestCase
     }
 
     /**
+     * @param array<string, mixed> $options
+     * @param list<string> $explicit
+     * @param list<string> $expected
+     */
+    #[DataProvider('fileControlWithExplicitRulesProvider')]
+    public function testFileControlJoinsTheExplicitMimetypeWithItsAccept(array $options, array $explicit, array $expected): void
+    {
+        $form = $this->formWithRules(
+            ['document' => ['type' => 'string']],
+            [['type' => 'Control', 'scope' => '#/properties/document', 'options' => $options]],
+            ['document' => ['validate' => $explicit]]
+        );
+
+        $this->resolver->resolve($form);
+
+        $this->assertSame($expected, $form->getRules()->getValidateRules('document'));
+    }
+
+    /**
+     * @return array<string, array{array<string, mixed>, list<string>, list<string>}>
+     */
+    public static function fileControlWithExplicitRulesProvider(): array
+    {
+        $pdf = implode(',', File::mimetypesFromExtension('pdf'));
+
+        return [
+            'explicit types are added to the ones of accept' => [
+                ['type' => 'file', 'accept' => '.pdf'],
+                ['mimetype:image/png'],
+                ['file', 'mimetype:' . $pdf . ',image/png'],
+            ],
+            'explicit types are added to a wildcard' => [
+                ['type' => 'file', 'accept' => 'image/*'],
+                ['mimetype:application/pdf, image/png'],
+                ['file', 'mimetype:image/*,application/pdf,image/png'],
+            ],
+            'explicit types alone when accept can not be derived' => [
+                ['type' => 'file', 'accept' => '.derafu'],
+                ['mimetype:application/pdf'],
+                ['file', 'mimetype:application/pdf'],
+            ],
+            'explicit types alone without accept' => [
+                ['type' => 'file'],
+                ['mimetype:application/pdf'],
+                ['file', 'mimetype:application/pdf'],
+            ],
+            'explicit types with a minimum size of zero' => [
+                ['type' => 'file', 'min_size' => 0],
+                ['mimetype:application/pdf'],
+                ['file:min_size=0', 'mimetype:application/pdf,application/x-empty'],
+            ],
+            'a type that is in both is only once' => [
+                ['type' => 'file', 'accept' => 'application/pdf'],
+                ['mimetype:application/pdf'],
+                ['file', 'mimetype:application/pdf'],
+            ],
+            'the other explicit rules are kept after' => [
+                ['type' => 'file', 'accept' => 'image/*'],
+                ['mimetype:image/png', 'no_whitespace'],
+                ['file', 'mimetype:image/*,image/png', 'no_whitespace'],
+            ],
+            'a mimetype without types is left to fail' => [
+                ['type' => 'file', 'accept' => 'image/*'],
+                ['mimetype'],
+                ['file', 'mimetype:image/*', 'mimetype'],
+            ],
+            'a rule with a name that only starts as mimetype is another rule' => [
+                ['type' => 'file'],
+                ['mimetype_other:a'],
+                ['file', 'mimetype_other:a'],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, array{array<string, mixed>, list<string>}>
      */
     public static function fileControlRulesProvider(): array
@@ -778,7 +1021,8 @@ final class FormRulesResolverTest extends TestCase
                 ['file', 'mimetype:' . $pdf . ',image/png'],
             ],
             'accept with the types of an extension' => [['type' => 'file', 'accept' => '.jpg'], ['file', 'mimetype:' . $jpg]],
-            'accept with a wildcard' => [['type' => 'file', 'accept' => '.pdf,image/*'], ['file']],
+            'accept with a wildcard' => [['type' => 'file', 'accept' => '.pdf,image/*'], ['file', 'mimetype:' . $pdf . ',image/*']],
+            'accept with a wildcard of the whole type and subtype' => [['type' => 'file', 'accept' => '.pdf,*/*'], ['file']],
             'accept with an extension that is not known' => [['type' => 'file', 'accept' => '.pdf,.derafu'], ['file']],
             'accept with a word' => [['type' => 'file', 'accept' => 'pdf'], ['file']],
             'accept that is empty' => [['type' => 'file', 'accept' => ' , '], ['file']],
@@ -797,7 +1041,7 @@ final class FormRulesResolverTest extends TestCase
             ],
             'wildcard and a minimum size of zero' => [
                 ['type' => 'file', 'accept' => 'image/*', 'min_size' => 0],
-                ['file:min_size=0'],
+                ['file:min_size=0', 'mimetype:image/*,application/x-empty'],
             ],
             'image control with accept' => [
                 ['type' => 'image', 'accept' => '.png'],

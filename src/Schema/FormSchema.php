@@ -101,8 +101,8 @@ final class FormSchema extends AbstractPropertySchema implements FormSchemaInter
             $array['minProperties'] = $this->minProperties;
         }
 
-        // Only include additionalProperties if it's not the default (true).
-        if ($this->additionalProperties !== true) {
+        // Only include additionalProperties if the schema has it.
+        if ($this->additionalProperties !== null) {
             $array['additionalProperties'] = $this->additionalProperties;
         }
 

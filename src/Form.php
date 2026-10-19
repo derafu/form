@@ -163,9 +163,13 @@ final class Form implements FormInterface
                     $field->setRequiredAsteriskHidden($this->optionBool('hide_required_asterisk') ?? false);
                     $field->setWidget($this->widgetFactory->create($field));
 
-                    // Initialize field data: explicit form data takes precedence,
+                    // Initialize field data: explicit form data takes precedence
+                    // (even a `null`, that is a field that was left empty), the
                     // schema default is the fallback for empty/new forms.
-                    $fieldValue = $this->data?->get($name) ?? $property->getDefault();
+                    $fieldValue = $this->data !== null && $this->data->has($name)
+                        ? $this->data->get($name)
+                        : $property->getDefault()
+                    ;
                     if ($fieldValue !== null) {
                         $field->setData($fieldValue);
                     }

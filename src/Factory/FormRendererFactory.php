@@ -39,12 +39,12 @@ final class FormRendererFactory implements FormRendererFactoryInterface
         /**
          * @var array{
          *     renderer: array{
-         *         paths?: array<string>,
+         *         paths?: list<string>,
          *         engines?: array<\Derafu\Renderer\Contract\EngineInterface|string>,
-         *         formatters?: array<string, mixed>,
+         *         formatters?: array<string, string|array<mixed>|object>,
          *         extensions?: array<\Twig\Extension\ExtensionInterface>,
          *         extra?: bool,
-         *         components?: \Derafu\Twig\Contract\ComponentProviderInterface,
+         *         components?: \Derafu\Twig\Contract\ComponentProviderInterface|iterable<class-string|object>,
          *         pdf?: array<string, mixed>
          *     },
          *     element_renderers?: array<string, \Derafu\Form\Contract\Renderer\ElementRendererInterface>|\Derafu\Form\Contract\Renderer\ElementRendererProviderInterface,

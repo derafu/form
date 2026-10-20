@@ -77,7 +77,7 @@ final class FormMessagesTest extends TestCase
             new FormTranslationResourceProvider(),
             (new TwigService([
                 'extra' => false,
-                'paths' => [$root . '/resources/templates', $root . '/vendor/derafu/twig/resources/templates'],
+                'paths' => [$root . '/resources/templates'],
                 'extensions' => [$renderer],
             ]))->getTwig(),
             messageMethods: [

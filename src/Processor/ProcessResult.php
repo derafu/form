@@ -15,6 +15,8 @@ namespace Derafu\Form\Processor;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\ProcessResultInterface;
 use Derafu\Form\Data\FormData;
+use Derafu\Support\ArrayReader;
+use Derafu\Support\ArrayType;
 
 /**
  * Result of processing form data through rules.
@@ -51,6 +53,17 @@ final class ProcessResult implements ProcessResultInterface
     public function getProcessedData(): mixed
     {
         return $this->processedData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getProcessedDataReader(): ArrayReader
+    {
+        $data = ArrayReader::from(['processed_data' => $this->processedData])
+            ->require('processed_data', ArrayType::array());
+
+        return ArrayReader::from($data);
     }
 
     /**

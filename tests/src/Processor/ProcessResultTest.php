@@ -32,10 +32,15 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\Support\ArrayType;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use Stringable;
 
 /**
  * Tests for ProcessResult.
@@ -326,6 +331,125 @@ final class ProcessResultTest extends TestCase
      * getForm() tests, so getField()/withData() run against production code
      * instead of a mock.
      */
+    public function testProcessedDataReaderReturnsTypedValuesWithoutChangingTheData(): void
+    {
+        $data = [
+            'name' => ' Ana ',
+            'age' => 42,
+            'active' => false,
+            'price' => 1.5,
+            'roles' => ['editor', 'reader'],
+            'optional' => null,
+        ];
+        $result = new ProcessResult($this->form, $data);
+        $reader = $result->getProcessedDataReader();
+
+        $this->assertSame(' Ana ', $reader->require('name', ArrayType::string()));
+        $this->assertSame(42, $reader->require('age', ArrayType::int()));
+        $this->assertFalse($reader->require('active', ArrayType::bool()));
+        $this->assertSame(1.5, $reader->require('price', ArrayType::float()));
+        $this->assertSame(['editor', 'reader'], $reader->require('roles', ArrayType::listOf(ArrayType::string())));
+        $this->assertNull($reader->string('optional'));
+        $this->assertSame($data, $reader->toArray());
+        $this->assertSame($data, $result->getProcessedData());
+    }
+
+    public function testProcessedDataReaderKeepsDefaultsAndAcceptsAnEmptyArray(): void
+    {
+        $reader = (new ProcessResult($this->form, []))->getProcessedDataReader();
+
+        $this->assertSame([], $reader->toArray());
+        $this->assertFalse($reader->has('name'));
+        $this->assertNull($reader->string('name'));
+        $this->assertSame('Guest', $reader->string('name', 'Guest'));
+        $this->assertSame(18, $reader->int('age', 18));
+    }
+
+    public function testProcessedDataReaderKeepsNestedDataAndLiteralKeysDistinct(): void
+    {
+        $data = [
+            'profile' => ['email' => 'nested@example.com'],
+            'profile.email' => 'literal@example.com',
+            7 => 'numbered value',
+        ];
+        $reader = (new ProcessResult($this->form, $data))->getProcessedDataReader();
+        $profile = $reader->reader('profile');
+        $this->assertNotNull($profile);
+
+        $this->assertSame('nested@example.com', $profile->require('email', ArrayType::string()));
+        $this->assertSame('literal@example.com', $reader->require('profile.email', ArrayType::string()));
+        $this->assertSame('numbered value', $reader->require('7', ArrayType::string()));
+        $this->assertSame($data, $reader->toArray());
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function nonArrayProcessedData(): iterable
+    {
+        yield 'null' => [null];
+        yield 'string' => ['data'];
+        yield 'integer' => [0];
+        yield 'boolean' => [false];
+        yield 'float' => [1.5];
+        yield 'object' => [new stdClass()];
+        yield 'Stringable' => [new class () implements Stringable {
+            public function __toString(): string
+            {
+                return 'data';
+            }
+        }];
+    }
+
+    #[DataProvider('nonArrayProcessedData')]
+    public function testOnlyTheReaderRejectsNonArrayProcessedData(mixed $data): void
+    {
+        $result = new ProcessResult($this->form, $data);
+        $this->assertSame($data, $result->getProcessedData());
+        $this->assertTrue($result->isValid());
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('"processed_data"');
+
+        $result->getProcessedDataReader();
+    }
+
+    /** @return iterable<string, array{array<string, mixed>}> */
+    public static function missingRequiredFields(): iterable
+    {
+        yield 'absent' => [[]];
+        yield 'null' => [['name' => null]];
+    }
+
+    /** @param array<string, mixed> $data */
+    #[DataProvider('missingRequiredFields')]
+    public function testProcessedDataReaderRejectsMissingRequiredValues(array $data): void
+    {
+        $reader = (new ProcessResult($this->form, $data))->getProcessedDataReader();
+        $this->assertSame('Guest', $reader->string('name', 'Guest'));
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('"name" is required.');
+
+        $reader->require('name', ArrayType::string());
+    }
+
+    public function testProcessedDataReaderDoesNotConvertValuesToTheRequestedType(): void
+    {
+        $result = new ProcessResult($this->form, ['age' => '42']);
+        $this->assertSame('42', $result->getProcessedDataReader()->string('age'));
+        $this->expectException(TranslatableInvalidArgumentException::class);
+        $this->expectExceptionMessage('"age" must be of type int');
+
+        $result->getProcessedDataReader()->require('age', ArrayType::int());
+    }
+
+    public function testAnInvalidResultStillProvidesItsDataReader(): void
+    {
+        $errors = ['age' => ['Age must be an integer.']];
+        $result = new ProcessResult($this->form, ['age' => 'invalid'], $errors, false);
+
+        $this->assertSame('invalid', $result->getProcessedDataReader()->require('age', ArrayType::string()));
+        $this->assertFalse($result->isValid());
+        $this->assertSame($errors, $result->getErrors());
+    }
+
     private function makeForm(): Form
     {
         $schema = FormSchema::fromArray([

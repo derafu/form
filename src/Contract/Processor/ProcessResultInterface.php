@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Derafu\Form\Contract\Processor;
 
 use Derafu\Form\Contract\FormInterface;
+use Derafu\Support\ArrayReader;
+use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 
 /**
  * Interface for form data processing results.
@@ -29,6 +31,13 @@ interface ProcessResultInterface
      * @return mixed The processed data after applying all rules
      */
     public function getProcessedData(): mixed;
+
+    /**
+     * Gets a typed reader for the processed data without converting its values.
+     *
+     * @throws TranslatableInvalidArgumentException If the processed data is not an array.
+     */
+    public function getProcessedDataReader(): ArrayReader;
 
     /**
      * Get validation errors by field name.

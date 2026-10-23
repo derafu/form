@@ -33,7 +33,7 @@ interface FormDataProcessorInterface
      *   3. Returns a result with processed data, errors, and validation status.
      *
      * @param FormInterface $form The form definition.
-     * @param array<string, mixed> $data The form data to process. If not
+     * @param array<array-key, mixed> $data The form data to process. If not
      * provided, the data will be retrieved from the request.
      * @return ProcessResultInterface The processing result with data, errors
      * and validation status.

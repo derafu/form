@@ -36,7 +36,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
     /**
      * {@inheritDoc}
      *
-     * @param array<string, mixed> $data
+     * @param array<array-key, mixed> $data
      */
     public function isActive(UiSchemaRuleInterface $rule, array $data): bool
     {
@@ -62,7 +62,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
      *
      * @param UiSchemaCompositeConditionInterface $condition The composite
      * condition to evaluate.
-     * @param array<string, mixed> $data The data to evaluate the condition against.
+     * @param array<array-key, mixed> $data The data to evaluate the condition against.
      * @return bool True if the composite condition is satisfied.
      */
     private function evaluateCompositeCondition(
@@ -89,7 +89,7 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
      * against the condition's schema fragment.
      *
      * @param UiSchemaConditionInterface $condition The simple condition.
-     * @param array<string, mixed> $data The data to evaluate the condition against.
+     * @param array<array-key, mixed> $data The data to evaluate the condition against.
      * @return bool True if the field value satisfies the condition schema.
      */
     private function evaluateSimpleCondition(

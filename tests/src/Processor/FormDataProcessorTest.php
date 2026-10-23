@@ -232,6 +232,28 @@ final class FormDataProcessorTest extends TestCase
         }
     }
 
+    public function testNumericAdditionalPropertiesFollowTheFormSchema(): void
+    {
+        foreach ([false, true, ['type' => 'string']] as $additionalProperties) {
+            $form = $this->simpleForm(required: ['name'], additionalProperties: $additionalProperties);
+            $result = $this->processor->process($form, [
+                'name' => 'John Doe',
+                'email' => 'john@example.com',
+                42 => 'numeric extra value',
+            ]);
+
+            $this->assertTrue($result->isValid());
+            $data = $result->getProcessedData();
+            $this->assertIsArray($data);
+            $this->assertSame('John Doe', $data['name']);
+            if ($additionalProperties === false) {
+                $this->assertArrayNotHasKey(42, $data);
+            } else {
+                $this->assertSame('numeric extra value', $data[42]);
+            }
+        }
+    }
+
     public function testGetFormReturnsNewInstanceWithProcessedData(): void
     {
         $form = $this->simpleForm(required: ['name', 'email']);

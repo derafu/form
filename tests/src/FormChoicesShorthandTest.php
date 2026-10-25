@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractType;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
@@ -61,9 +62,8 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
+use Derafu\Value\ValueType;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -616,7 +616,7 @@ final class FormChoicesShorthandTest extends TestCase
     public function testChoicesInTheDetailOfAControlThatIsNotAnObjectAreRejected(): void
     {
         $this->expectException(TranslatableInvalidArgumentException::class);
-        $this->expectExceptionMessage('The key "elements" must be of type list<object>, string given.');
+        $this->expectExceptionMessage('The key "elements" must be of type list<map>, string given.');
 
         $this->factory->create($this->def(
             ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['a' => ['type' => 'string']]]],
@@ -645,9 +645,9 @@ final class FormChoicesShorthandTest extends TestCase
         $this->assertSame(['a' => 'A', 'b' => 'B'], $items->getProperty('kind')?->getChoices());
 
         // The shorthand does not reach the control, and its other options stay.
-        $detail = ArrayReader::from($this->field($form, 'field')->getControl()->getOptions())->map('detail');
+        $detail = ArrayReader::fromArray($this->field($form, 'field')->getControl()->getOptions())->getMap('detail');
         $this->assertNotNull($detail);
-        $elements = ArrayReader::from($detail)->listOf('elements', ArrayType::map());
+        $elements = ArrayReader::fromArray($detail)->getListOf('elements', ValueType::map());
         $this->assertNotNull($elements);
         $this->assertSame(['placeholder' => 'Kind'], $elements[0]['options'] ?? null);
     }
@@ -659,7 +659,7 @@ final class FormChoicesShorthandTest extends TestCase
             ['detail' => ['type' => 'VerticalLayout', 'elements' => [['type' => 'Label', 'text' => 'Item']]]]
         ));
 
-        $detail = ArrayReader::from($this->field($form, 'field')->getControl()->getOptions())->map('detail');
+        $detail = ArrayReader::fromArray($this->field($form, 'field')->getControl()->getOptions())->getMap('detail');
         $this->assertNotNull($detail);
         $this->assertSame([['type' => 'Label', 'text' => 'Item']], $detail['elements'] ?? null);
     }

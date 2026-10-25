@@ -12,14 +12,14 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Element;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\HorizontalLayoutInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\FormRenderer;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for horizontal layout elements.
@@ -63,7 +63,7 @@ final class HorizontalLayoutRenderer implements ElementRendererInterface
         // The options of each child, by its index (`elements_options`): they are
         // passed to the child, and the size and the class of its column are
         // taken from them, before what the child asks for.
-        $elementsOptions = ArrayReader::from($layoutOptions)->listOf('elements_options', ArrayType::map()) ?? [];
+        $elementsOptions = ArrayReader::fromArray($layoutOptions)->getListOf('elements_options', ValueType::map()) ?? [];
 
         // Render each element.
         $elementsHtml = [];
@@ -72,7 +72,7 @@ final class HorizontalLayoutRenderer implements ElementRendererInterface
         foreach ($uiElements as $index => $uiElement) {
             // The size of the column that the element asks for.
             $column = [];
-            $colSize = ArrayReader::from($uiElement->getOptions())->get('col_size', ArrayType::scalar());
+            $colSize = ArrayReader::fromArray($uiElement->getOptions())->get('col_size', ValueType::scalar());
             if ($colSize !== null) {
                 $column['col_size'] = $colSize;
             }

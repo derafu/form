@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Tests\Processor;
 
+use Derafu\Array\ArrayPath;
 use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
@@ -35,7 +36,6 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
-use Derafu\Support\Arr;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -186,7 +186,7 @@ final class FormDataProcessorNestedTest extends TestCase
         $this->assertTrue($result->isValid());
         $processed = $result->getProcessedData();
         $this->assertIsArray($processed);
-        $this->assertSame('Calle 1', Arr::getAtPath($processed, 'datos_de_contacto.direccion'));
+        $this->assertSame('Calle 1', ArrayPath::get($processed, 'datos_de_contacto.direccion'));
     }
 
     public function testTheFormThatIsGivenBackHasTheValuesOfTheObject(): void

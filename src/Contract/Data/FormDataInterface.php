@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Contract\Data;
 
+use Derafu\Array\ArrayReader;
 use JsonSerializable;
 
 /**
@@ -22,6 +23,14 @@ use JsonSerializable;
  */
 interface FormDataInterface extends JsonSerializable
 {
+    /**
+     * Returns a typed snapshot of the current array data.
+     *
+     * Obtain a new reader after mutations. Objects stored in the array are
+     * not cloned. Reader keys support literal keys and dot notation.
+     */
+    public function getReader(): ArrayReader;
+
     /**
      * Checks if a property exists in the data.
      *

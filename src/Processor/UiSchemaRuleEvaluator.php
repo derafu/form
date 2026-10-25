@@ -21,8 +21,9 @@ use Derafu\Form\Data\FieldPath;
 use Derafu\Form\Schema\Pattern;
 use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
-use Derafu\Support\Caster;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
+use Derafu\Value\ValueCaster;
+use Stringable;
 
 /**
  * Evaluates UI schema rules against a data set.
@@ -182,7 +183,8 @@ final class UiSchemaRuleEvaluator implements UiSchemaRuleEvaluatorInterface
             $text = match (true) {
                 $value === null => '',
                 is_scalar($value) => (string) $value,
-                default => Caster::toString($value),
+                $value instanceof Stringable => ValueCaster::requireString($value),
+                default => null,
             };
             $checks[] = $text !== null && $this->matches($schema->getPattern(), $text);
         }

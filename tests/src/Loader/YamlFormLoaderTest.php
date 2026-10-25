@@ -124,7 +124,7 @@ final class YamlFormLoaderTest extends TestCase
         $loader->addPath(self::FIXTURES);
 
         $this->expectException(TranslatableInvalidArgumentException::class);
-        $this->expectExceptionMessage('The key "data" must be of type object, string given.');
+        $this->expectExceptionMessage('The key "data" must be of type map, string given.');
 
         $loader->load('bad-data', [], ['name' => 'from-call']);
     }

@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\Form\UiSchema;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Represents a control in a UI Schema.
@@ -41,7 +41,7 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
     {
         parent::__construct($definition);
 
-        $this->scope = ArrayReader::from($definition)->require('scope', ArrayType::string());
+        $this->scope = ArrayReader::fromArray($definition)->require('scope', ValueType::string());
     }
 
     /**
@@ -82,7 +82,7 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
      */
     public function getPropertyName(): string
     {
-        $name = ArrayReader::from($this->definition->options)->string('name');
+        $name = ArrayReader::fromArray($this->definition->options)->getString('name');
         if ($name) {
             return $name;
         }
@@ -105,7 +105,7 @@ final class Control extends AbstractUiSchemaElement implements ControlInterface
      */
     public function getControlType(): ?string
     {
-        return ArrayReader::from($this->definition->options)->string('type');
+        return ArrayReader::fromArray($this->definition->options)->getString('type');
     }
 
     /**

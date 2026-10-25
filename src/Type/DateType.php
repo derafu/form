@@ -14,7 +14,7 @@ namespace Derafu\Form\Type;
 
 use DateTimeImmutable;
 use Derafu\Form\Abstract\AbstractType;
-use Derafu\Support\Caster;
+use Derafu\Value\ValueCaster;
 
 /**
  * Represents a date type in the form.
@@ -43,7 +43,7 @@ final class DateType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return new DateTimeImmutable(Caster::requireString($value));
+        return new DateTimeImmutable(ValueCaster::requireString($value));
     }
 
     /**

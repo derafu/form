@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Widget;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Renderer\Support\RequiredField;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for radio widgets.
@@ -50,8 +50,8 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
             );
         }
 
-        $reader = ArrayReader::from($options);
-        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+        $reader = ArrayReader::fromArray($options);
+        $customAttrs = $reader->getMapOf('attr', ValueType::scalar()) ?? [];
 
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -64,7 +64,7 @@ final class RadioWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        $extraClass = $reader->string('widget_class');
+        $extraClass = $reader->getString('widget_class');
         if ($extraClass !== null) {
             $widgetClass .= ' ' . $extraClass;
         }

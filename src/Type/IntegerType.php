@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
-use Derafu\Support\Caster;
+use Derafu\Value\ValueType;
 
 /**
  * Represents an integer type in the form.
@@ -43,7 +43,7 @@ final class IntegerType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return (int) Caster::requireNumber($value);
+        return (int) ValueType::toNumber()->parse($value);
     }
 
     /**

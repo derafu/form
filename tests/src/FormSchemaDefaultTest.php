@@ -680,11 +680,11 @@ final class FormSchemaDefaultTest extends TestCase
         $schema = ['type' => 'object', 'properties' => ['a' => ['type' => 'string']]];
 
         return [
-            'schema' => [['schema' => 'x'], 'The key "schema" must be of type object, string given.'],
-            'uischema' => [['schema' => $schema, 'uischema' => 'x'], 'The key "uischema" must be of type object, string given.'],
-            'data' => [['schema' => $schema, 'data' => 'x'], 'The key "data" must be of type object, string given.'],
-            'rules' => [['schema' => $schema, 'rules' => 'x'], 'The key "rules" must be of type object<array>, string given.'],
-            'errors' => [['schema' => $schema, 'errors' => 'x'], 'The key "errors" must be of type object<list<string>>, string given.'],
+            'schema' => [['schema' => 'x'], 'The key "schema" must be of type map, string given.'],
+            'uischema' => [['schema' => $schema, 'uischema' => 'x'], 'The key "uischema" must be of type map, string given.'],
+            'data' => [['schema' => $schema, 'data' => 'x'], 'The key "data" must be of type map, string given.'],
+            'rules' => [['schema' => $schema, 'rules' => 'x'], 'The key "rules" must be of type map<array>, string given.'],
+            'errors' => [['schema' => $schema, 'errors' => 'x'], 'The key "errors" must be of type map<list<string>>, string given.'],
             'an error that is not a list of strings' => [['schema' => $schema, 'errors' => ['a' => [5]]], 'The key "errors.a.0" must be of type string, int given.'],
         ];
     }

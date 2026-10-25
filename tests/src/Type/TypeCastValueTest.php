@@ -26,10 +26,13 @@ use Derafu\Form\Type\PercentType;
 use Derafu\Form\Type\RangeType;
 use Derafu\Form\Type\SliderType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
+use Derafu\Value\Exception\TypeMismatchException;
+use Derafu\Value\Exception\ValueConversionException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 use Stringable;
 
@@ -88,7 +91,7 @@ final class TypeCastValueTest extends TestCase
     public function shouldNotCastWhatIsNotANumber(string $class): void
     {
         $this->expectException(TranslatableInvalidArgumentException::class);
-        $this->expectExceptionMessage('The value must be a number, string given.');
+        $this->expectExceptionMessage('The value at "$" must be of type float|int, string given.');
 
         (new $class())->castValue('abc');
     }
@@ -134,7 +137,8 @@ final class TypeCastValueTest extends TestCase
     public function shouldSayWhatWasGivenWhenItIsNotANumber(string $class, mixed $value, string $given): void
     {
         $this->expectException(TranslatableInvalidArgumentException::class);
-        $this->expectExceptionMessage('The value must be a number, ' . $given . ' given.');
+        $expected = $class === FloatType::class ? 'float' : 'float|int';
+        $this->expectExceptionMessage('The value at "$" must be of type ' . $expected . ', ' . $given . ' given.');
 
         (new $class())->castValue($value);
     }
@@ -154,6 +158,31 @@ final class TypeCastValueTest extends TestCase
     }
 
     #[Test]
+    public function shouldPreserveTheCauseWhenAColorStringableFails(): void
+    {
+        $cause = new RuntimeException('Color text cannot be produced.');
+        $value = new class ($cause) implements Stringable {
+            public function __construct(private RuntimeException $cause)
+            {
+            }
+
+            public function __toString(): string
+            {
+                throw $this->cause;
+            }
+        };
+
+        try {
+            (new ColorType())->castValue($value);
+            $this->fail('A failing Stringable must not produce a color.');
+        } catch (TypeMismatchException $exception) {
+            $conversion = $exception->getPrevious();
+            $this->assertInstanceOf(ValueConversionException::class, $conversion);
+            $this->assertSame($cause, $conversion->getPrevious());
+        }
+    }
+
+    #[Test]
     public function shouldCastTextToADateWithTheDateTypes(): void
     {
         $date = (new DateType())->castValue('2024-01-15');
@@ -163,6 +192,38 @@ final class TypeCastValueTest extends TestCase
         $this->assertSame('2024-01-15', $date->format('Y-m-d'));
         $this->assertInstanceOf(DateTimeImmutable::class, $datetime);
         $this->assertSame('2024-01-15 10:30', $datetime->format('Y-m-d H:i'));
+    }
+
+    /**
+     * @return iterable<string, array{class-string<TypeInterface>, string, string}>
+     */
+    public static function dateTextObjects(): iterable
+    {
+        yield 'date' => [DateType::class, '2024-01-15', '2024-01-15 00:00'];
+        yield 'datetime' => [DatetimeType::class, '2024-01-15T10:30', '2024-01-15 10:30'];
+    }
+
+    /**
+     * @param class-string<TypeInterface> $class
+     */
+    #[Test]
+    #[DataProvider('dateTextObjects')]
+    public function shouldPreserveStringableDateInputs(string $class, string $text, string $expected): void
+    {
+        $value = new class ($text) implements Stringable {
+            public function __construct(private string $text)
+            {
+            }
+
+            public function __toString(): string
+            {
+                return $this->text;
+            }
+        };
+
+        $date = (new $class())->castValue($value);
+        $this->assertInstanceOf(DateTimeImmutable::class, $date);
+        $this->assertSame($expected, $date->format('Y-m-d H:i'));
     }
 
     /**
@@ -185,7 +246,7 @@ final class TypeCastValueTest extends TestCase
     public function shouldSayWhatWasGivenWhenItIsNotText(string $class, mixed $value, string $given): void
     {
         $this->expectException(TranslatableInvalidArgumentException::class);
-        $this->expectExceptionMessage('The value must be text, ' . $given . ' given.');
+        $this->expectExceptionMessage('The value at "$" must be of type string|Stringable, ' . $given . ' given.');
 
         (new $class())->castValue($value);
     }

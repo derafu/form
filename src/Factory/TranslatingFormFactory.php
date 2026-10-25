@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Factory;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Translation\FormTexts;
-use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -59,7 +59,7 @@ final class TranslatingFormFactory implements FormFactoryInterface
      */
     public function create(array $definition): FormInterface
     {
-        $domain = ArrayReader::from(FormDefinition::fromArray($definition)->options)->string('translation_domain');
+        $domain = ArrayReader::fromArray(FormDefinition::fromArray($definition)->options)->getString('translation_domain');
 
         if ($domain !== null && $domain !== '') {
             $definition = $this->texts->map(

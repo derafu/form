@@ -32,8 +32,8 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
+use Derafu\Value\ValueType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -342,27 +342,27 @@ final class ProcessResultTest extends TestCase
             'optional' => null,
         ];
         $result = new ProcessResult($this->form, $data);
-        $reader = $result->getProcessedDataReader();
+        $reader = $result->getReader();
 
-        $this->assertSame(' Ana ', $reader->require('name', ArrayType::string()));
-        $this->assertSame(42, $reader->require('age', ArrayType::int()));
-        $this->assertFalse($reader->require('active', ArrayType::bool()));
-        $this->assertSame(1.5, $reader->require('price', ArrayType::float()));
-        $this->assertSame(['editor', 'reader'], $reader->require('roles', ArrayType::listOf(ArrayType::string())));
-        $this->assertNull($reader->string('optional'));
+        $this->assertSame(' Ana ', $reader->require('name', ValueType::string()));
+        $this->assertSame(42, $reader->require('age', ValueType::int()));
+        $this->assertFalse($reader->require('active', ValueType::bool()));
+        $this->assertSame(1.5, $reader->require('price', ValueType::float()));
+        $this->assertSame(['editor', 'reader'], $reader->require('roles', ValueType::listOf(ValueType::string())));
+        $this->assertNull($reader->getString('optional'));
         $this->assertSame($data, $reader->toArray());
         $this->assertSame($data, $result->getProcessedData());
     }
 
     public function testProcessedDataReaderKeepsDefaultsAndAcceptsAnEmptyArray(): void
     {
-        $reader = (new ProcessResult($this->form, []))->getProcessedDataReader();
+        $reader = (new ProcessResult($this->form, []))->getReader();
 
         $this->assertSame([], $reader->toArray());
-        $this->assertFalse($reader->has('name'));
-        $this->assertNull($reader->string('name'));
-        $this->assertSame('Guest', $reader->string('name', 'Guest'));
-        $this->assertSame(18, $reader->int('age', 18));
+        $this->assertFalse($reader->hasValue('name'));
+        $this->assertNull($reader->getString('name'));
+        $this->assertSame('Guest', $reader->getString('name', 'Guest'));
+        $this->assertSame(18, $reader->getInt('age', 18));
     }
 
     public function testProcessedDataReaderKeepsNestedDataAndLiteralKeysDistinct(): void
@@ -372,13 +372,13 @@ final class ProcessResultTest extends TestCase
             'profile.email' => 'literal@example.com',
             7 => 'numbered value',
         ];
-        $reader = (new ProcessResult($this->form, $data))->getProcessedDataReader();
-        $profile = $reader->reader('profile');
+        $reader = (new ProcessResult($this->form, $data))->getReader();
+        $profile = $reader->getReader('profile');
         $this->assertNotNull($profile);
 
-        $this->assertSame('nested@example.com', $profile->require('email', ArrayType::string()));
-        $this->assertSame('literal@example.com', $reader->require('profile.email', ArrayType::string()));
-        $this->assertSame('numbered value', $reader->require('7', ArrayType::string()));
+        $this->assertSame('nested@example.com', $profile->require('email', ValueType::string()));
+        $this->assertSame('literal@example.com', $reader->require('profile.email', ValueType::string()));
+        $this->assertSame('numbered value', $reader->require('7', ValueType::string()));
         $this->assertSame($data, $reader->toArray());
     }
 
@@ -406,9 +406,9 @@ final class ProcessResultTest extends TestCase
         $this->assertSame($data, $result->getProcessedData());
         $this->assertTrue($result->isValid());
         $this->expectException(TranslatableInvalidArgumentException::class);
-        $this->expectExceptionMessage('"processed_data"');
+        $this->expectExceptionMessage('"$"');
 
-        $result->getProcessedDataReader();
+        $result->getReader();
     }
 
     /** @return iterable<string, array{array<string, mixed>}> */
@@ -422,22 +422,22 @@ final class ProcessResultTest extends TestCase
     #[DataProvider('missingRequiredFields')]
     public function testProcessedDataReaderRejectsMissingRequiredValues(array $data): void
     {
-        $reader = (new ProcessResult($this->form, $data))->getProcessedDataReader();
-        $this->assertSame('Guest', $reader->string('name', 'Guest'));
+        $reader = (new ProcessResult($this->form, $data))->getReader();
+        $this->assertSame('Guest', $reader->getString('name', 'Guest'));
         $this->expectException(TranslatableInvalidArgumentException::class);
         $this->expectExceptionMessage('"name" is required.');
 
-        $reader->require('name', ArrayType::string());
+        $reader->require('name', ValueType::string());
     }
 
     public function testProcessedDataReaderDoesNotConvertValuesToTheRequestedType(): void
     {
         $result = new ProcessResult($this->form, ['age' => '42']);
-        $this->assertSame('42', $result->getProcessedDataReader()->string('age'));
+        $this->assertSame('42', $result->getReader()->getString('age'));
         $this->expectException(TranslatableInvalidArgumentException::class);
         $this->expectExceptionMessage('"age" must be of type int');
 
-        $result->getProcessedDataReader()->require('age', ArrayType::int());
+        $result->getReader()->require('age', ValueType::int());
     }
 
     public function testAnInvalidResultStillProvidesItsDataReader(): void
@@ -445,7 +445,7 @@ final class ProcessResultTest extends TestCase
         $errors = ['age' => ['Age must be an integer.']];
         $result = new ProcessResult($this->form, ['age' => 'invalid'], $errors, false);
 
-        $this->assertSame('invalid', $result->getProcessedDataReader()->require('age', ArrayType::string()));
+        $this->assertSame('invalid', $result->getReader()->require('age', ValueType::string()));
         $this->assertFalse($result->isValid());
         $this->assertSame($errors, $result->getErrors());
     }

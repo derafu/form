@@ -12,11 +12,10 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Processor;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\ProcessResultInterface;
 use Derafu\Form\Data\FormData;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 
 /**
  * Result of processing form data through rules.
@@ -58,12 +57,9 @@ final class ProcessResult implements ProcessResultInterface
     /**
      * {@inheritDoc}
      */
-    public function getProcessedDataReader(): ArrayReader
+    public function getReader(): ArrayReader
     {
-        $data = ArrayReader::from(['processed_data' => $this->processedData])
-            ->require('processed_data', ArrayType::array());
-
-        return ArrayReader::from($data);
+        return ArrayReader::fromValue($this->processedData);
     }
 
     /**

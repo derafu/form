@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Loader;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\FormInterface;
-use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
 use JsonException;
 
@@ -61,7 +61,7 @@ class JsonFormLoader extends AbstractFileFormLoader
         }
 
         if ($data !== []) {
-            $definition['data'] = array_merge(ArrayReader::from($definition)->map('data') ?? [], $data);
+            $definition['data'] = array_merge(ArrayReader::fromArray($definition)->getMap('data') ?? [], $data);
         }
 
         return $this->formFactory->create($definition);

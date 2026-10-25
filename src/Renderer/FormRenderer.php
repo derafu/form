@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\Captcha\CaptchaProviderInterface;
 use Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface;
 use Derafu\Form\Contract\FormFieldInterface;
@@ -22,9 +23,8 @@ use Derafu\Form\Contract\Renderer\WidgetRendererRegistryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\Support\RequiredField;
 use Derafu\Renderer\Contract\RendererInterface;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
+use Derafu\Value\ValueType;
 
 /**
  * Form renderer implementation.
@@ -191,11 +191,11 @@ final class FormRenderer implements FormRendererInterface
             'floating_labels' => $field->getWidget()->supportsFloatingLabel(),
         ], $options);
 
-        $reader = ArrayReader::from($options);
-        $attr = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+        $reader = ArrayReader::fromArray($options);
+        $attr = $reader->getMapOf('attr', ValueType::scalar()) ?? [];
         $placeholder = $field->getControl()->getLabel();
         if (
-            $reader->bool('floating_labels')
+            $reader->getBool('floating_labels')
             && empty($attr['placeholder'])
             && $placeholder !== null
         ) {
@@ -207,7 +207,7 @@ final class FormRenderer implements FormRendererInterface
             'field' => $field,
             'label' => $this->renderLabel(
                 $field,
-                $reader->string('label'),
+                $reader->getString('label'),
                 $options
             ),
             'errors' => $this->renderErrors($field, $options),

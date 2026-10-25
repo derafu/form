@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Data;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\Data\FormDataInterface;
 use Derafu\Support\JsonSerializer;
 
@@ -30,6 +31,14 @@ final class FormData implements FormDataInterface
      */
     public function __construct(private array $data)
     {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getReader(): ArrayReader
+    {
+        return ArrayReader::fromArray($this->data);
     }
 
     /**

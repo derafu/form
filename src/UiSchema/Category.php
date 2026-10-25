@@ -12,14 +12,14 @@ declare(strict_types=1);
 
 namespace Derafu\Form\UiSchema;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\CategoryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Form\Factory\UiSchemaElementFactory;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Represents a category in a UI Schema.
@@ -148,20 +148,20 @@ final class Category extends AbstractUiSchemaElement implements CategoryInterfac
      */
     public static function fromArray(array $definition): static
     {
-        $reader = ArrayReader::from($definition);
+        $reader = ArrayReader::fromArray($definition);
 
         $elements = [];
-        foreach ($reader->require('elements', ArrayType::listOf(ArrayType::map())) as $element) {
+        foreach ($reader->require('elements', ValueType::listOf(ValueType::map())) as $element) {
             $elements[] = UiSchemaElementFactory::create($element);
         }
 
-        $rule = $reader->map('rule');
+        $rule = $reader->getMap('rule');
 
         return new static(
-            $reader->require('label', ArrayType::string()),
+            $reader->require('label', ValueType::string()),
             $elements,
             $rule !== null ? UiSchemaRule::fromArray($rule) : null,
-            $reader->map('options') ?? [],
+            $reader->getMap('options') ?? [],
         );
     }
 }

@@ -23,10 +23,10 @@ use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
 use Derafu\Form\Contract\Schema\ObjectSchemaInterface;
 use Derafu\Form\Data\FieldPath;
 use Derafu\Form\Exception\CaptchaUnavailableException;
-use Derafu\Support\Value;
 use Derafu\Translation\Contract\TranslatableInterface;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 use Derafu\Translation\TranslatableMessage;
+use Derafu\Value\ValueInspector;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 
@@ -353,7 +353,7 @@ final class FormDataProcessor implements FormDataProcessorInterface
             if (
                 !isset($fields[$triggerName])
                 || isset($skippedFields[$triggerName])
-                || Value::isBlank(FieldPath::get($processedData, $triggerName))
+                || ValueInspector::isBlank(FieldPath::get($processedData, $triggerName))
                 || FieldPath::get($processedData, $triggerName) === false
             ) {
                 continue;
@@ -364,7 +364,7 @@ final class FormDataProcessor implements FormDataProcessorInterface
                 if (
                     isset($fields[$name])
                     && !isset($skippedFields[$name])
-                    && Value::isBlank(FieldPath::get($processedData, $name))
+                    && ValueInspector::isBlank(FieldPath::get($processedData, $name))
                 ) {
                     $missing[] = $name;
                 }

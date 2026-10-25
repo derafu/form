@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\Data\FormDataInterface;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
@@ -30,7 +31,6 @@ use Derafu\Form\Options\FormOptions;
 use Derafu\Form\Rules\FormRules;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\Widget\WidgetFactory;
-use Derafu\Support\ArrayReader;
 use Derafu\Support\JsonSerializer;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
@@ -201,7 +201,7 @@ final class Form implements FormInterface
      */
     private function optionBool(string $key): ?bool
     {
-        return ArrayReader::from($this->options?->toArray() ?? [])->bool($key);
+        return ArrayReader::fromArray($this->options?->toArray() ?? [])->getBool($key);
     }
 
     /**

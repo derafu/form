@@ -12,14 +12,14 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Element;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\GroupInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\FormRenderer;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for group elements.
@@ -59,7 +59,7 @@ final class GroupRenderer implements ElementRendererInterface
 
         // Render each child element
         $groupOptions = array_merge($options, $element->getOptions());
-        $elementsOptions = ArrayReader::from($groupOptions)->listOf('elements_options', ArrayType::map()) ?? [];
+        $elementsOptions = ArrayReader::fromArray($groupOptions)->getListOf('elements_options', ValueType::map()) ?? [];
 
         foreach ($childElements as $elementIndex => $childElement) {
             // Check if there are element-specific options.

@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
-use Derafu\Support\Caster;
+use Derafu\Value\ValueType;
 
 /**
  * Represents a percent type in the form.
@@ -43,7 +43,7 @@ final class PercentType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return Caster::requireNumber($value);
+        return ValueType::toNumber()->parse($value);
     }
 
     /**

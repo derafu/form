@@ -144,7 +144,7 @@ final class RendererOptionsTest extends TestCase
             ],
             'attr that is not an object' => [
                 [], [], ['attr' => 'x'],
-                'The key "attr" must be of type object<bool|float|int|string>, string given.',
+                'The key "attr" must be of type map<bool|float|int|string>, string given.',
             ],
             'attr with a value that is not scalar' => [
                 [], [], ['attr' => ['data-x' => ['a']]],
@@ -164,11 +164,11 @@ final class RendererOptionsTest extends TestCase
             ],
             'size that is not a number' => [
                 ['enum' => ['a', 'b']], [], ['size' => 'big'],
-                'The value must be a number, string given.',
+                'The value at "$" must be of type float|int, string given.',
             ],
             'step that is not a number' => [
                 ['type' => 'integer'], ['options' => ['type' => 'slider', 'step' => 'big']], [],
-                'The value must be a number, string given.',
+                'The value at "$" must be of type float|int, string given.',
             ],
             'actions with a length that is not an integer' => [
                 [], ['options' => ['type' => 'password', 'actions' => [['type' => 'generate-password', 'length' => 'long']]]], [],
@@ -177,7 +177,7 @@ final class RendererOptionsTest extends TestCase
             'detail that is not an object' => [
                 ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['a' => ['type' => 'string']]]],
                 ['options' => ['detail' => 'x']], [],
-                'The key "detail" must be of type object, string given.',
+                'The key "detail" must be of type map, string given.',
             ],
         ];
     }
@@ -290,7 +290,7 @@ final class RendererOptionsTest extends TestCase
     public function shouldRejectOptionsOfTheElementsOfAGroupThatAreNotAList(): void
     {
         $this->expectException(TranslatableInvalidArgumentException::class);
-        $this->expectExceptionMessage('The key "elements_options" must be of type list<object>, string given.');
+        $this->expectExceptionMessage('The key "elements_options" must be of type list<map>, string given.');
 
         $this->element(new Group('Group', [new Label('Hi')]), ['elements_options' => 'x']);
     }

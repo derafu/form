@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 namespace Derafu\Form\UiSchema;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\CategorizationInterface;
 use Derafu\Form\Contract\UiSchema\CategoryInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Represents a categorization in a UI Schema.
@@ -126,13 +126,13 @@ final class Categorization extends AbstractUiSchemaElement implements Categoriza
      */
     public static function fromArray(array $definition): static
     {
-        $reader = ArrayReader::from($definition);
+        $reader = ArrayReader::fromArray($definition);
 
         $categories = [];
-        foreach ($reader->require('elements', ArrayType::listOf(ArrayType::map())) as $categoryDefinition) {
+        foreach ($reader->require('elements', ValueType::listOf(ValueType::map())) as $categoryDefinition) {
             $categories[] = Category::fromArray($categoryDefinition);
         }
 
-        return new static($categories, $reader->map('options') ?? []);
+        return new static($categories, $reader->getMap('options') ?? []);
     }
 }

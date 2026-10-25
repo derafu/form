@@ -12,10 +12,10 @@ declare(strict_types=1);
 
 namespace Derafu\ExamplesForm;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
+use Derafu\Value\ValueType;
 use InvalidArgumentException;
 
 /**
@@ -91,7 +91,7 @@ final class Example
                 throw new InvalidArgumentException(sprintf('Example file "%s" can not be read.', $this->file));
             }
 
-            $this->data = ArrayType::map()->parse(
+            $this->data = ValueType::map()->parse(
                 json_decode($json, true, flags: JSON_THROW_ON_ERROR),
                 $this->file
             );
@@ -109,7 +109,7 @@ final class Example
     {
         if (!isset($this->form)) {
             $this->form = self::$formFactory->create(
-                ArrayReader::from($this->getData())->require('form', ArrayType::map())
+                ArrayReader::fromArray($this->getData())->require('form', ValueType::map())
             );
         }
 
@@ -191,7 +191,7 @@ final class Example
      */
     public function getName(): string
     {
-        return ArrayReader::from($this->getMeta())->string('name') ?? $this->getCode();
+        return ArrayReader::fromArray($this->getMeta())->getString('name') ?? $this->getCode();
     }
 
     /**
@@ -201,7 +201,7 @@ final class Example
      */
     public function getDescription(): ?string
     {
-        return ArrayReader::from($this->getMeta())->string('description');
+        return ArrayReader::fromArray($this->getMeta())->getString('description');
     }
 
     /**
@@ -211,7 +211,7 @@ final class Example
      */
     public function getTags(): array
     {
-        return ArrayReader::from($this->getMeta())->stringList('tags') ?? [];
+        return ArrayReader::fromArray($this->getMeta())->getStringList('tags') ?? [];
     }
 
     /**
@@ -221,7 +221,7 @@ final class Example
      */
     public function getMeta(): array
     {
-        return ArrayReader::from($this->getData())->map('meta') ?? [];
+        return ArrayReader::fromArray($this->getData())->getMap('meta') ?? [];
     }
 
     /**

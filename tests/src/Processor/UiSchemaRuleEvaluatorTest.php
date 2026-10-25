@@ -19,9 +19,13 @@ use Derafu\Form\UiSchema\UiSchemaCompositeConditionType;
 use Derafu\Form\UiSchema\UiSchemaCondition;
 use Derafu\Form\UiSchema\UiSchemaRule;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
+use Derafu\Value\Exception\TypeMismatchException;
+use Derafu\Value\Exception\ValueConversionException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use Stringable;
 
 /**
  * Unit tests for UiSchemaRuleEvaluator.
@@ -298,6 +302,58 @@ final class UiSchemaRuleEvaluatorTest extends TestCase
         };
 
         $this->assertTrue($this->evaluator->isActive($rule, ['trigger' => $text]));
+    }
+
+    public function testPatternPreservesBooleanTextRepresentation(): void
+    {
+        $empty = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '^$']);
+        $zero = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '^0$']);
+        $one = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '^1$']);
+
+        $this->assertTrue($this->evaluator->isActive($empty, ['trigger' => false]));
+        $this->assertFalse($this->evaluator->isActive($zero, ['trigger' => false]));
+        $this->assertTrue($this->evaluator->isActive($one, ['trigger' => true]));
+    }
+
+    public function testPatternDoesNotMatchOrCloseAResource(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '.*']);
+        $stream = fopen('php://memory', 'w+');
+        $this->assertIsResource($stream);
+
+        try {
+            $this->assertFalse($this->evaluator->isActive($rule, ['trigger' => $stream]));
+            $this->assertSame(4, fwrite($stream, 'text'));
+            rewind($stream);
+            $this->assertSame('text', stream_get_contents($stream));
+        } finally {
+            fclose($stream);
+        }
+    }
+
+    public function testPatternPreservesTheCauseWhenStringableFails(): void
+    {
+        $rule = $this->simpleRule(UiSchemaRuleEffect::SHOW, ['pattern' => '.*']);
+        $cause = new RuntimeException('Rule text cannot be produced.');
+        $text = new class ($cause) implements Stringable {
+            public function __construct(private RuntimeException $cause)
+            {
+            }
+
+            public function __toString(): string
+            {
+                throw $this->cause;
+            }
+        };
+
+        try {
+            $this->evaluator->isActive($rule, ['trigger' => $text]);
+            $this->fail('A failing Stringable must propagate its conversion failure.');
+        } catch (TypeMismatchException $exception) {
+            $conversion = $exception->getPrevious();
+            $this->assertInstanceOf(ValueConversionException::class, $conversion);
+            $this->assertSame($cause, $conversion->getPrevious());
+        }
     }
 
     // =========================================================================

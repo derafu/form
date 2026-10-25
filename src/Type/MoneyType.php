@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
-use Derafu\Support\Caster;
+use Derafu\Value\ValueType;
 
 /**
  * Represents a money type in the form.
@@ -43,7 +43,7 @@ final class MoneyType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return Caster::requireNumber($value);
+        return ValueType::toNumber()->parse($value);
     }
 
     /**

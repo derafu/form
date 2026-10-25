@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
-use Derafu\Support\Caster;
+use Derafu\Value\ValueCaster;
 
 /**
  * Represents a color type in the form.
@@ -54,7 +54,7 @@ final class ColorType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return strtolower(Caster::requireString($value));
+        return strtolower(ValueCaster::requireString($value));
     }
 
     /**

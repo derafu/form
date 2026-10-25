@@ -12,10 +12,10 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Factory;
 
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
+use Derafu\Array\ArrayReader;
 use Derafu\Translation\Exception\Core\TranslatableLogicException as LogicException;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Promotes the `options.choices` of the controls to a `oneOf` of the schema.
@@ -70,8 +70,8 @@ final class ChoicesShorthand
      */
     public function apply(array $schema, array $uischema): array
     {
-        $elements = ArrayReader::from($uischema)->listOf('elements', ArrayType::map());
-        $properties = ArrayReader::from($schema)->mapOf('properties', ArrayType::map());
+        $elements = ArrayReader::fromArray($uischema)->getListOf('elements', ValueType::map());
+        $properties = ArrayReader::fromArray($schema)->getMapOf('properties', ValueType::map());
 
         if (empty($elements) || empty($properties)) {
             return [$schema, $uischema];
@@ -109,12 +109,12 @@ final class ChoicesShorthand
      */
     private function walkElement(array $element, array $properties): array
     {
-        $reader = ArrayReader::from($element);
+        $reader = ArrayReader::fromArray($element);
 
         // Recurse into layout elements (VerticalLayout, HorizontalLayout,
         // Group, Category, Categorization…) before processing controls so
         // nested controls are also handled.
-        $children = $reader->listOf('elements', ArrayType::map());
+        $children = $reader->getListOf('elements', ValueType::map());
         if ($children !== null) {
             [$children, $properties] = $this->walk($children, $properties);
             $element['elements'] = $children;
@@ -125,8 +125,8 @@ final class ChoicesShorthand
             return [$element, $properties];
         }
 
-        $scope = $reader->string('scope') ?? '';
-        $options = $reader->map('options') ?? [];
+        $scope = $reader->getString('scope') ?? '';
+        $options = $reader->getMap('options') ?? [];
 
         // Recurse into the detail elements of array Controls, using the array
         // property's items.properties as the nested property scope.
@@ -140,7 +140,7 @@ final class ChoicesShorthand
             return [$element, $properties];
         }
 
-        $choices = ArrayReader::from($options)->get('choices', self::choicesType());
+        $choices = ArrayReader::fromArray($options)->get('choices', ValueType::arrayOf(ValueType::scalar()));
 
         // Reject nested scopes — not supported in v1.
         if (!preg_match(self::SCOPE, $scope, $m)) {
@@ -184,7 +184,7 @@ final class ChoicesShorthand
 
         if ($type === 'array') {
             // For array types, choices describe each item's allowed values.
-            $items = ArrayReader::from($property)->map('items') ?? [];
+            $items = ArrayReader::fromArray($property)->getMap('items') ?? [];
 
             if (isset($items['oneOf'])) {
                 throw new LogicException([
@@ -234,18 +234,18 @@ final class ChoicesShorthand
      */
     private function walkDetail(array $options, string $scope, array $properties): array
     {
-        $detail = ArrayReader::from($options)->map('detail');
-        $elements = $detail === null ? null : ArrayReader::from($detail)->listOf('elements', ArrayType::map());
+        $detail = ArrayReader::fromArray($options)->getMap('detail');
+        $elements = $detail === null ? null : ArrayReader::fromArray($detail)->getListOf('elements', ValueType::map());
 
         if ($detail === null || $elements === null || !preg_match(self::SCOPE, $scope, $m)) {
             return [$options, $properties];
         }
 
         $name = $m[1];
-        $items = ArrayReader::from($properties[$name] ?? [])->map('items');
+        $items = ArrayReader::fromArray($properties[$name] ?? [])->getMap('items');
         $itemProperties = $items === null
             ? null
-            : ArrayReader::from($items)->mapOf('properties', ArrayType::map());
+            : ArrayReader::fromArray($items)->getMapOf('properties', ValueType::map());
 
         if ($items === null || $itemProperties === null) {
             return [$options, $properties];
@@ -259,31 +259,5 @@ final class ChoicesShorthand
         $properties[$name]['items'] = $items;
 
         return [$options, $properties];
-    }
-
-    /**
-     * The type of `choices`: an array whose values are text, numbers or
-     * booleans (what is written as the title of each choice).
-     *
-     * @return ArrayType<array<array-key, bool|float|int|string>>
-     */
-    private static function choicesType(): ArrayType
-    {
-        return new ArrayType(
-            'array<bool|float|int|string>',
-            static function (mixed $value, string $path): array {
-                if (!is_array($value)) {
-                    throw ArrayType::mismatch($path, 'array<bool|float|int|string>', $value);
-                }
-
-                foreach ($value as $key => $title) {
-                    if (!is_scalar($title)) {
-                        throw ArrayType::mismatch(ArrayType::path($path, $key), 'bool|float|int|string', $title);
-                    }
-                }
-
-                return $value;
-            }
-        );
     }
 }

@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Widget;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
@@ -26,7 +27,6 @@ use Derafu\Form\Form;
 use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
-use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -66,7 +66,7 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         $itemsSchema = $property->getItems();
         $controlOptions = $field->getControl()->getOptions();
 
-        $detail = ArrayReader::from($controlOptions)->map('detail');
+        $detail = ArrayReader::fromArray($controlOptions)->getMap('detail');
         $detailUiSchema = $detail !== null
             ? FormUiSchemaFactory::create($detail)
             : ($itemsSchema !== null

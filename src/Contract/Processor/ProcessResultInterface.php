@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Contract\Processor;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormInterface;
-use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 
 /**
@@ -37,7 +37,7 @@ interface ProcessResultInterface
      *
      * @throws TranslatableInvalidArgumentException If the processed data is not an array.
      */
-    public function getProcessedDataReader(): ArrayReader;
+    public function getReader(): ArrayReader;
 
     /**
      * Get validation errors by field name.

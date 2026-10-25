@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 namespace Derafu\Form\UiSchema;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\GroupInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Factory\UiSchemaElementFactory;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Represents a group in a UI Schema.
@@ -122,13 +122,13 @@ final class Group extends AbstractUiSchemaElement implements GroupInterface
      */
     public static function fromArray(array $definition): static
     {
-        $reader = ArrayReader::from($definition);
+        $reader = ArrayReader::fromArray($definition);
 
         $elements = [];
-        foreach ($reader->require('elements', ArrayType::listOf(ArrayType::map())) as $element) {
+        foreach ($reader->require('elements', ValueType::listOf(ValueType::map())) as $element) {
             $elements[] = UiSchemaElementFactory::create($element);
         }
 
-        return new static($reader->require('label', ArrayType::string()), $elements, $reader->map('options') ?? []);
+        return new static($reader->require('label', ValueType::string()), $elements, $reader->getMap('options') ?? []);
     }
 }

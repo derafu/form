@@ -12,15 +12,14 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Widget;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\ArraySchemaInterface;
 use Derafu\Form\Renderer\Support\RequiredField;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
-use Derafu\Support\Caster;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for select input widgets.
@@ -45,8 +44,8 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
             );
         }
 
-        $reader = ArrayReader::from($options);
-        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+        $reader = ArrayReader::fromArray($options);
+        $customAttrs = $reader->getMapOf('attr', ValueType::scalar()) ?? [];
 
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -62,7 +61,7 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        $extraClass = $reader->string('widget_class');
+        $extraClass = $reader->getString('widget_class');
         if ($extraClass !== null) {
             $widgetClass .= ' ' . $extraClass;
         }
@@ -113,9 +112,9 @@ final class SelectWidgetRenderer implements WidgetRendererInterface
         $attrs = array_merge($attrs, RequiredField::attributes($field, $options));
 
         // Add size attribute if specified.
-        $size = $reader->get('size', ArrayType::mixed());
+        $size = $reader->get('size', ValueType::mixed());
         if ($size !== null) {
-            $attrs['size'] = (string) Caster::requireNumber($size);
+            $attrs['size'] = (string) ValueType::toNumber()->parse($size);
         }
 
         // Add placeholder from control options if available.

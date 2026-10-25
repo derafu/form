@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Schema;
 
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
+use Derafu\Array\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Immutable definition of a property, as read from a JSON Schema fragment.
@@ -130,53 +130,53 @@ final readonly class PropertyDefinition
      */
     public static function fromArray(array $definition): self
     {
-        $reader = ArrayReader::from($definition);
+        $reader = ArrayReader::fromArray($definition);
 
         return new self(
-            name: $reader->string('name') ?? '',
-            type: $reader->get('type', ArrayType::oneOf(ArrayType::string(), ArrayType::listOf(ArrayType::string()))),
-            title: $reader->string('title'),
-            description: $reader->string('description'),
+            name: $reader->getString('name') ?? '',
+            type: $reader->get('type', ValueType::oneOf(ValueType::string(), ValueType::listOf(ValueType::string()))),
+            title: $reader->getString('title'),
+            description: $reader->getString('description'),
             default: $definition['default'] ?? null,
             hasDefault: array_key_exists('default', $definition),
-            deprecated: $reader->bool('deprecated'),
-            examples: $reader->list('examples'),
-            readOnly: $reader->bool('readOnly'),
-            writeOnly: $reader->bool('writeOnly'),
-            enum: $reader->scalarList('enum'),
+            deprecated: $reader->getBool('deprecated'),
+            examples: $reader->getList('examples'),
+            readOnly: $reader->getBool('readOnly'),
+            writeOnly: $reader->getBool('writeOnly'),
+            enum: $reader->getScalarList('enum'),
             const: $definition['const'] ?? null,
             hasConst: array_key_exists('const', $definition),
-            allOf: $reader->listOf('allOf', ArrayType::map()),
-            anyOf: $reader->listOf('anyOf', ArrayType::map()),
-            oneOf: $reader->listOf('oneOf', ArrayType::map()),
-            format: $reader->string('format'),
-            maxLength: $reader->int('maxLength'),
-            minLength: $reader->int('minLength'),
-            pattern: $reader->string('pattern'),
-            contentMediaType: $reader->string('contentMediaType'),
-            minimum: $reader->number('minimum'),
-            maximum: $reader->number('maximum'),
-            exclusiveMinimum: $reader->number('exclusiveMinimum'),
-            exclusiveMaximum: $reader->number('exclusiveMaximum'),
-            multipleOf: $reader->number('multipleOf'),
-            items: $reader->get('items', ArrayType::oneOf(ArrayType::map(), ArrayType::bool())),
-            maxItems: $reader->int('maxItems'),
-            minItems: $reader->int('minItems'),
-            contains: $reader->map('contains'),
-            maxContains: $reader->int('maxContains'),
-            minContains: $reader->int('minContains'),
-            uniqueItems: $reader->bool('uniqueItems'),
-            required: $reader->stringList('required'),
-            dependentRequired: $reader->mapOf('dependentRequired', ArrayType::listOf(ArrayType::string())),
-            maxProperties: $reader->int('maxProperties'),
-            minProperties: $reader->int('minProperties'),
+            allOf: $reader->getListOf('allOf', ValueType::map()),
+            anyOf: $reader->getListOf('anyOf', ValueType::map()),
+            oneOf: $reader->getListOf('oneOf', ValueType::map()),
+            format: $reader->getString('format'),
+            maxLength: $reader->getInt('maxLength'),
+            minLength: $reader->getInt('minLength'),
+            pattern: $reader->getString('pattern'),
+            contentMediaType: $reader->getString('contentMediaType'),
+            minimum: $reader->getNumber('minimum'),
+            maximum: $reader->getNumber('maximum'),
+            exclusiveMinimum: $reader->getNumber('exclusiveMinimum'),
+            exclusiveMaximum: $reader->getNumber('exclusiveMaximum'),
+            multipleOf: $reader->getNumber('multipleOf'),
+            items: $reader->get('items', ValueType::oneOf(ValueType::map(), ValueType::bool())),
+            maxItems: $reader->getInt('maxItems'),
+            minItems: $reader->getInt('minItems'),
+            contains: $reader->getMap('contains'),
+            maxContains: $reader->getInt('maxContains'),
+            minContains: $reader->getInt('minContains'),
+            uniqueItems: $reader->getBool('uniqueItems'),
+            required: $reader->getStringList('required'),
+            dependentRequired: $reader->getMapOf('dependentRequired', ValueType::listOf(ValueType::string())),
+            maxProperties: $reader->getInt('maxProperties'),
+            minProperties: $reader->getInt('minProperties'),
             additionalProperties: $reader->get(
                 'additionalProperties',
-                ArrayType::oneOf(ArrayType::bool(), ArrayType::map())
+                ValueType::oneOf(ValueType::bool(), ValueType::map())
             ),
-            properties: $reader->mapOf('properties', ArrayType::map()),
-            defs: $reader->mapOf('$defs', ArrayType::map()),
-            definitions: $reader->mapOf('definitions', ArrayType::map()),
+            properties: $reader->getMapOf('properties', ValueType::map()),
+            defs: $reader->getMapOf('$defs', ValueType::map()),
+            definitions: $reader->getMapOf('definitions', ValueType::map()),
         );
     }
 

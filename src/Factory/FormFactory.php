@@ -12,14 +12,14 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Factory;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Type\TypeResolverInterface;
 use Derafu\Form\Form;
 use Derafu\Form\FormDefinition;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Factory class for creating form instances with automatic schema generation.
@@ -85,7 +85,7 @@ final class FormFactory implements FormFactoryInterface
             $schema = $this->createSchemaDefinitionFromData($data);
         }
 
-        $properties = ArrayReader::from($schema)->mapOf('properties', ArrayType::map()) ?? [];
+        $properties = ArrayReader::fromArray($schema)->getMapOf('properties', ValueType::map()) ?? [];
 
         $uischema = $definition->uischema;
         if ($uischema === []) {
@@ -147,7 +147,7 @@ final class FormFactory implements FormFactoryInterface
         foreach ($properties as $name => $property) {
             $elements[] = [
                 'type' => 'Control',
-                'label' => ArrayReader::from($property)->string('title')
+                'label' => ArrayReader::fromArray($property)->getString('title')
                     ?? implode(' ', array_map('ucfirst', explode('_', (string) $name))),
                 'scope' => '#/properties/' . $name,
             ];

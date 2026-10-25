@@ -12,14 +12,14 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Widget;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use Derafu\Form\Renderer\Support\RequiredField;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for textarea input widgets.
@@ -43,8 +43,8 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
             );
         }
 
-        $reader = ArrayReader::from($options);
-        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+        $reader = ArrayReader::fromArray($options);
+        $customAttrs = $reader->getMapOf('attr', ValueType::scalar()) ?? [];
 
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -57,7 +57,7 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        $extraClass = $reader->string('widget_class');
+        $extraClass = $reader->getString('widget_class');
         if ($extraClass !== null) {
             $widgetClass .= ' ' . $extraClass;
         }
@@ -76,8 +76,8 @@ final class TextareaWidgetRenderer implements WidgetRendererInterface
         ];
 
         // Default rows and cols.
-        $rows = $reader->int('rows') ?? 5;
-        $cols = $reader->int('cols') ?? 40;
+        $rows = $reader->getInt('rows') ?? 5;
+        $cols = $reader->getInt('cols') ?? 40;
 
         $attrs['rows'] = (string)$rows;
         $attrs['cols'] = (string)$cols;

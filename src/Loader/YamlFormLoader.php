@@ -12,10 +12,10 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Loader;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
-use Derafu\Support\ArrayReader;
 use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
@@ -86,7 +86,7 @@ class YamlFormLoader extends AbstractFileFormLoader
         }
 
         if ($data !== []) {
-            $definition['data'] = array_merge(ArrayReader::from($definition)->map('data') ?? [], $data);
+            $definition['data'] = array_merge(ArrayReader::fromArray($definition)->getMap('data') ?? [], $data);
         }
 
         return $this->formFactory->create($definition);

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Data;
 
-use Derafu\Support\Arr;
+use Derafu\Array\ArrayPath;
 
 /**
  * The value of a field in the data of a form, by the name of the field.
@@ -34,11 +34,7 @@ final class FieldPath
      */
     public static function get(array $data, string $name): mixed
     {
-        if (array_key_exists($name, $data)) {
-            return $data[$name];
-        }
-
-        return Arr::getAtPath($data, $name);
+        return ArrayPath::get($data, $name);
     }
 
     /**
@@ -50,6 +46,6 @@ final class FieldPath
      */
     public static function set(array $data, string $name, mixed $value): array
     {
-        return Arr::setAtPath($data, $name, $value);
+        return ArrayPath::set($data, $name, $value);
     }
 }

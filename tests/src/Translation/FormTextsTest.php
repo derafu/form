@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Translation;
 
+use Derafu\Array\ArrayPath;
 use Derafu\Form\Translation\FormTexts;
-use Derafu\Support\Arr;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -180,12 +180,12 @@ final class FormTextsTest extends TestCase
         foreach ((new FormTexts())->collect($mapped) as $found) {
             $this->assertStringStartsWith('T:', $found['text'], $found['path']);
         }
-        $this->assertSame('Text', Arr::getAtPath($mapped, 'schema.properties.name.default'));
+        $this->assertSame('Text', ArrayPath::get($mapped, 'schema.properties.name.default'));
 
         // The keys of the choices are values, not texts.
         $this->assertSame(
             ['Text' => 'T:Text', 'other' => '', 'list' => 'T:Text'],
-            Arr::getAtPath($mapped, 'uischema.elements.0.options.choices')
+            ArrayPath::get($mapped, 'uischema.elements.0.options.choices')
         );
     }
 
@@ -229,7 +229,7 @@ final class FormTextsTest extends TestCase
         $mapped = $texts->map($definition, fn (string $text) => strtoupper($text));
         $this->assertSame(
             [['title' => 'FIRST'], 'not a schema', ['description' => 'SECOND']],
-            Arr::getAtPath($mapped, 'schema.items')
+            ArrayPath::get($mapped, 'schema.items')
         );
     }
 }

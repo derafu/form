@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Abstract;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaRuleInterface;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\UiSchemaRule;
-use Derafu\Support\ArrayReader;
 use Derafu\Support\JsonSerializer;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
@@ -56,7 +56,7 @@ abstract class AbstractUiSchemaElement implements UiSchemaElementInterface
      */
     public function getId(): string
     {
-        $id = ArrayReader::from($this->definition->options)->string('id');
+        $id = ArrayReader::fromArray($this->definition->options)->getString('id');
         if ($id !== null) {
             return $id;
         }

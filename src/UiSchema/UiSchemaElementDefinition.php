@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\UiSchema;
 
-use Derafu\Support\ArrayReader;
+use Derafu\Array\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 
 /**
@@ -55,14 +55,14 @@ final readonly class UiSchemaElementDefinition
      */
     public static function fromArray(array $definition): self
     {
-        $reader = ArrayReader::from($definition);
+        $reader = ArrayReader::fromArray($definition);
 
         return new self(
-            type: $reader->string('type'),
-            scope: $reader->string('scope'),
-            label: $reader->string('label'),
-            options: $reader->map('options') ?? [],
-            rule: $reader->map('rule'),
+            type: $reader->getString('type'),
+            scope: $reader->getString('scope'),
+            label: $reader->getString('label'),
+            options: $reader->getMap('options') ?? [],
+            rule: $reader->getMap('rule'),
         );
     }
 

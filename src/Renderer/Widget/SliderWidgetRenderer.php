@@ -12,15 +12,14 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Widget;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
 use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
-use Derafu\Support\Caster;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for range slider input widgets.
@@ -52,8 +51,8 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
             );
         }
 
-        $reader = ArrayReader::from($options);
-        $customAttrs = $reader->mapOf('attr', ArrayType::scalar()) ?? [];
+        $reader = ArrayReader::fromArray($options);
+        $customAttrs = $reader->getMapOf('attr', ValueType::scalar()) ?? [];
 
         $property = $field->getProperty();
         $control = $field->getControl();
@@ -66,7 +65,7 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
         if ($hasErrors) {
             $widgetClass .= ' is-invalid';
         }
-        $extraClass = $reader->string('widget_class');
+        $extraClass = $reader->getString('widget_class');
         if ($extraClass !== null) {
             $widgetClass .= ' ' . $extraClass;
         }
@@ -118,20 +117,20 @@ final class SliderWidgetRenderer implements WidgetRendererInterface
         $controlOptions = $control->getOptions();
 
         // Handle step from control options
-        $controlReader = ArrayReader::from($controlOptions);
-        $step = $controlReader->get('step', ArrayType::mixed());
+        $controlReader = ArrayReader::fromArray($controlOptions);
+        $step = $controlReader->get('step', ValueType::mixed());
         if (!empty($step)) {
-            $attrs['step'] = (string) Caster::requireNumber($step);
+            $attrs['step'] = (string) ValueType::toNumber()->parse($step);
         }
 
         // Handle min/max from control options (override schema if present)
-        $min = $controlReader->get('min', ArrayType::mixed());
+        $min = $controlReader->get('min', ValueType::mixed());
         if (!empty($min)) {
-            $attrs['min'] = (string) Caster::requireNumber($min);
+            $attrs['min'] = (string) ValueType::toNumber()->parse($min);
         }
-        $max = $controlReader->get('max', ArrayType::mixed());
+        $max = $controlReader->get('max', ValueType::mixed());
         if (!empty($max)) {
-            $attrs['max'] = (string) Caster::requireNumber($max);
+            $attrs['max'] = (string) ValueType::toNumber()->parse($max);
         }
 
         // Merge additional attributes from options

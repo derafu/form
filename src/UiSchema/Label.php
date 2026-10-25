@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\Form\UiSchema;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Contract\UiSchema\LabelInterface;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Represents a label in a UI Schema.
@@ -89,6 +89,6 @@ final class Label extends AbstractUiSchemaElement implements LabelInterface
      */
     public static function fromArray(array $definition): static
     {
-        return new static(ArrayReader::from($definition)->require('text', ArrayType::string()));
+        return new static(ArrayReader::fromArray($definition)->require('text', ValueType::string()));
     }
 }

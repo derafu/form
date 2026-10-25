@@ -55,14 +55,14 @@ final class UiSchemaFromArrayTest extends TestCase
             'label with a text that is not a string' => [fn () => Label::fromArray(['text' => 1]), 'The key "text" must be of type string, int given.'],
             'group without label' => [fn () => Group::fromArray(['elements' => []]), 'The key "label" is required.'],
             'group without elements' => [fn () => Group::fromArray(['label' => 'A']), 'The key "elements" is required.'],
-            'group with elements that are not a list' => [fn () => Group::fromArray(['label' => 'A', 'elements' => 'x']), 'The key "elements" must be of type list<object>, string given.'],
-            'group with an element that is not an object' => [fn () => Group::fromArray(['label' => 'A', 'elements' => ['x']]), 'The key "elements.0" must be of type object, string given.'],
-            'group with options that are not an object' => [fn () => Group::fromArray(['label' => 'A', 'elements' => [], 'options' => 'x']), 'The key "options" must be of type object, string given.'],
+            'group with elements that are not a list' => [fn () => Group::fromArray(['label' => 'A', 'elements' => 'x']), 'The key "elements" must be of type list<map>, string given.'],
+            'group with an element that is not an object' => [fn () => Group::fromArray(['label' => 'A', 'elements' => ['x']]), 'The key "elements.0" must be of type map, string given.'],
+            'group with options that are not an object' => [fn () => Group::fromArray(['label' => 'A', 'elements' => [], 'options' => 'x']), 'The key "options" must be of type map, string given.'],
             'horizontal layout without elements' => [fn () => HorizontalLayout::fromArray([]), 'The key "elements" is required.'],
             'vertical layout without elements' => [fn () => VerticalLayout::fromArray([]), 'The key "elements" is required.'],
             'categorization without elements' => [fn () => Categorization::fromArray([]), 'The key "elements" is required.'],
             'category without label' => [fn () => Category::fromArray(['elements' => []]), 'The key "label" is required.'],
-            'category with a rule that is not an object' => [fn () => Category::fromArray(['label' => 'A', 'elements' => [], 'rule' => 'x']), 'The key "rule" must be of type object, string given.'],
+            'category with a rule that is not an object' => [fn () => Category::fromArray(['label' => 'A', 'elements' => [], 'rule' => 'x']), 'The key "rule" must be of type map, string given.'],
         ];
     }
 

@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Derafu\Form;
 
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
+use Derafu\Array\ArrayReader;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Immutable definition of a form, as it is written in a file or in an array.
@@ -60,15 +60,15 @@ final readonly class FormDefinition
      */
     public static function fromArray(array $definition): self
     {
-        $reader = ArrayReader::from($definition);
+        $reader = ArrayReader::fromArray($definition);
 
         return new self(
-            schema: $reader->map('schema') ?? [],
-            uischema: $reader->map('uischema') ?? [],
-            rules: $reader->mapOf('rules', ArrayType::array()) ?? [],
-            data: $reader->map('data'),
-            options: $reader->map('options') ?? [],
-            errors: $reader->mapOf('errors', ArrayType::listOf(ArrayType::string())),
+            schema: $reader->getMap('schema') ?? [],
+            uischema: $reader->getMap('uischema') ?? [],
+            rules: $reader->getMapOf('rules', ValueType::array()) ?? [],
+            data: $reader->getMap('data'),
+            options: $reader->getMap('options') ?? [],
+            errors: $reader->getMapOf('errors', ValueType::listOf(ValueType::string())),
         );
     }
 

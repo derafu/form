@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Factory;
 
+use Derafu\Array\ArrayPath;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\Loader\FormLoaderInterface;
 use Derafu\Form\Factory\ChoicesShorthand;
@@ -26,7 +27,6 @@ use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
-use Derafu\Support\Arr;
 use Derafu\Translation\SimpleTranslationResourceProvider;
 use Derafu\Translation\TranslatorFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -116,19 +116,19 @@ final class TranslatingFormFactoryTest extends TestCase
     {
         $form = (new YamlFormLoader($this->factory(), [self::FORMS]))->load('contact')->toArray();
 
-        $this->assertSame('Contáctanos', Arr::getAtPath($form, 'schema.title'));
-        $this->assertSame('Te responderemos pronto', Arr::getAtPath($form, 'schema.description'));
-        $this->assertSame('Tu nombre', Arr::getAtPath($form, 'schema.properties.name.title'));
-        $this->assertSame('Como en tu cédula', Arr::getAtPath($form, 'schema.properties.name.description'));
-        $this->assertSame('Tipo', Arr::getAtPath($form, 'schema.properties.kind.title'));
-        $this->assertSame('Etiquetas', Arr::getAtPath($form, 'schema.properties.tags.title'));
+        $this->assertSame('Contáctanos', ArrayPath::get($form, 'schema.title'));
+        $this->assertSame('Te responderemos pronto', ArrayPath::get($form, 'schema.description'));
+        $this->assertSame('Tu nombre', ArrayPath::get($form, 'schema.properties.name.title'));
+        $this->assertSame('Como en tu cédula', ArrayPath::get($form, 'schema.properties.name.description'));
+        $this->assertSame('Tipo', ArrayPath::get($form, 'schema.properties.kind.title'));
+        $this->assertSame('Etiquetas', ArrayPath::get($form, 'schema.properties.tags.title'));
 
         // Options of a list, in the property.
         $this->assertSame(
             ['Opción A', 'Opción B'],
             [
-                Arr::getAtPath($form, 'schema.properties.tags.items.oneOf.0.title'),
-                Arr::getAtPath($form, 'schema.properties.tags.items.oneOf.1.title'),
+                ArrayPath::get($form, 'schema.properties.tags.items.oneOf.0.title'),
+                ArrayPath::get($form, 'schema.properties.tags.items.oneOf.1.title'),
             ]
         );
 
@@ -136,14 +136,14 @@ final class TranslatingFormFactoryTest extends TestCase
         // with their title translated and their value as it was.
         $this->assertSame(
             [['const' => 'sales', 'title' => 'Ventas'], ['const' => 'support', 'title' => 'Soporte']],
-            Arr::getAtPath($form, 'schema.properties.kind.oneOf')
+            ArrayPath::get($form, 'schema.properties.kind.oneOf')
         );
 
         // The UI schema.
-        $this->assertSame('Escribe aquí', Arr::getAtPath($form, 'uischema.elements.0.options.placeholder'));
-        $this->assertSame('Texto de ayuda', Arr::getAtPath($form, 'uischema.elements.0.options.help'));
-        $this->assertSame('días', Arr::getAtPath($form, 'uischema.elements.0.options.input_group_append_text'));
-        $this->assertSame('Detalles', Arr::getAtPath($form, 'uischema.elements.1.label'));
+        $this->assertSame('Escribe aquí', ArrayPath::get($form, 'uischema.elements.0.options.placeholder'));
+        $this->assertSame('Texto de ayuda', ArrayPath::get($form, 'uischema.elements.0.options.help'));
+        $this->assertSame('días', ArrayPath::get($form, 'uischema.elements.0.options.input_group_append_text'));
+        $this->assertSame('Detalles', ArrayPath::get($form, 'uischema.elements.1.label'));
     }
 
     #[Test]
@@ -152,8 +152,8 @@ final class TranslatingFormFactoryTest extends TestCase
         $form = (new YamlFormLoader($this->factory(), [self::FORMS]))->load('contact')->toArray();
 
         // The default has the same text as the title, and it is a value.
-        $this->assertSame('Your name', Arr::getAtPath($form, 'schema.properties.name.default'));
-        $this->assertSame('#/properties/name', Arr::getAtPath($form, 'uischema.elements.0.scope'));
+        $this->assertSame('Your name', ArrayPath::get($form, 'schema.properties.name.default'));
+        $this->assertSame('#/properties/name', ArrayPath::get($form, 'uischema.elements.0.scope'));
     }
 
     #[Test]
@@ -162,8 +162,8 @@ final class TranslatingFormFactoryTest extends TestCase
         $json = (new JsonFormLoader($this->factory(), [self::FORMS]))->load('contact')->toArray();
         $php = (new PhpFormLoader($this->factory(), [self::FORMS]))->load('contact')->toArray();
 
-        $this->assertSame('Tu nombre', Arr::getAtPath($json, 'schema.properties.name.title'));
-        $this->assertSame('Tu nombre', Arr::getAtPath($php, 'schema.properties.name.title'));
+        $this->assertSame('Tu nombre', ArrayPath::get($json, 'schema.properties.name.title'));
+        $this->assertSame('Tu nombre', ArrayPath::get($php, 'schema.properties.name.title'));
     }
 
     #[Test]
@@ -174,7 +174,7 @@ final class TranslatingFormFactoryTest extends TestCase
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Your name']]],
         ])->toArray();
 
-        $this->assertSame('Tu nombre', Arr::getAtPath($form, 'schema.properties.name.title'));
+        $this->assertSame('Tu nombre', ArrayPath::get($form, 'schema.properties.name.title'));
     }
 
     #[Test]
@@ -182,7 +182,7 @@ final class TranslatingFormFactoryTest extends TestCase
     {
         $form = (new YamlFormLoader($this->factory(), [self::FORMS]))->load('without-domain')->toArray();
 
-        $this->assertSame('Your name', Arr::getAtPath($form, 'schema.properties.name.title'));
+        $this->assertSame('Your name', ArrayPath::get($form, 'schema.properties.name.title'));
     }
 
     #[Test]
@@ -193,7 +193,7 @@ final class TranslatingFormFactoryTest extends TestCase
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Not in the catalogue']]],
         ])->toArray();
 
-        $this->assertSame('Not in the catalogue', Arr::getAtPath($form, 'schema.properties.name.title'));
+        $this->assertSame('Not in the catalogue', ArrayPath::get($form, 'schema.properties.name.title'));
     }
 
     #[Test]
@@ -204,7 +204,7 @@ final class TranslatingFormFactoryTest extends TestCase
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Your name']]],
         ])->toArray();
 
-        $this->assertSame('Your name', Arr::getAtPath($form, 'schema.properties.name.title'));
+        $this->assertSame('Your name', ArrayPath::get($form, 'schema.properties.name.title'));
     }
 
     #[Test]
@@ -231,9 +231,9 @@ final class TranslatingFormFactoryTest extends TestCase
         $form = $loader->load('closure', ['user' => 'Ana'])->toArray();
 
         // What the closure translates with `_t` (with a parameter).
-        $this->assertSame('Hola Ana', Arr::getAtPath($form, 'schema.properties.name.title'));
+        $this->assertSame('Hola Ana', ArrayPath::get($form, 'schema.properties.name.title'));
         // And the texts of the list of the result, by the factory.
-        $this->assertSame('Tu nombre', Arr::getAtPath($form, 'schema.properties.name.description'));
+        $this->assertSame('Tu nombre', ArrayPath::get($form, 'schema.properties.name.description'));
     }
 
     #[Test]
@@ -242,11 +242,11 @@ final class TranslatingFormFactoryTest extends TestCase
         $with = (new PhpFormLoader($this->factory(), [self::FORMS], $this->translator()))->load('context')->toArray();
         $without = (new PhpFormLoader($this->factory(), [self::FORMS]))->load('context')->toArray();
 
-        $this->assertSame('Hola Ana', Arr::getAtPath($with, 'schema.properties.a.title'));
-        $this->assertSame(Translator::class, Arr::getAtPath($with, 'schema.properties.a.description'));
+        $this->assertSame('Hola Ana', ArrayPath::get($with, 'schema.properties.a.title'));
+        $this->assertSame(Translator::class, ArrayPath::get($with, 'schema.properties.a.description'));
 
-        $this->assertSame('no _t', Arr::getAtPath($without, 'schema.properties.a.title'));
-        $this->assertSame('no translator', Arr::getAtPath($without, 'schema.properties.a.description'));
+        $this->assertSame('no _t', ArrayPath::get($without, 'schema.properties.a.title'));
+        $this->assertSame('no translator', ArrayPath::get($without, 'schema.properties.a.description'));
     }
 
     #[Test]
@@ -256,7 +256,7 @@ final class TranslatingFormFactoryTest extends TestCase
 
         $form = $loader->load('context', ['_t' => fn (): string => 'mine'])->toArray();
 
-        $this->assertSame('mine', Arr::getAtPath($form, 'schema.properties.a.title'));
+        $this->assertSame('mine', ArrayPath::get($form, 'schema.properties.a.title'));
     }
 
     #[Test]
@@ -267,7 +267,7 @@ final class TranslatingFormFactoryTest extends TestCase
 
         $form = $loader->load('default-domain')->toArray();
 
-        $this->assertSame('Buen día', Arr::getAtPath($form, 'schema.properties.a.title'));
+        $this->assertSame('Buen día', ArrayPath::get($form, 'schema.properties.a.title'));
     }
 
     /**
@@ -307,7 +307,7 @@ final class TranslatingFormFactoryTest extends TestCase
             'options' => ['translation_domain' => 'contact'],
             'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'title' => 'Your name']]],
         ])->toArray();
-        $this->assertSame('Tu nombre', Arr::getAtPath($form, 'schema.properties.name.title'));
+        $this->assertSame('Tu nombre', ArrayPath::get($form, 'schema.properties.name.title'));
     }
 
     /**
@@ -326,8 +326,8 @@ final class TranslatingFormFactoryTest extends TestCase
         $yaml = $this->service($container, YamlFormLoader::class)->load('hello')->toArray();
         $php = $this->service($container, PhpFormLoader::class)->load('hello')->toArray();
 
-        $this->assertSame('Tu nombre', Arr::getAtPath($yaml, 'schema.properties.name.title'));
-        $this->assertSame('Hola Ana', Arr::getAtPath($php, 'schema.properties.name.title'));
+        $this->assertSame('Tu nombre', ArrayPath::get($yaml, 'schema.properties.name.title'));
+        $this->assertSame('Hola Ana', ArrayPath::get($php, 'schema.properties.name.title'));
     }
 
     /**
@@ -377,6 +377,6 @@ final class TranslatingFormFactoryTest extends TestCase
      */
     private function nameTitle(array $form): mixed
     {
-        return Arr::getAtPath($form, 'schema.properties.name.title');
+        return ArrayPath::get($form, 'schema.properties.name.title');
     }
 }

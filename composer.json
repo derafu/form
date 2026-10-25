@@ -28,6 +28,8 @@
     "require": {
         "php": "^8.5",
         "derafu/support": "dev-main",
+        "derafu/array": "dev-main",
+        "derafu/value": "dev-main",
         "derafu/renderer": "dev-main",
         "derafu/translation": "dev-main",
         "derafu/data-processor": "dev-main"

@@ -98,8 +98,8 @@ final class UiSchemaElementDefinitionTest extends TestCase
             'type' => [['type' => 1], 'The key "type" must be of type string, int given.'],
             'scope' => [['scope' => ['a']], 'The key "scope" must be of type string, array given.'],
             'label' => [['label' => true], 'The key "label" must be of type string, bool given.'],
-            'options' => [['options' => 'x'], 'The key "options" must be of type object, string given.'],
-            'rule' => [['rule' => ['a']], 'The key "rule" must be of type object, array given.'],
+            'options' => [['options' => 'x'], 'The key "options" must be of type map, string given.'],
+            'rule' => [['rule' => ['a']], 'The key "rule" must be of type map, array given.'],
         ];
     }
 

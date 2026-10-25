@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Type;
 
 use Derafu\Form\Abstract\AbstractType;
-use Derafu\Support\Caster;
+use Derafu\Value\ValueType;
 
 /**
  * Represents an float type in the form.
@@ -43,7 +43,7 @@ final class FloatType extends AbstractType
      */
     public function castValue(mixed $value): mixed
     {
-        return (float) Caster::requireNumber($value);
+        return ValueType::toFloat()->parse($value);
     }
 
     /**

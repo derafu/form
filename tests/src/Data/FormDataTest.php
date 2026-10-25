@@ -16,6 +16,7 @@ use Derafu\Form\Data\FormData;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 /**
  * The data of a form, read and written by the path of a property.
@@ -72,5 +73,54 @@ final class FormDataTest extends TestCase
         $this->assertSame($data->all(), $data->toArray());
         $this->assertSame($data->all(), $data->jsonSerialize());
         $this->assertJsonStringEqualsJsonString((string) json_encode($data->all()), $data->toJson());
+    }
+
+    public function testReadersPreserveDataTypesKeysAndNullPresence(): void
+    {
+        $input = [
+            'address' => ['city' => 'Santiago', 'zip' => null],
+            'address.city' => 'literal',
+            'rows' => [3 => ['active' => false]],
+            'name' => ' Ana ',
+            'count' => 0,
+        ];
+        $data = FormData::fromArray($input);
+        $reader = $data->getReader();
+
+        $this->assertSame($input, $reader->toArray());
+        $this->assertSame('literal', $reader->requireString('address.city'));
+        $this->assertSame('Santiago', $reader->requireReader('address')->requireString('city'));
+        $this->assertTrue($reader->hasKey('address.zip'));
+        $this->assertFalse($reader->hasValue('address.zip'));
+        $this->assertFalse($reader->requireArrayReaders('rows')[3]->requireBool('active'));
+        $this->assertSame(' Ana ', $reader->requireString('name'));
+        $this->assertSame(0, $reader->requireInt('count'));
+        $this->assertSame($input, $data->all());
+    }
+
+    public function testReadersAreSnapshotsAndNewReadersSeeScopeMutations(): void
+    {
+        $data = new FormData(['address' => ['city' => 'Santiago']]);
+        $before = $data->getReader();
+        $data->set('#/properties/address/properties/city', 'Valparaiso');
+        $after = $data->getReader();
+
+        $this->assertNotSame($before, $after);
+        $this->assertSame('Santiago', $before->requireString('address.city'));
+        $this->assertSame('Valparaiso', $after->requireString('address.city'));
+        $this->assertSame('Valparaiso', $data->get('#/properties/address/properties/city'));
+    }
+
+    public function testReadersKeepObjectIdentityWithoutCloningStoredObjects(): void
+    {
+        $object = new stdClass();
+        $object->name = 'before';
+        $data = new FormData(['objects' => [$object]]);
+        $reader = $data->getReader();
+
+        $this->assertSame($object, $reader->requireArray('objects')[0]);
+        $object->name = 'after';
+        $this->assertSame($object, $data->get('objects.0'));
+        $this->assertSame('after', $data->get('objects.0')->name);
     }
 }

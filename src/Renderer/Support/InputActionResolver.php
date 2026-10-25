@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Support;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormFieldInterface;
-use Derafu\Support\ArrayReader;
 use Derafu\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -130,11 +130,11 @@ final class InputActionResolver
             return null;
         }
 
-        $reader = ArrayReader::from($action);
-        $type = $reader->string('type');
+        $reader = ArrayReader::fromArray($action);
+        $type = $reader->getString('type');
         $defaults = $type !== null ? (self::ACTIONS[$type] ?? []) : [];
 
-        $onclick = $reader->string('onclick') ?? $this->buildOnclick($type, $reader, $field);
+        $onclick = $reader->getString('onclick') ?? $this->buildOnclick($type, $reader, $field);
         if ($onclick === null) {
             return null;
         }
@@ -142,10 +142,10 @@ final class InputActionResolver
         // Only translate the built-in default label when it will actually
         // be used; an explicit override is the caller's own text and is
         // never translated (nor is trans() called needlessly for it).
-        $label = $reader->string('label') ?? $this->defaultLabel($type);
+        $label = $reader->getString('label') ?? $this->defaultLabel($type);
 
         return [
-            'icon' => $reader->string('icon') ?? $defaults['icon'] ?? '',
+            'icon' => $reader->getString('icon') ?? $defaults['icon'] ?? '',
             'label' => $label,
             'onclick' => $onclick,
         ];
@@ -165,11 +165,11 @@ final class InputActionResolver
             'toggle-password' => 'FormFields.showPassword(this)',
             'generate-password' => sprintf(
                 'FormFields.generatePassword(this, %d)',
-                $action->int('length') ?? 16
+                $action->getInt('length') ?? 16
             ),
             'copy' => sprintf(
                 "UI.copy(this.closest('.input-group').querySelector('input, textarea'), %s)",
-                json_encode($action->string('message') ?? $this->buildCopyMessage($field))
+                json_encode($action->getString('message') ?? $this->buildCopyMessage($field))
             ),
             default => null,
         };

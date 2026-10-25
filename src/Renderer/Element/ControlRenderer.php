@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Element;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererInterface;
@@ -20,9 +21,8 @@ use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Renderer\Support\InputActionResolver;
 use Derafu\Form\UiSchema\UiSchemaRuleEffect;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for control elements.
@@ -106,7 +106,7 @@ final class ControlRenderer implements ElementRendererInterface
         // (`native_required`) is in the field, and the options that are passed
         // or the ones of the control override it. They must be booleans.
         foreach (['hide_required_asterisk', 'native_required'] as $key) {
-            ArrayReader::from($fieldOptions)->bool($key);
+            ArrayReader::fromArray($fieldOptions)->getBool($key);
         }
 
         // Evaluate initial rule state when an evaluator is available.
@@ -135,7 +135,7 @@ final class ControlRenderer implements ElementRendererInterface
             // Pass disabled via options['attr'] so every widget renderer picks
             // it up through their final array_merge($attrs, $options['attr']).
             if (!$initiallyActive) {
-                $attr = ArrayReader::from($fieldOptions)->mapOf('attr', ArrayType::scalar()) ?? [];
+                $attr = ArrayReader::fromArray($fieldOptions)->getMapOf('attr', ValueType::scalar()) ?? [];
                 $attr['disabled'] = true;
                 $fieldOptions['attr'] = $attr;
             }

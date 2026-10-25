@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Renderer\Element;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Renderer\ElementRendererInterface;
 use Derafu\Form\Contract\UiSchema\LabelInterface;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
-use Derafu\Support\ArrayReader;
-use Derafu\Support\ArrayType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for label elements.
@@ -50,13 +50,13 @@ final class LabelRenderer implements ElementRendererInterface
         $finalOptions = array_merge($options, $element->getOptions());
 
         // Get label attributes.
-        $reader = ArrayReader::from($finalOptions);
-        $labelAttr = $reader->mapOf('label_attr', ArrayType::scalar()) ?? [];
+        $reader = ArrayReader::fromArray($finalOptions);
+        $labelAttr = $reader->getMapOf('label_attr', ValueType::scalar()) ?? [];
         $labelClass = isset($labelAttr['class']) ? (string) $labelAttr['class'] : 'form-label';
 
         // Determine if this is a heading.
-        $isHeading = $reader->bool('heading') ?? false;
-        $headingLevel = $reader->int('heading_level') ?? 3; // Default to h3
+        $isHeading = $reader->getBool('heading') ?? false;
+        $headingLevel = $reader->getInt('heading_level') ?? 3; // Default to h3
 
         // Generate HTML.
         if ($isHeading) {

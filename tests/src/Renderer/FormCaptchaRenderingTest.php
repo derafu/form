@@ -109,7 +109,7 @@ final class FormCaptchaRenderingTest extends TestCase
 
         $captcha = strpos($html, 'test-captcha');
         $this->assertGreaterThan(strpos($html, 'name="email"'), $captcha);
-        $this->assertLessThan(strpos($html, 'name="_token"'), $captcha);
+        $this->assertLessThan(strpos($html, 'name="_csrf_token"'), $captcha);
     }
 
     #[Test]

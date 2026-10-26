@@ -330,7 +330,7 @@ final class FormRenderer implements FormRendererInterface
 
         $context = [
             'form' => $form,
-            'name' => FormInterface::CSRF_FIELD,
+            'name' => $form->getCsrfFieldName(),
             'token' => $csrfTokenManager->getToken($form->getCsrfTokenId()),
         ];
 

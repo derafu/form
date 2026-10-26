@@ -100,8 +100,9 @@ final class FormDataProcessor implements FormDataProcessorInterface
                 'form' => $form->getCsrfTokenId(),
             ]);
 
-            $token = $data[FormInterface::CSRF_FIELD] ?? null;
-            unset($data[FormInterface::CSRF_FIELD]);
+            $csrfField = $form->getCsrfFieldName();
+            $token = $data[$csrfField] ?? null;
+            unset($data[$csrfField]);
 
             if (!is_string($token) || !$csrfTokenManager->isValid($form->getCsrfTokenId(), $token)) {
                 $formErrors[] = $this->translated(new TranslatableMessage(

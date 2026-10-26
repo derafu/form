@@ -106,6 +106,29 @@ final class FormCsrfOptionTest extends TestCase
     }
 
     #[Test]
+    public function theCsrfTokenIdCanBeSetExplicitly(): void
+    {
+        $form = $this->form('contact', ['csrf_token_id' => 'authenticate']);
+
+        $this->assertSame('authenticate', $form->getCsrfTokenId());
+        $this->assertSame('contact', $form->getId());
+    }
+
+    #[Test]
+    public function theCsrfFieldNameDefaultsToSymfonySecurity(): void
+    {
+        $this->assertSame('_csrf_token', $this->form()->getCsrfFieldName());
+    }
+
+    #[Test]
+    public function theCsrfFieldNameCanBeSetExplicitly(): void
+    {
+        $form = $this->form(options: ['csrf_field_name' => '_token']);
+
+        $this->assertSame('_token', $form->getCsrfFieldName());
+    }
+
+    #[Test]
     public function aFormHasNoErrorsOfItsOwnUnlessItIsGivenThem(): void
     {
         $form = $this->form();

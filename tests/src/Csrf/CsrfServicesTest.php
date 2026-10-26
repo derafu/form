@@ -86,7 +86,7 @@ final class CsrfServicesTest extends TestCase
 
         $processor = $this->service($container, FormDataProcessorInterface::class);
         $this->assertFalse($processor->process($this->form(), ['email' => 'a@b.cl'])->isValid());
-        $this->assertTrue($processor->process($this->form(), ['email' => 'a@b.cl', '_token' => $manager->getToken('form')])->isValid());
+        $this->assertTrue($processor->process($this->form(), ['email' => 'a@b.cl', '_csrf_token' => $manager->getToken('form')])->isValid());
     }
 
     #[Test]
@@ -111,7 +111,7 @@ final class CsrfServicesTest extends TestCase
         $container = $this->container(withManager: false);
 
         $html = $this->service($container, FormRendererInterface::class)->render($this->form(protected: false));
-        $this->assertStringNotContainsString('_token', $html);
+        $this->assertStringNotContainsString('name="_csrf_token"', $html);
         $this->assertTrue($this->service($container, FormDataProcessorInterface::class)->process($this->form(protected: false), ['email' => 'a@b.cl'])->isValid());
     }
 

@@ -205,7 +205,7 @@ final class FormDataProcessorCaptchaTest extends TestCase
 
         $result = $this->processor($this->captcha)->process($this->form(['captcha_protection' => true, 'csrf_protection' => true]), [
             'email' => 'ana@example.com',
-            '_token' => $token,
+            '_csrf_token' => $token,
             'test-captcha-response' => 'solved-contact',
         ]);
 

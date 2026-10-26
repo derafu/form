@@ -117,7 +117,7 @@ final class FormCsrfRenderingTest extends TestCase
         $html = $this->renderer()->render($this->form());
 
         $token = $this->manager->getToken('form');
-        $this->assertStringContainsString('<input type="hidden" name="_token" value="' . $token . '">', $html);
+        $this->assertStringContainsString('<input type="hidden" name="_csrf_token" value="' . $token . '">', $html);
         $this->assertSame(32, strlen($token));
     }
 
@@ -135,7 +135,7 @@ final class FormCsrfRenderingTest extends TestCase
     {
         $html = $this->renderer()->renderCsrf($this->form());
 
-        $this->assertStringContainsString('name="_token"', $html);
+        $this->assertStringContainsString('name="_csrf_token"', $html);
         $this->assertStringContainsString($this->manager->getToken('form'), $html);
     }
 
@@ -144,7 +144,7 @@ final class FormCsrfRenderingTest extends TestCase
     {
         $html = $this->renderer()->renderBody($this->form());
 
-        $this->assertGreaterThan(strpos($html, 'name="email"'), strpos($html, 'name="_token"'));
+        $this->assertGreaterThan(strpos($html, 'name="email"'), strpos($html, 'name="_csrf_token"'));
     }
 
     #[Test]
@@ -153,7 +153,7 @@ final class FormCsrfRenderingTest extends TestCase
         $form = $this->form(options: ['csrf_protection' => false]);
         $renderer = $this->renderer(withManager: false);
 
-        $this->assertStringNotContainsString('_token', $renderer->render($form));
+        $this->assertStringNotContainsString('name="_csrf_token"', $renderer->render($form));
         $this->assertSame('', $renderer->renderCsrf($form));
     }
 

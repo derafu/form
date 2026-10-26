@@ -32,9 +32,14 @@ use JsonSerializable;
 interface FormInterface extends JsonSerializable
 {
     /**
-     * Name of the field that carries the CSRF token.
+     * Default name of the request field that carries the CSRF token (Symfony Security convention).
      */
-    public const CSRF_FIELD = '_token';
+    public const DEFAULT_CSRF_FIELD_NAME = '_csrf_token';
+
+    /**
+     * Same as {@see DEFAULT_CSRF_FIELD_NAME}; prefer {@see getCsrfFieldName()} on a form instance.
+     */
+    public const CSRF_FIELD = self::DEFAULT_CSRF_FIELD_NAME;
 
     /**
      * Gets the schema that defines the data structure and validation rules.
@@ -123,8 +128,17 @@ interface FormInterface extends JsonSerializable
 
     /**
      * Gets the id that the CSRF token of the form is asked for (its id).
+     *
+     * Uses the option `csrf_token_id` when set; otherwise the form {@see getId()}.
      */
     public function getCsrfTokenId(): string;
+
+    /**
+     * Gets the name of the request field that carries the CSRF token.
+     *
+     * Uses the option `csrf_field_name` when set; otherwise {@see DEFAULT_CSRF_FIELD_NAME}.
+     */
+    public function getCsrfFieldName(): string;
 
     /**
      * Whether the form is protected with the captcha of the application.

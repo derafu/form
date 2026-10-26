@@ -273,7 +273,27 @@ final class Form implements FormInterface
      */
     public function getCsrfTokenId(): string
     {
+        $tokenId = $this->options?->get('csrf_token_id');
+
+        if (is_string($tokenId) && $tokenId !== '') {
+            return $tokenId;
+        }
+
         return $this->getId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCsrfFieldName(): string
+    {
+        $fieldName = $this->options?->get('csrf_field_name');
+
+        if (is_string($fieldName) && $fieldName !== '') {
+            return $fieldName;
+        }
+
+        return FormInterface::DEFAULT_CSRF_FIELD_NAME;
     }
 
     /**

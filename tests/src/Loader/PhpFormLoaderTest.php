@@ -163,6 +163,46 @@ final class PhpFormLoaderTest extends TestCase
         $this->assertSame('nested', $form->getData()?->get('tag'));
     }
 
+    public function testLoaderNameBecomesCsrfTokenIdWhenSchemaHasNoName(): void
+    {
+        $loader = new PhpFormLoader($this->makeFactory());
+        $loader->addPath(self::FIXTURES);
+
+        $form = $loader->load('static');
+
+        $this->assertSame('static', $form->getCsrfTokenId());
+    }
+
+    public function testNestedLoaderNameBecomesCsrfTokenId(): void
+    {
+        $loader = new PhpFormLoader($this->makeFactory());
+        $loader->addPath(self::FIXTURES);
+
+        $form = $loader->load('sub/nested');
+
+        $this->assertSame('sub/nested', $form->getCsrfTokenId());
+    }
+
+    public function testSchemaNamePreventsLoaderCsrfTokenId(): void
+    {
+        $loader = new PhpFormLoader($this->makeFactory());
+        $loader->addPath(self::FIXTURES);
+
+        $form = $loader->load('schema-named');
+
+        $this->assertSame('contact', $form->getCsrfTokenId());
+    }
+
+    public function testExplicitCsrfTokenIdIsNotOverwrittenByLoaderName(): void
+    {
+        $loader = new PhpFormLoader($this->makeFactory());
+        $loader->addPath(self::FIXTURES);
+
+        $form = $loader->load('explicit-csrf');
+
+        $this->assertSame('authenticate', $form->getCsrfTokenId());
+    }
+
     private function makeFactory(): FormFactoryInterface
     {
         return new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider())));

@@ -105,6 +105,8 @@ class PhpFormLoader extends AbstractFileFormLoader
             $definition['data'] = array_merge($definition['data'] ?? [], $data);
         }
 
+        $definition = $this->applyDefaultCsrfTokenId($name, $definition, $file);
+
         return $this->formFactory->create($definition);
     }
 }

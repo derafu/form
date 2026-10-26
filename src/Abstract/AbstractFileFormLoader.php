@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Abstract;
 
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\Loader\FormLoaderInterface;
 use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
@@ -103,5 +104,37 @@ abstract class AbstractFileFormLoader implements FormLoaderInterface
             'extension' => static::EXTENSION,
             'paths' => implode(', ', $this->paths) ?: '(no paths registered)',
         ]);
+    }
+
+    /**
+     * Sets `options.csrf_token_id` to the loader form name when neither an
+     * explicit token id nor `schema.name` is present (same precedence as
+     * {@see \Derafu\Form\Form::getCsrfTokenId()}).
+     *
+     * @param array<string, mixed> $definition
+     * @param string|null          $source     Form file path for typed-read errors.
+     *
+     * @return array<string, mixed>
+     */
+    protected function applyDefaultCsrfTokenId(string $name, array $definition, ?string $source = null): array
+    {
+        $reader = ArrayReader::fromArray($definition, $source);
+
+        $optionsReader = $reader->getReader('options');
+        $explicitTokenId = $optionsReader?->getString('csrf_token_id');
+        if ($explicitTokenId !== null && $explicitTokenId !== '') {
+            return $definition;
+        }
+
+        $schemaName = $reader->getReader('schema')?->getString('name');
+        if ($schemaName !== null && $schemaName !== '') {
+            return $definition;
+        }
+
+        $options = $optionsReader?->toArray() ?? [];
+        $options['csrf_token_id'] = $name;
+        $definition['options'] = $options;
+
+        return $definition;
     }
 }

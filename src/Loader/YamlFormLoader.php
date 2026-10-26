@@ -89,6 +89,8 @@ class YamlFormLoader extends AbstractFileFormLoader
             $definition['data'] = array_merge(ArrayReader::fromArray($definition)->getMap('data') ?? [], $data);
         }
 
+        $definition = $this->applyDefaultCsrfTokenId($name, $definition, $file);
+
         return $this->formFactory->create($definition);
     }
 }

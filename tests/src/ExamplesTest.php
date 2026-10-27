@@ -20,7 +20,6 @@ use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Data\FormData;
 use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
@@ -98,12 +97,17 @@ use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(FormFactory::class)]
 #[CoversClass(Form::class)]
 #[CoversClass(FormOptions::class)]
@@ -131,7 +135,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FormData::class)]
 #[CoversClass(FormRules::class)]
 #[CoversTrait(ObjectSchemaTrait::class)]
-#[CoversClass(FormRendererFactory::class)]
 #[CoversClass(FormRenderer::class)]
 #[CoversClass(ElementRendererRegistry::class)]
 #[CoversClass(WidgetRendererRegistry::class)]
@@ -195,7 +198,7 @@ final class ExamplesTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->renderer = FormRendererFactory::create(['csrf_token_manager' => new InMemoryCsrfTokenManager()]);
+        $this->renderer = (new FormTestContainer(csrfTokenManager: new InMemoryCsrfTokenManager()))->getFormRenderer();
 
         Example::setFormFactory(
             new FormFactory(

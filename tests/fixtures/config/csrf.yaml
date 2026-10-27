@@ -1,0 +1,7 @@
+imports:
+    - { resource: form.yaml }
+
+services:
+    Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface:
+        class: Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager
+        public: true

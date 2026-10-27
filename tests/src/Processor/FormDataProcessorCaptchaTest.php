@@ -12,7 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Processor;
 
-use Derafu\DataProcessor\ProcessorFactory;
+use Derafu\DataProcessor\Processor;
+use Derafu\DataProcessor\Registrar\DefaultRuleRegistrar;
+use Derafu\DataProcessor\RuleParser;
+use Derafu\DataProcessor\RuleRegistry;
+use Derafu\DataProcessor\RuleResolver;
 use Derafu\Form\Form;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Processor\FormDataProcessor;
@@ -78,9 +82,11 @@ final class FormDataProcessorCaptchaTest extends TestCase
 
     private function processor(?InMemoryCaptchaProvider $captcha = null, ?Translator $translator = null): FormDataProcessor
     {
+        $dataProcessorRegistry = new RuleRegistry();
+        (new DefaultRuleRegistrar())->register($dataProcessorRegistry);
         return new FormDataProcessor(
             new FormRulesResolver(),
-            (new ProcessorFactory())->create(),
+            new Processor(new RuleResolver($dataProcessorRegistry), new RuleParser()),
             translator: $translator,
             locale: $translator?->getLocale(),
             csrfTokenManager: $this->csrf,

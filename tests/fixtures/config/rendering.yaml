@@ -1,0 +1,8 @@
+imports:
+    - { resource: form.yaml }
+
+services:
+    Symfony\Contracts\Translation\TranslatorInterface:
+        class: Symfony\Component\Translation\Translator
+        arguments:
+            $locale: en

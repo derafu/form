@@ -12,8 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Csrf;
 
-use Derafu\DataProcessor\Contract\ProcessorInterface;
-use Derafu\DataProcessor\ProcessorFactory;
+use Composer\InstalledVersions;
 use Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
@@ -22,6 +21,7 @@ use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -40,17 +40,12 @@ final class CsrfServicesTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.project_dir', sys_get_temp_dir());
-        (new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 3) . '/resources/config')))
-            ->load('form-services.yaml');
-
-        $container->register(ProcessorInterface::class, ProcessorInterface::class)
-            ->setFactory([ProcessorFactory::class, 'create']);
-
-        if ($withManager) {
-            $container->register(InMemoryCsrfTokenManager::class, InMemoryCsrfTokenManager::class)
-                ->setPublic(true);
-            $container->setAlias(CsrfTokenManagerInterface::class, InMemoryCsrfTokenManager::class);
-        }
+        (new YamlFileLoader($container, new FileLocator([
+            dirname(__DIR__, 2) . '/fixtures/config',
+            (InstalledVersions::getInstallPath('derafu/renderer')
+                ?? throw new RuntimeException('derafu/renderer must be installed for these tests.')) . '/resources/config',
+        ])))
+            ->load($withManager ? 'csrf.yaml' : 'form.yaml');
 
         $container->getDefinition(FormRendererInterface::class)->setPublic(true);
         $container->getDefinition(FormDataProcessorInterface::class)->setPublic(true);
@@ -78,7 +73,7 @@ final class CsrfServicesTest extends TestCase
     public function theManagerOfTheApplicationIsUsedToRenderAndToProcess(): void
     {
         $container = $this->container(withManager: true);
-        $manager = $this->service($container, InMemoryCsrfTokenManager::class);
+        $manager = $this->service($container, CsrfTokenManagerInterface::class);
         $this->assertInstanceOf(InMemoryCsrfTokenManager::class, $manager);
 
         $html = $this->service($container, FormRendererInterface::class)->render($this->form());

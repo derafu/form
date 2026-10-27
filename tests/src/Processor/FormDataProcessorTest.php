@@ -12,7 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Tests\Processor;
 
-use Derafu\DataProcessor\ProcessorFactory;
+use Derafu\DataProcessor\Processor;
+use Derafu\DataProcessor\Registrar\DefaultRuleRegistrar;
+use Derafu\DataProcessor\RuleParser;
+use Derafu\DataProcessor\RuleRegistry;
+use Derafu\DataProcessor\RuleResolver;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Data\FormData;
@@ -86,9 +90,11 @@ final class FormDataProcessorTest extends TestCase
 
     protected function setUp(): void
     {
+        $dataProcessorRegistry = new RuleRegistry();
+        (new DefaultRuleRegistrar())->register($dataProcessorRegistry);
         $this->processor = new FormDataProcessor(
             new FormRulesResolver(),
-            ProcessorFactory::create()
+            new Processor(new RuleResolver($dataProcessorRegistry), new RuleParser())
         );
     }
 
@@ -408,9 +414,11 @@ final class FormDataProcessorTest extends TestCase
             'Invalid email format.' => 'Formato de correo electrónico inválido.',
         ], 'es', 'errors+intl-icu');
 
+        $dataProcessorRegistry = new RuleRegistry();
+        (new DefaultRuleRegistrar())->register($dataProcessorRegistry);
         $processor = new FormDataProcessor(
             new FormRulesResolver(),
-            ProcessorFactory::create(),
+            new Processor(new RuleResolver($dataProcessorRegistry), new RuleParser()),
             translator: $translator,
             locale: 'es',
         );

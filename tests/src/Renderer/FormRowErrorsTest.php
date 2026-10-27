@@ -15,7 +15,6 @@ namespace Derafu\TestsForm\Renderer;
 use Derafu\Form\Data\FormData;
 use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\FormRenderer;
 use Derafu\Form\Schema\PropertyDefinition;
@@ -23,6 +22,7 @@ use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -34,13 +34,16 @@ use PHPUnit\Framework\TestCase;
  * which is what the field says and not what the HTML of its errors is (it is
  * never empty: it has a line break even when there is nothing to show).
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(FormRenderer::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractPropertySchema::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractType::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
 #[UsesClass(\Derafu\Form\Data\FormData::class)]
 #[UsesClass(\Derafu\Form\Factory\FormFactory::class)]
-#[UsesClass(\Derafu\Form\Factory\FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\FormUiSchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\PropertySchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
@@ -113,7 +116,7 @@ final class FormRowErrorsTest extends TestCase
         $field = $form->getField('name');
         $this->assertNotNull($field);
 
-        return FormRendererFactory::create()->renderRow($field);
+        return (new FormTestContainer())->getFormRenderer()->renderRow($field);
     }
 
     #[Test]

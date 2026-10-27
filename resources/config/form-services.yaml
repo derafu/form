@@ -1,13 +1,42 @@
+# Reuses the shared Renderer and Twig services. Form contributes its own
+# templates and extension through the shared provider collections.
+imports:
+    - { resource: '../../../renderer/resources/config/renderer-services.yaml' }
+
 services:
     _defaults:
         autowire: true
         autoconfigure: true
 
-    Derafu\Form\Renderer\FormTwigExtension: ~
-
     Derafu\Form\Renderer\Support\InputActionResolver: ~
 
-    Derafu\Form\Renderer\ElementRendererProvider: ~
+    Derafu\Form\Contract\Renderer\ElementRendererProviderInterface:
+        class: Derafu\Form\Renderer\ChainElementRendererProvider
+        arguments:
+            $providers: !tagged_iterator derafu_form.element_renderer_provider
+
+    Derafu\Form\Renderer\ElementRendererProvider:
+        tags:
+            - { name: derafu_form.element_renderer_provider, priority: -1000 }
+
+    Derafu\Form\Contract\Renderer\WidgetRendererProviderInterface:
+        class: Derafu\Form\Renderer\ChainWidgetRendererProvider
+        arguments:
+            $providers: !tagged_iterator derafu_form.widget_renderer_provider
+
+    Derafu\Form\Renderer\WidgetRendererProvider:
+        tags:
+            - { name: derafu_form.widget_renderer_provider, priority: -1000 }
+
+    Derafu\Form\Contract\Renderer\ElementRendererRegistryInterface:
+        class: Derafu\Form\Renderer\ElementRendererRegistry
+        arguments:
+            $renderers: '@Derafu\Form\Contract\Renderer\ElementRendererProviderInterface'
+
+    Derafu\Form\Contract\Renderer\WidgetRendererRegistryInterface:
+        class: Derafu\Form\Renderer\WidgetRendererRegistry
+        arguments:
+            $renderers: '@Derafu\Form\Contract\Renderer\WidgetRendererProviderInterface'
 
     # Feeds resources/translations into the consuming app's Translator (the
     # app must pass $resourceProviders: !tagged_iterator
@@ -18,16 +47,18 @@ services:
         tags: ['derafu_translation.resource_provider']
 
     Derafu\Form\Contract\Renderer\FormRendererInterface:
-        factory: ['Derafu\Form\Factory\FormRendererFactory', 'create']
+        class: Derafu\Form\Renderer\FormRenderer
         arguments:
-            $options:
-                element_renderers: '@Derafu\Form\Renderer\ElementRendererProvider'
-                # Optional: without it a form that is protected can not be
-                # rendered, nor its data processed (see CsrfTokenManagerInterface).
-                csrf_token_manager: '@?Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface'
-                # Optional: without it a form that asks for the captcha has none
-                # (see CaptchaProviderInterface).
-                captcha_provider: '@?Derafu\Form\Contract\Captcha\CaptchaProviderInterface'
+            $renderer: '@Derafu\Renderer\Contract\RendererInterface'
+            $csrfTokenManager: '@?Derafu\Form\Contract\Csrf\CsrfTokenManagerInterface'
+            $captchaProvider: '@?Derafu\Form\Contract\Captcha\CaptchaProviderInterface'
+
+    Derafu\Form\Renderer\FormExtensionProvider:
+        tags: ['derafu_twig.extension_provider']
+
+    Derafu\Form\Renderer\FormTemplatePathProvider:
+        tags:
+            - { name: derafu_twig.template_path_provider, priority: -1000 }
 
     Derafu\Form\Contract\Factory\FormFactoryInterface:
         class: Derafu\Form\Factory\FormFactory
@@ -56,14 +87,13 @@ services:
     Derafu\Form\Contract\Type\TypeResolverInterface:
         class: Derafu\Form\Type\TypeResolver
 
-    Derafu\Form\Type\TypeResolver: ~
-
     Derafu\Form\Contract\Type\TypeRegistryInterface:
         class: Derafu\Form\Type\TypeRegistry
         arguments:
-            $types: '@Derafu\Form\Type\TypeProvider'
+            $types: '@Derafu\Form\Contract\Type\TypeProviderInterface'
 
-    Derafu\Form\Type\TypeProvider: ~
+    Derafu\Form\Contract\Type\TypeProviderInterface:
+        class: Derafu\Form\Type\TypeProvider
 
     Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface:
         class: Derafu\Form\Processor\UiSchemaRuleEvaluator

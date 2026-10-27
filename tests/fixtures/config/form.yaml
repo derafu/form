@@ -1,0 +1,3 @@
+imports:
+    - { resource: '../../../vendor/derafu/data-processor/resources/config/data-processor-services.yaml' }
+    - { resource: '../../../resources/config/form-services.yaml' }

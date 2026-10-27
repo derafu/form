@@ -14,7 +14,6 @@ namespace Derafu\TestsForm\Renderer;
 
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Data\FormData;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Form;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\FormRenderer;
@@ -22,6 +21,7 @@ use Derafu\Form\Renderer\FormTwigExtension;
 use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -35,11 +35,14 @@ use Twig\Error\RuntimeError;
  * the manager gives for the form, and the errors of the form as a whole are
  * rendered before its fields.
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(FormRenderer::class)]
 #[CoversClass(FormTwigExtension::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractPropertySchema::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
-#[UsesClass(\Derafu\Form\Factory\FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\FormUiSchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\PropertySchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
@@ -81,7 +84,7 @@ final class FormCsrfRenderingTest extends TestCase
 
     private function renderer(bool $withManager = true): FormRendererInterface
     {
-        return FormRendererFactory::create($withManager ? ['csrf_token_manager' => $this->manager] : []);
+        return (new FormTestContainer(csrfTokenManager: $withManager ? $this->manager : null))->getFormRenderer();
     }
 
     /**

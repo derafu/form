@@ -12,7 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm;
 
-use Derafu\DataProcessor\ProcessorFactory;
+use Derafu\DataProcessor\Processor;
+use Derafu\DataProcessor\Registrar\DefaultRuleRegistrar;
+use Derafu\DataProcessor\RuleParser;
+use Derafu\DataProcessor\RuleRegistry;
+use Derafu\DataProcessor\RuleResolver;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractType;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
@@ -21,7 +25,6 @@ use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Data\FormData;
 use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Factory\FormUiSchemaFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Factory\UiSchemaElementFactory;
@@ -93,6 +96,7 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -112,6 +116,10 @@ use PHPUnit\Framework\TestCase;
  *    when the user submitted a legitimate falsy value.
  * D) Rendered HTML: the correct value appears in the rendered output.
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(Form::class)]
 #[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(FormField::class)]
@@ -125,7 +133,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(NumberSchema::class)]
 #[CoversClass(ArraySchema::class)]
 #[CoversClass(FormFactory::class)]
-#[CoversClass(FormRendererFactory::class)]
 #[CoversClass(FormUiSchemaFactory::class)]
 #[CoversClass(UiSchemaElementFactory::class)]
 #[CoversClass(AbstractUiSchemaElement::class)]
@@ -306,9 +313,11 @@ final class FormSchemaDefaultTest extends TestCase
 
     private function processor(): FormDataProcessor
     {
+        $dataProcessorRegistry = new RuleRegistry();
+        (new DefaultRuleRegistrar())->register($dataProcessorRegistry);
         return new FormDataProcessor(
             new FormRulesResolver(),
-            (new ProcessorFactory())->create()
+            new Processor(new RuleResolver($dataProcessorRegistry), new RuleParser())
         );
     }
 
@@ -569,7 +578,7 @@ final class FormSchemaDefaultTest extends TestCase
     public function testTextInputRendersWithDefaultValue(): void
     {
         $form = $this->formFactory->create($this->stringFieldDef('name', 'John'));
-        $html = FormRendererFactory::create()->render($form);
+        $html = (new FormTestContainer())->getFormRenderer()->render($form);
 
         $this->assertStringContainsString('value="John"', $html);
     }
@@ -577,7 +586,7 @@ final class FormSchemaDefaultTest extends TestCase
     public function testCheckboxRendersCheckedWhenDefaultIsTrue(): void
     {
         $form = $this->formFactory->create($this->boolFieldDef('active', true));
-        $html = FormRendererFactory::create()->render($form);
+        $html = (new FormTestContainer())->getFormRenderer()->render($form);
 
         $this->assertStringContainsString('checked', $html);
     }
@@ -586,7 +595,7 @@ final class FormSchemaDefaultTest extends TestCase
     {
         // default=false → setData(false) → checkbox must NOT have checked attr.
         $form = $this->formFactory->create($this->boolFieldDef('active', false));
-        $html = FormRendererFactory::create()->render($form);
+        $html = (new FormTestContainer())->getFormRenderer()->render($form);
 
         // The checkbox is present but must not be checked.
         $this->assertStringContainsString('type="checkbox"', $html);
@@ -613,7 +622,7 @@ final class FormSchemaDefaultTest extends TestCase
             ],
         ]);
 
-        $html = FormRendererFactory::create()->render($form);
+        $html = (new FormTestContainer())->getFormRenderer()->render($form);
 
         // The 'active' option must be marked selected.
         $this->assertMatchesRegularExpression(
@@ -654,7 +663,7 @@ final class FormSchemaDefaultTest extends TestCase
 
         $this->assertFalse($result->isValid(), 'Required name empty, must be invalid.');
 
-        $html = FormRendererFactory::create()->render($result->getForm());
+        $html = (new FormTestContainer())->getFormRenderer()->render($result->getForm());
 
         // terms checkbox must NOT be checked in the re-rendered form.
         $this->assertStringNotContainsString('checked', $html);

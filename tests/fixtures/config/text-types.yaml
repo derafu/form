@@ -1,0 +1,6 @@
+imports:
+    - { resource: services.yaml }
+
+services:
+    Derafu\Form\Contract\Type\TypeProviderInterface:
+        class: Derafu\TestsForm\Fixture\TextOnlyTypeProvider

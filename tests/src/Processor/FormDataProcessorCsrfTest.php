@@ -12,7 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Processor;
 
-use Derafu\DataProcessor\ProcessorFactory;
+use Derafu\DataProcessor\Processor;
+use Derafu\DataProcessor\Registrar\DefaultRuleRegistrar;
+use Derafu\DataProcessor\RuleParser;
+use Derafu\DataProcessor\RuleRegistry;
+use Derafu\DataProcessor\RuleResolver;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Form;
 use Derafu\Form\FormDefinition;
@@ -73,9 +77,11 @@ final class FormDataProcessorCsrfTest extends TestCase
 
     private function processor(?Translator $translator = null, bool $withManager = true): FormDataProcessor
     {
+        $dataProcessorRegistry = new RuleRegistry();
+        (new DefaultRuleRegistrar())->register($dataProcessorRegistry);
         return new FormDataProcessor(
             new FormRulesResolver(),
-            (new ProcessorFactory())->create(),
+            new Processor(new RuleResolver($dataProcessorRegistry), new RuleParser()),
             translator: $translator,
             locale: $translator?->getLocale(),
             csrfTokenManager: $withManager ? $this->manager : null,

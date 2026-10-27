@@ -12,7 +12,11 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Tests\Processor;
 
-use Derafu\DataProcessor\ProcessorFactory;
+use Derafu\DataProcessor\Processor;
+use Derafu\DataProcessor\Registrar\DefaultRuleRegistrar;
+use Derafu\DataProcessor\RuleParser;
+use Derafu\DataProcessor\RuleRegistry;
+use Derafu\DataProcessor\RuleResolver;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Factory\FormUiSchemaFactory;
@@ -85,7 +89,9 @@ final class FormDataProcessorDependentRequiredTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->processor = new FormDataProcessor(new FormRulesResolver(), ProcessorFactory::create());
+        $dataProcessorRegistry = new RuleRegistry();
+        (new DefaultRuleRegistrar())->register($dataProcessorRegistry);
+        $this->processor = new FormDataProcessor(new FormRulesResolver(), new Processor(new RuleResolver($dataProcessorRegistry), new RuleParser()));
     }
 
     /**

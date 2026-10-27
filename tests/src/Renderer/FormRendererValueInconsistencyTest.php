@@ -14,7 +14,6 @@ namespace Derafu\Form\Tests\Renderer;
 
 use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Data\FormData;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Factory\PropertySchemaFactory;
 use Derafu\Form\Form;
 use Derafu\Form\Rules\FormRules;
@@ -24,6 +23,7 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -32,6 +32,10 @@ use PHPUnit\Framework\TestCase;
 /**
  * Test for form rendering value inconsistency between form_rest() and form_element().
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(\Derafu\Form\Form::class)]
 #[CoversClass(PropertySchemaFactory::class)]
 #[CoversClass(\Derafu\Form\FormField::class)]
@@ -50,7 +54,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WidgetFactory::class)]
 #[CoversClass(Widget::class)]
 #[CoversClass(FormRules::class)]
-#[CoversClass(FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Renderer\ElementRendererProvider::class)]
 #[UsesClass(\Derafu\Form\Renderer\ElementRendererRegistry::class)]
 #[UsesClass(\Derafu\Form\Renderer\FormTwigExtension::class)]
@@ -113,7 +116,7 @@ final class FormRendererValueInconsistencyTest extends TestCase
 
         // Use the real, fully wired renderer (Twig + widget/element registries)
         // instead of a mock, so the test exercises the actual rendering pipeline.
-        $renderer = FormRendererFactory::create();
+        $renderer = (new FormTestContainer())->getFormRenderer();
 
         // form_rest() behavior: renders every field not yet individually rendered.
         $restHtml = $renderer->renderRest($form);

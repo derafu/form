@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Factory;
 
+use Composer\InstalledVersions;
 use Derafu\Array\ArrayPath;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\Loader\FormLoaderInterface;
@@ -34,6 +35,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -278,7 +280,11 @@ final class TranslatingFormFactoryTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.project_dir', $projectDir);
-        (new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 3) . '/resources/config')))
+        (new YamlFileLoader($container, new FileLocator([
+            dirname(__DIR__, 3) . '/resources/config',
+            (InstalledVersions::getInstallPath('derafu/renderer')
+                ?? throw new RuntimeException('derafu/renderer must be installed for these tests.')) . '/resources/config',
+        ])))
             ->load('form-services.yaml');
         $container->register(Translator::class, Translator::class)
             ->setFactory([TranslatorFactory::class, 'create'])

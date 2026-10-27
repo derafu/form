@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm;
 
+use Composer\InstalledVersions;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
@@ -20,19 +21,18 @@ use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Type\TypeRegistryInterface;
 use Derafu\Form\Contract\Type\TypeResolverInterface;
 use Derafu\Form\Factory\TranslatingFormFactory;
+use Derafu\Form\Renderer\FormExtensionProvider;
 use Derafu\Form\Renderer\FormTwigExtension;
 use Derafu\Form\Renderer\Support\InputActionResolver;
 use Derafu\Form\Translation\FormTranslationResourceProvider;
 use Derafu\Form\Type\IntegerType;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
-use Derafu\Translation\TranslatorFactory;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Symfony\Component\Translation\Translator;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -43,21 +43,17 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[CoversNothing]
 final class ServicesTest extends TestCase
 {
-    private function loadContainer(): ContainerBuilder
+    private function loadContainer(string $configuration = 'services.yaml'): ContainerBuilder
     {
         $root = dirname(__DIR__, 2);
         $container = new ContainerBuilder();
         $container->setParameter('kernel.project_dir', __DIR__ . '/../fixtures/project');
-        $loader = new YamlFileLoader($container, new FileLocator($root . '/resources/config'));
-        $loader->load($root . '/vendor/derafu/data-processor/resources/config/data-processor-services.yaml');
-        $loader->load('form-services.yaml');
-
-        // The application chooses the translator and locale. Both packages
-        // contribute their catalogues through their actual YAML tags.
-        $container->register(Translator::class, Translator::class)
-            ->setFactory([TranslatorFactory::class, 'create'])
-            ->setArguments(['es', ['en'], new TaggedIteratorArgument('derafu_translation.resource_provider')]);
-        $container->setAlias(TranslatorInterface::class, Translator::class);
+        (new YamlFileLoader($container, new FileLocator([
+            $root . '/tests/fixtures/config',
+            (InstalledVersions::getInstallPath('derafu/renderer')
+                ?? throw new RuntimeException('derafu/renderer must be installed for these tests.')) . '/resources/config',
+        ])))
+            ->load($configuration);
 
         return $container;
     }
@@ -112,6 +108,23 @@ final class ServicesTest extends TestCase
         self::assertSame($registry->get(IntegerType::class), $resolver->guess(12));
     }
 
+    public function testTheConfiguredTypeProviderAffectsInferenceRenderingAndProcessing(): void
+    {
+        $container = $this->loadContainer('text-types.yaml');
+        $this->compile($container);
+        $form = $this->service($container, FormFactoryInterface::class)->create([
+            'data' => ['contact' => 'ada@example.com'],
+            'options' => ['csrf_protection' => false],
+        ]);
+
+        $html = $this->service($container, FormRendererInterface::class)->render($form);
+        self::assertStringContainsString('type="text"', $html);
+        self::assertStringNotContainsString('type="email"', $html);
+        $result = $this->service($container, FormDataProcessorInterface::class)->process($form, ['contact' => 'plain text']);
+        self::assertTrue($result->isValid());
+        self::assertSame('plain text', $result->getReader()->requireString('contact'));
+    }
+
     public function testTheTaggedProviderExposesBothPackageCatalogues(): void
     {
         $container = $this->loadContainer();
@@ -155,7 +168,9 @@ final class ServicesTest extends TestCase
         self::assertStringContainsString('Mostrar u ocultar la contraseña', $html);
         self::assertStringContainsString('Copiar valor', $html);
         self::assertStringContainsString('name="password"', $html);
-        $extension = $this->service($container, FormTwigExtension::class);
+        $provider = $this->service($container, FormExtensionProvider::class);
+        $extension = [...$provider->getExtensions()][0];
+        self::assertInstanceOf(FormTwigExtension::class, $extension);
         self::assertSame('form', $extension->getFunctions()[0]->getName());
     }
 

@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Derafu\TestsForm\Renderer;
 
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\Form;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\FormRenderer;
@@ -22,6 +21,7 @@ use Derafu\Form\Schema\PropertyDefinition;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\TestsForm\Captcha\InMemoryCaptchaProvider;
 use Derafu\TestsForm\Csrf\InMemoryCsrfTokenManager;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -34,11 +34,14 @@ use Twig\Error\RuntimeError;
  * The captcha of a form is rendered when the form asks for it and the
  * application has one, with the id of the form, before the CSRF token.
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(FormRenderer::class)]
 #[CoversClass(FormTwigExtension::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractPropertySchema::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
-#[UsesClass(\Derafu\Form\Factory\FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\FormUiSchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\PropertySchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
@@ -72,10 +75,10 @@ final class FormCaptchaRenderingTest extends TestCase
 {
     private function renderer(?InMemoryCaptchaProvider $captcha): FormRendererInterface
     {
-        return FormRendererFactory::create([
-            'csrf_token_manager' => new InMemoryCsrfTokenManager(),
-            'captcha_provider' => $captcha,
-        ]);
+        return (new FormTestContainer(
+            csrfTokenManager: new InMemoryCsrfTokenManager(),
+            captchaProvider: $captcha
+        ))->getFormRenderer();
     }
 
     private function form(string $name = '', bool $captcha = true): Form

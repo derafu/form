@@ -1,0 +1,6 @@
+imports:
+    - { resource: services.yaml }
+
+services:
+    Derafu\Form\Contract\Processor\UiSchemaRuleEvaluatorInterface:
+        class: Derafu\TestsForm\Fixture\InactiveRuleEvaluator

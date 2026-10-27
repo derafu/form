@@ -14,7 +14,6 @@ namespace Derafu\TestsForm\Renderer;
 
 use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\Widget\InputWidgetRenderer;
 use Derafu\Form\Schema\PropertyDefinition;
@@ -22,6 +21,7 @@ use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -34,13 +34,16 @@ use PHPUnit\Framework\TestCase;
  * The control of an image restricts the files to images; the option `accept` of
  * the control sets which ones (extensions or MIME types) and replaces that.
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(InputWidgetRenderer::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractPropertySchema::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractType::class)]
 #[UsesClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
 #[UsesClass(\Derafu\Form\Data\FormData::class)]
 #[UsesClass(\Derafu\Form\Factory\FormFactory::class)]
-#[UsesClass(\Derafu\Form\Factory\FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\FormUiSchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\PropertySchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
@@ -121,7 +124,7 @@ final class FileAcceptAttributeTest extends TestCase
 
         // The type of the control is also an option of the rendering, like when
         // the whole form is rendered (see ControlRenderer).
-        return html_entity_decode(FormRendererFactory::create()->renderRow($field, ['type' => $control]));
+        return html_entity_decode((new FormTestContainer())->getFormRenderer()->renderRow($field, ['type' => $control]));
     }
 
     #[Test]

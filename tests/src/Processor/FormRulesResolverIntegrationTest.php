@@ -14,7 +14,6 @@ namespace Derafu\Form\Tests\Processor;
 
 use Derafu\DataProcessor\Contract\ProcessorInterface;
 use Derafu\DataProcessor\Exception\ValidationException;
-use Derafu\DataProcessor\ProcessorFactory;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Factory\FormUiSchemaFactory;
@@ -43,6 +42,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 /**
  * Integration tests for FormRulesResolver + Derafu DataProcessor.
@@ -85,7 +87,15 @@ final class FormRulesResolverIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->resolver = new FormRulesResolver();
-        $this->processor = ProcessorFactory::create();
+        $container = new ContainerBuilder();
+        (new YamlFileLoader($container, new FileLocator()))->load(
+            dirname(__DIR__, 3) . '/vendor/derafu/data-processor/resources/config/data-processor-services.yaml'
+        );
+        $container->getDefinition(ProcessorInterface::class)->setPublic(true);
+        $container->compile();
+        $processor = $container->get(ProcessorInterface::class);
+        self::assertInstanceOf(ProcessorInterface::class, $processor);
+        $this->processor = $processor;
     }
 
     // =========================================================================

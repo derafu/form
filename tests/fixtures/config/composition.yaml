@@ -1,0 +1,31 @@
+imports:
+    - { resource: services.yaml }
+
+parameters:
+    derafu.twig.options: { extra: false }
+
+services:
+    Derafu\Form\Contract\Renderer\ElementRendererInterface $domain:
+        class: Derafu\TestsForm\Fixture\DomainElementRenderer
+
+    Derafu\TestsForm\Fixture\DomainElementRendererProvider:
+        arguments:
+            $renderer: '@Derafu\Form\Contract\Renderer\ElementRendererInterface $domain'
+        tags: ['derafu_form.element_renderer_provider']
+
+    Derafu\Form\Contract\Renderer\WidgetRendererInterface $domain:
+        class: Derafu\TestsForm\Fixture\DomainWidgetRenderer
+
+    Derafu\TestsForm\Fixture\DomainWidgetRendererProvider:
+        arguments:
+            $renderer: '@Derafu\Form\Contract\Renderer\WidgetRendererInterface $domain'
+        tags: ['derafu_form.widget_renderer_provider']
+
+    Derafu\TestsForm\Fixture\DomainTemplatePathProvider:
+        tags: ['derafu_twig.template_path_provider']
+
+    Derafu\TestsForm\Fixture\DomainExtensionProvider:
+        tags: ['derafu_twig.extension_provider']
+
+    Derafu\TestsForm\Fixture\DomainComponent:
+        tags: ['derafu_twig.component']

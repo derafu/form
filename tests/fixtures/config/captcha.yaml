@@ -1,0 +1,7 @@
+imports:
+    - { resource: form.yaml }
+
+services:
+    Derafu\Form\Contract\Captcha\CaptchaProviderInterface:
+        class: Derafu\TestsForm\Captcha\InMemoryCaptchaProvider
+        public: true

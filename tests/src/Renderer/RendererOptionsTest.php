@@ -15,7 +15,6 @@ namespace Derafu\TestsForm\Renderer;
 use Derafu\Form\Contract\UiSchema\UiSchemaElementInterface;
 use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\Widget\TextareaWidgetRenderer;
 use Derafu\Form\Schema\PropertyDefinition;
@@ -25,6 +24,7 @@ use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\Group;
 use Derafu\Form\UiSchema\Label;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -37,6 +37,10 @@ use PHPUnit\Framework\TestCase;
  * The options of the renderers are read with the type that each one has: one that
  * is not of that type is an error of the definition, and it says which one.
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(\Derafu\Form\Renderer\Widget\InputWidgetRenderer::class)]
 #[CoversClass(TextareaWidgetRenderer::class)]
 #[CoversClass(\Derafu\Form\Renderer\Widget\SelectWidgetRenderer::class)]
@@ -52,7 +56,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
 #[UsesClass(\Derafu\Form\Data\FormData::class)]
 #[UsesClass(\Derafu\Form\Factory\FormFactory::class)]
-#[UsesClass(\Derafu\Form\Factory\FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\FormUiSchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\PropertySchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
@@ -128,7 +131,7 @@ final class RendererOptionsTest extends TestCase
         $this->assertNotNull($field);
 
         return html_entity_decode(
-            FormRendererFactory::create()->renderElement($field->getControl(), $form, $options)
+            (new FormTestContainer())->getFormRenderer()->renderElement($field->getControl(), $form, $options)
         );
     }
 
@@ -245,7 +248,7 @@ final class RendererOptionsTest extends TestCase
             ],
         ]);
 
-        return FormRendererFactory::create()->renderElement($element, $form, $options);
+        return (new FormTestContainer())->getFormRenderer()->renderElement($element, $form, $options);
     }
 
     #[Test]

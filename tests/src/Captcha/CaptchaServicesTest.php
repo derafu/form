@@ -12,9 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\TestsForm\Captcha;
 
-use Derafu\DataProcessor\Contract\ProcessorInterface;
-use Derafu\DataProcessor\ProcessorFactory;
-use Derafu\Form\Contract\Captcha\CaptchaProviderInterface;
+use Composer\InstalledVersions;
 use Derafu\Form\Contract\Processor\FormDataProcessorInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Form;
@@ -22,6 +20,7 @@ use Derafu\Translation\Exception\Core\TranslatableLogicException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -39,16 +38,12 @@ final class CaptchaServicesTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.project_dir', sys_get_temp_dir());
-        (new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 3) . '/resources/config')))
-            ->load('form-services.yaml');
-
-        $container->register(ProcessorInterface::class, ProcessorInterface::class)
-            ->setFactory([ProcessorFactory::class, 'create']);
-
-        if ($withProvider) {
-            $container->register(InMemoryCaptchaProvider::class, InMemoryCaptchaProvider::class);
-            $container->setAlias(CaptchaProviderInterface::class, InMemoryCaptchaProvider::class);
-        }
+        (new YamlFileLoader($container, new FileLocator([
+            dirname(__DIR__, 2) . '/fixtures/config',
+            (InstalledVersions::getInstallPath('derafu/renderer')
+                ?? throw new RuntimeException('derafu/renderer must be installed for these tests.')) . '/resources/config',
+        ])))
+            ->load($withProvider ? 'captcha.yaml' : 'form.yaml');
 
         $container->getDefinition(FormRendererInterface::class)->setPublic(true);
         $container->getDefinition(FormDataProcessorInterface::class)->setPublic(true);

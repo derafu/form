@@ -14,7 +14,6 @@ namespace Derafu\TestsForm\Renderer;
 
 use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\Widget\TextareaWidgetRenderer;
 use Derafu\Form\Schema\PropertyDefinition;
@@ -23,6 +22,7 @@ use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -34,6 +34,10 @@ use PHPUnit\Framework\TestCase;
  * What the renderers of the widgets and of the elements write for the values
  * that the definition of a field can have.
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(\Derafu\Form\Renderer\Widget\InputWidgetRenderer::class)]
 #[CoversClass(TextareaWidgetRenderer::class)]
 #[CoversClass(\Derafu\Form\Renderer\Widget\SelectWidgetRenderer::class)]
@@ -50,7 +54,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
 #[UsesClass(\Derafu\Form\Data\FormData::class)]
 #[UsesClass(\Derafu\Form\Factory\FormFactory::class)]
-#[UsesClass(\Derafu\Form\Factory\FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\FormUiSchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\PropertySchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
@@ -148,7 +151,7 @@ final class WidgetRenderingTest extends TestCase
         $this->assertNotNull($field);
 
         return html_entity_decode(
-            FormRendererFactory::create()->renderElement($field->getControl(), $form, $options)
+            (new FormTestContainer())->getFormRenderer()->renderElement($field->getControl(), $form, $options)
         );
     }
 
@@ -317,7 +320,7 @@ final class WidgetRenderingTest extends TestCase
         ];
         $form = (new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider()))))->create($definition);
 
-        $html = FormRendererFactory::create()->render($form);
+        $html = (new FormTestContainer())->getFormRenderer()->render($form);
 
         $this->assertMatchesRegularExpression('/<input[^>]*name="field"[^>]*disabled/', html_entity_decode($html));
     }
@@ -332,7 +335,7 @@ final class WidgetRenderingTest extends TestCase
 
         $this->expectException(TranslatableInvalidArgumentException::class);
         $this->expectExceptionMessage('not found in form');
-        FormRendererFactory::create()->renderElement(new Control(['type' => 'Control', 'scope' => '#/properties/nope']), $form);
+        (new FormTestContainer())->getFormRenderer()->renderElement(new Control(['type' => 'Control', 'scope' => '#/properties/nope']), $form);
     }
 
     /**
@@ -347,7 +350,7 @@ final class WidgetRenderingTest extends TestCase
             'options' => ['csrf_protection' => false],
         ]);
 
-        return html_entity_decode(FormRendererFactory::create()->renderElement($form->getUiSchema(), $form, $options));
+        return html_entity_decode((new FormTestContainer())->getFormRenderer()->renderElement($form->getUiSchema(), $form, $options));
     }
 
     #[Test]
@@ -437,7 +440,7 @@ final class WidgetRenderingTest extends TestCase
 
         $this->expectException(TranslatableInvalidArgumentException::class);
         $this->expectExceptionMessage('requires an ArraySchemaInterface');
-        $widget->render($field, ['renderer' => FormRendererFactory::create()]);
+        $widget->render($field, ['renderer' => (new FormTestContainer())->getFormRenderer()]);
     }
 
     private const ASTERISK = '<span class="text-danger">*</span>';
@@ -590,11 +593,11 @@ final class WidgetRenderingTest extends TestCase
         ];
         $factory = new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider())));
 
-        $hidden = html_entity_decode(FormRendererFactory::create()->render($factory->create($definition('no'))));
+        $hidden = html_entity_decode((new FormTestContainer())->getFormRenderer()->render($factory->create($definition('no'))));
         $this->assertMatchesRegularExpression('/<input[^>]*name="field"[^>]*disabled/', $hidden);
         $this->assertStringContainsString('d-none', $hidden);
 
-        $shown = html_entity_decode(FormRendererFactory::create()->render($factory->create($definition('yes'))));
+        $shown = html_entity_decode((new FormTestContainer())->getFormRenderer()->render($factory->create($definition('yes'))));
         $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="field"[^>]*disabled/', $shown);
     }
 
@@ -609,7 +612,7 @@ final class WidgetRenderingTest extends TestCase
             ]);
             $field = $form->getField('field');
             $this->assertNotNull($field);
-            $renderer = FormRendererFactory::create();
+            $renderer = (new FormTestContainer())->getFormRenderer();
 
             $this->assertSame($native, str_contains($renderer->renderWidget($field), 'required="required"'));
             $this->assertSame(!$hidden, str_contains($renderer->renderLabel($field), self::ASTERISK));
@@ -743,7 +746,7 @@ final class WidgetRenderingTest extends TestCase
             ],
             'options' => ['csrf_protection' => false],
         ]);
-        $renderer = FormRendererFactory::create();
+        $renderer = (new FormTestContainer())->getFormRenderer();
         $extension = new \Derafu\Form\Renderer\FormTwigExtension($renderer);
 
         // Only one of the fields is rendered: the other one comes with the end.
@@ -767,7 +770,7 @@ final class WidgetRenderingTest extends TestCase
             'options' => ['csrf_protection' => false],
         ]);
 
-        $end = (string) (new \Derafu\Form\Renderer\FormTwigExtension(FormRendererFactory::create()))
+        $end = (string) (new \Derafu\Form\Renderer\FormTwigExtension((new FormTestContainer())->getFormRenderer()))
             ->renderFormEnd($form, ['render_rest' => false]);
 
         $this->assertStringNotContainsString('name="a"', $end);
@@ -800,7 +803,7 @@ final class WidgetRenderingTest extends TestCase
             'options' => ['csrf_protection' => false],
         ]);
 
-        $html = html_entity_decode(FormRendererFactory::create()->render($form));
+        $html = html_entity_decode((new FormTestContainer())->getFormRenderer()->render($form));
 
         $this->assertMatchesRegularExpression('/<input[^>]*name="contact\[address\]"[^>]*value="Street 1"[^>]*required/', $html);
         $this->assertMatchesRegularExpression('/<input[^>]*name="contact\[city\]"(?![^>]*required)/', $html);

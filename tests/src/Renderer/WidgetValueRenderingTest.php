@@ -14,7 +14,6 @@ namespace Derafu\TestsForm\Renderer;
 
 use Derafu\Form\Factory\ChoicesShorthand;
 use Derafu\Form\Factory\FormFactory;
-use Derafu\Form\Factory\FormRendererFactory;
 use Derafu\Form\FormDefinition;
 use Derafu\Form\Renderer\Widget\RadioWidgetRenderer;
 use Derafu\Form\Renderer\Widget\SelectWidgetRenderer;
@@ -24,6 +23,7 @@ use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\TestsForm\Fixture\FormTestContainer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -34,6 +34,10 @@ use PHPUnit\Framework\TestCase;
  * A control shows the value that the form has: the one that was sent or, if
  * there is none, the default of the schema.
  */
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainElementRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\ChainWidgetRendererProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormTemplatePathProvider::class)]
+#[\PHPUnit\Framework\Attributes\UsesClass(\Derafu\Form\Renderer\FormExtensionProvider::class)]
 #[CoversClass(RadioWidgetRenderer::class)]
 #[CoversClass(SelectWidgetRenderer::class)]
 #[CoversClass(TextareaWidgetRenderer::class)]
@@ -42,7 +46,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\Derafu\Form\Abstract\AbstractUiSchemaElement::class)]
 #[UsesClass(\Derafu\Form\Data\FormData::class)]
 #[UsesClass(\Derafu\Form\Factory\FormFactory::class)]
-#[UsesClass(\Derafu\Form\Factory\FormRendererFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\FormUiSchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\PropertySchemaFactory::class)]
 #[UsesClass(\Derafu\Form\Factory\UiSchemaElementFactory::class)]
@@ -133,7 +136,7 @@ final class WidgetValueRenderingTest extends TestCase
 
         $form = (new FormFactory(new TypeResolver(new TypeRegistry(new TypeProvider()))))->create($definition);
 
-        return html_entity_decode(FormRendererFactory::create()->render($form));
+        return html_entity_decode((new FormTestContainer())->getFormRenderer()->render($form));
     }
 
     /**

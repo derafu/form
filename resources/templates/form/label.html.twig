@@ -11,7 +11,7 @@
 {# Assign label class based on widget type. #}
 {% if field.widget.type in ['checkbox', 'radio'] %}
     {% set label_class = 'form-check-label' %}
-{% elseif not options.floating_labels %}
+{% elseif not (options.floating_labels|default(false)) %}
     {% set label_class = 'form-label' %}
 {% endif %}
 

@@ -28,6 +28,7 @@ use Derafu\Renderer\Engine\Html\TwigHtmlEngine;
 use Derafu\TestsForm\Fixture\InactiveRuleEvaluator;
 use Derafu\Twig\Contract\TwigServiceInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesNamespace;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -190,5 +191,30 @@ final class RendererCompositionTest extends TestCase
         self::assertStringContainsString('<aside>Domain label</aside>', $html);
         self::assertStringContainsString('data-domain-widget', $html);
         self::assertStringContainsString('<form', $html);
+    }
+
+    /** @return iterable<string, array{array<string, mixed>, bool}> */
+    public static function strictLabelOptions(): iterable
+    {
+        yield 'no options' => [[], false];
+        yield 'unrelated attributes' => [['label_attr' => ['data-domain' => 'application']], false];
+        yield 'explicit false' => [['floating_labels' => false], false];
+        yield 'explicit true' => [['floating_labels' => true], true];
+    }
+
+    /** @param array<string, mixed> $options */
+    #[DataProvider('strictLabelOptions')]
+    public function testLabelsSupportStrictTwigWithOptionalFloatingLabels(array $options, bool $floating): void
+    {
+        $container = $this->container();
+        $this->service($container, TwigServiceInterface::class)->getTwig()->enableStrictVariables();
+        $field = $this->form($container)->getField('email');
+        self::assertNotNull($field);
+        $html = $this->service($container, FormRendererInterface::class)->renderLabel($field, 'Email', $options);
+        self::assertStringContainsString('>Email</label>', $html);
+        self::assertSame(!$floating, str_contains($html, 'class="form-label"'));
+        if (isset($options['label_attr'])) {
+            self::assertStringContainsString('data-domain="application"', $html);
+        }
     }
 }

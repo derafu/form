@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Derafu\Form\Processor;
 
 use Derafu\DataProcessor\RuleSet;
+use Derafu\File\ByteSize;
+use Derafu\File\Mime;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Form\Contract\Processor\FormRulesResolverInterface;
@@ -25,7 +27,6 @@ use Derafu\Form\Contract\Schema\PropertySchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use Derafu\Form\Contract\UiSchema\ControlInterface;
 use Derafu\Form\Schema\Pattern;
-use Derafu\Support\File;
 
 /**
  * Resolves the complete, merged processing rules for every field in a form.
@@ -607,7 +608,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
 
         if ($types !== []) {
             $minSize = $options['min_size'] ?? null;
-            if ((is_int($minSize) || is_string($minSize)) && File::parseSize((string) $minSize) === 0) {
+            if ((is_int($minSize) || is_string($minSize)) && ByteSize::parse((string) $minSize) === 0) {
                 $types[] = 'application/x-empty';
             }
             $validate[] = 'mimetype:' . implode(',', array_unique($types));
@@ -651,7 +652,7 @@ final class FormRulesResolver implements FormRulesResolverInterface
             }
 
             if (str_starts_with($element, '.')) {
-                $elementTypes = File::mimetypesFromExtension($element);
+                $elementTypes = Mime::typesOfExtension($element);
             } elseif (preg_match('~^[a-z0-9][a-z0-9!#$&^_.+-]*/(?:\*|[a-z0-9][a-z0-9!#$&^_.+-]*)$~', $element)) {
                 $elementTypes = [$element];
             } else {

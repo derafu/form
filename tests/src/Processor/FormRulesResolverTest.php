@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Derafu\Form\Tests\Processor;
 
+use Derafu\File\Mime;
 use Derafu\Form\Abstract\AbstractPropertySchema;
 use Derafu\Form\Abstract\AbstractUiSchemaElement;
 use Derafu\Form\Factory\FormUiSchemaFactory;
@@ -36,7 +37,6 @@ use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Form\Widget\Widget;
 use Derafu\Form\Widget\WidgetFactory;
-use Derafu\Support\File;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -947,7 +947,7 @@ final class FormRulesResolverTest extends TestCase
      */
     public static function fileControlWithExplicitRulesProvider(): array
     {
-        $pdf = implode(',', File::mimetypesFromExtension('pdf'));
+        $pdf = implode(',', Mime::typesOfExtension('pdf'));
 
         return [
             'explicit types are added to the ones of accept' => [
@@ -1004,9 +1004,9 @@ final class FormRulesResolverTest extends TestCase
     public static function fileControlRulesProvider(): array
     {
         // The types that an extension has are the ones that `File` knows.
-        $pdf = implode(',', File::mimetypesFromExtension('pdf'));
-        $jpg = implode(',', File::mimetypesFromExtension('jpg'));
-        $png = implode(',', File::mimetypesFromExtension('png'));
+        $pdf = implode(',', Mime::typesOfExtension('pdf'));
+        $jpg = implode(',', Mime::typesOfExtension('jpg'));
+        $png = implode(',', Mime::typesOfExtension('png'));
 
         return [
             'file without options' => [['type' => 'file'], ['file']],

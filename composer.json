@@ -32,7 +32,8 @@
         "derafu/value": "dev-main",
         "derafu/renderer": "dev-main",
         "derafu/translation": "dev-main",
-        "derafu/data-processor": "dev-main"
+        "derafu/data-processor": "dev-main",
+        "derafu/file": "dev-main"
     },
     "require-dev": {
         "ext-xdebug": "*",

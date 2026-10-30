@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Derafu\Form\Renderer\Widget;
 
 use Derafu\Array\ArrayReader;
+use Derafu\File\ByteSize;
 use Derafu\Form\Contract\FormFieldInterface;
 use Derafu\Form\Contract\Renderer\FormRendererInterface;
 use Derafu\Form\Contract\Renderer\WidgetRendererInterface;
@@ -20,7 +21,6 @@ use Derafu\Form\Contract\Schema\IntegerSchemaInterface;
 use Derafu\Form\Contract\Schema\NumberSchemaInterface;
 use Derafu\Form\Contract\Schema\StringSchemaInterface;
 use Derafu\Form\Renderer\Support\RequiredField;
-use Derafu\Support\File;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
 use Derafu\Value\ValueCaster;
 use Derafu\Value\ValueType;
@@ -181,7 +181,7 @@ final class InputWidgetRenderer implements WidgetRendererInterface
         if ($type === 'file') {
             foreach (['min_size' => 'data-min-size', 'max_size' => 'data-max-size'] as $option => $attribute) {
                 $size = $controlOptions[$option] ?? null;
-                $bytes = is_int($size) || is_string($size) ? File::parseSize((string) $size) : null;
+                $bytes = is_int($size) || is_string($size) ? ByteSize::parse((string) $size) : null;
                 if ($bytes !== null) {
                     $attrs[$attribute] = (string) $bytes;
                 }

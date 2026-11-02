@@ -14,6 +14,15 @@
  *   import { InvalidReveal } from './invalid-reveal.js';
  *   document.addEventListener('DOMContentLoaded', () => InvalidReveal.init());
  *
+ * When the server renders the form with controls marked `is-invalid`, `init()`
+ * also opens the panels of the first one that is hidden and focuses it. If the
+ * page also uses `Tabs.init()` of derafu-js (it opens the first tab by default),
+ * `InvalidReveal.init()` must be called AFTER `Tabs.init()`, otherwise the tab
+ * would be reset to the first one:
+ *
+ *   Tabs.init();
+ *   InvalidReveal.init();
+ *
  * It uses Bootstrap 5 (`window.bootstrap`) to open the panels, the same that
  * the templates of the categorizations and of the groups use. Without it, it
  * clicks the button of the tab and adds the class `show` to the section.
@@ -40,7 +49,33 @@ export const InvalidReveal = {
 
             // The `invalid` event does not bubble: it is listened in capture.
             form.addEventListener('invalid', event => this.handle(form, event), true);
+
+            this.revealServerInvalid(form);
         });
+    },
+
+    /**
+     * Reveals the first control that the server rendered as invalid (class
+     * `is-invalid`) when it is inside a tab or a section that is not visible.
+     *
+     * The `invalid` event is not fired for those controls, because the error
+     * does not come from the validation of the browser. The panels are opened
+     * and the control is focused; the message is already in the HTML, so
+     * `reportValidity()` is not called.
+     *
+     * @param {HTMLFormElement} form
+     * @returns {Promise<void>} Resolves when the control is focused (or when
+     *   there is nothing to reveal).
+     */
+    revealServerInvalid(form) {
+        const control = [...form.elements].find(
+            element => element.type !== 'hidden' && element.classList.contains('is-invalid')
+        );
+        if (!control || this.isVisible(control)) {
+            return Promise.resolve();
+        }
+
+        return this.reveal(control).then(() => control.focus());
     },
 
     /**

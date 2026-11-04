@@ -1,6 +1,13 @@
 // json-editor.js - Function to initialize the JSON editor.
 
 /**
+ * The editors that were initialized, by the field that each one replaces.
+ *
+ * @type {WeakMap<Element, object>}
+ */
+const editors = new WeakMap();
+
+/**
  * Initialize the JSON editor using the JSONEditor library.
  *
  * @param {string} selector - The selector for the input(s) to replace.
@@ -93,8 +100,39 @@ function initJsonEditor(selector, options) {
 
         // Initialize JSONEditor on the container div.
         const editor = new JSONEditor(container, editorOptions, initialJson);
+        editors.set(field, editor);
     });
 }
 
+/**
+ * Get the JSONEditor instance that replaces a field.
+ *
+ * @param {Element} field - The field (input or textarea) that was replaced.
+ * @returns {object|undefined} The editor, or undefined if the field has none.
+ */
+function getJsonEditor(field) {
+    return editors.get(field);
+}
+
+/**
+ * Set the content of the editor that replaces a field.
+ *
+ * The editor does not notify the changes that are made by code, so the field is
+ * updated here as well: the form submits what the field has.
+ *
+ * @param {Element} field - The field (input or textarea) that was replaced.
+ * @param {*} json - The JSON value to show in the editor.
+ * @throws {Error} If the field has no editor.
+ */
+function setJsonEditorValue(field, json) {
+    const editor = editors.get(field);
+    if (editor === undefined) {
+        throw new Error('setJsonEditorValue: the field has no JSON editor.');
+    }
+
+    editor.set(json);
+    field.value = JSON.stringify(json);
+}
+
 // Export the functions for use in other modules.
-export { initJsonEditor };
+export { initJsonEditor, getJsonEditor, setJsonEditorValue };

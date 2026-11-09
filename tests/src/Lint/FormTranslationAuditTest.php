@@ -64,9 +64,9 @@ final class FormTranslationAuditTest extends TestCase
                 'd-array.form.php uischema.elements.0.options.help "Help text" [contact]',
                 // The calls of `$context['_t']` are found wherever they are, with
                 // the domain of the call or `messages`.
-                'e-closure.form.php line 15 "Hello {name}" [contact]',
-                'e-closure.form.php line 24 "days" [contact]',
-                'e-closure.form.php line 34 "Good day" [messages]',
+                'e-closure.form.php line 16 "Hello {name}" [contact]',
+                'e-closure.form.php line 25 "days" [contact]',
+                'e-closure.form.php line 35 "Good day" [messages]',
             ],
             $report->describe($report->texts)
         );
@@ -81,8 +81,8 @@ final class FormTranslationAuditTest extends TestCase
             [
                 "d-array.form.php schema.properties.size.title 'Size ' . 'in cm'",
                 "e-closure.form.php schema.properties.a.title \$t('Your name')",
-                "e-closure.form.php line 6 \$context['_t'](\$id, [], 'contact')",
-                "e-closure.form.php line 29 \$context['_t'](\$id)",
+                "e-closure.form.php line 7 \$context['_t'](\$id, [], 'contact')",
+                "e-closure.form.php line 30 \$context['_t'](\$id)",
             ],
             $report->describe($report->dynamicTexts)
         );

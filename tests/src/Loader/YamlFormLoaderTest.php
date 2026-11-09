@@ -24,7 +24,9 @@ use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
+use Derafu\Value\Exception\TypeMismatchException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
@@ -127,6 +129,18 @@ final class YamlFormLoaderTest extends TestCase
         $this->expectExceptionMessage('The key "data" must be of type map, string given.');
 
         $loader->load('bad-data', [], ['name' => 'from-call']);
+    }
+
+    #[TestWith(['numeric-key', 'array'])]
+    public function testInvalidDefinitionsIdentifyTheirFileAndType(string $name, string $type): void
+    {
+        $loader = new YamlFormLoader($this->makeFactory());
+        $loader->addPath(__DIR__ . '/../../fixtures/invalid-definitions');
+
+        $this->expectException(TypeMismatchException::class);
+        $this->expectExceptionMessage($name . '.form.yaml must be of type map, ' . $type . ' given.');
+
+        $loader->load($name);
     }
 
     private function makeFactory(): FormFactoryInterface

@@ -24,8 +24,10 @@ use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
 use Derafu\TestsForm\Fixture\FormTestContainer;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException;
+use Derafu\Value\Exception\TypeMismatchException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
@@ -134,6 +136,8 @@ final class WidgetRenderingTest extends TestCase
         array $form = [],
         bool $required = false
     ): string {
+        // Both definitions have string keys; recursive replacement preserves them.
+        /** @var array<string, mixed> $definition */
         $definition = array_replace_recursive([
             'schema' => [
                 'type' => 'object',
@@ -415,6 +419,29 @@ final class WidgetRenderingTest extends TestCase
         );
 
         $this->assertStringContainsString('from json', $html);
+    }
+
+    #[Test]
+    #[TestWith([false, false])]
+    #[TestWith([true, false])]
+    #[TestWith([true, true])]
+    public function shouldRejectNumericFieldKeysInCollectionRows(bool $complex, bool $json): void
+    {
+        $control = $complex ? ['options' => ['detail' => [
+            'type' => 'VerticalLayout',
+            'elements' => [['type' => 'Group', 'label' => 'G', 'elements' => [
+                ['type' => 'Control', 'scope' => '#/properties/a'],
+            ]]],
+        ]]] : [];
+        $row = ['a' => 'valid field', 123 => 'invalid field'];
+        if ($json) {
+            $row = json_encode($row, JSON_THROW_ON_ERROR);
+        }
+
+        $this->expectException(TypeMismatchException::class);
+        $this->expectExceptionMessage('The value at "field[0]" of collection row must be of type map, array given.');
+
+        $this->row(self::collection(), $control, [], ['data' => ['field' => [$row]]]);
     }
 
     #[Test]

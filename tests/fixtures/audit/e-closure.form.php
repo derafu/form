@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return function (array $context = []): array {
+    /** @var array{_t: callable(string, array<string, mixed>=, string=): string, id: string} $context */
     $t = fn (string $id): string => $context['_t']($id, [], 'contact');
     $id = $context['id'];
 

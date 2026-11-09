@@ -31,7 +31,7 @@ abstract class AbstractFileFormLoader implements FormLoaderInterface
      * File extension used by this loader, including leading dot and any
      * namespace part (e.g. `.form.php`).
      */
-    protected const EXTENSION = '';
+    protected const string EXTENSION = '';
 
     /** @var string[] Registered directories (searched last-to-first). */
     private array $paths = [];

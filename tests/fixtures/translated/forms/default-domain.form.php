@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-return fn (array $context = []): array => [
+return function (array $context = []): array {
+    /** @var array{_t: callable(string, array<string, mixed>=, string=): string} $context */
+    return [
         'schema' => [
             'type' => 'object',
             'properties' => [
@@ -10,3 +12,4 @@ return fn (array $context = []): array => [
             ],
         ],
     ];
+};

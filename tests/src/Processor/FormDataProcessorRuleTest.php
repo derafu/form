@@ -446,6 +446,12 @@ final class FormDataProcessorRuleTest extends TestCase
         $data = $result->getProcessedData();
         $this->assertIsArray($data);
 
-        return $data;
+        $map = [];
+        foreach ($data as $key => $value) {
+            $this->assertIsString($key);
+            $map[$key] = $value;
+        }
+
+        return $map;
     }
 }

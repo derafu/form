@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-return fn (array $context = []): array => [
+return function (array $context = []): array {
+    /** @var array{_t: callable(string, array<string, mixed>=, string=): string, user: string} $context */
+    return [
         'options' => ['translation_domain' => 'contact'],
         'schema' => [
             'type' => 'object',
@@ -15,3 +17,4 @@ return fn (array $context = []): array => [
             ],
         ],
     ];
+};

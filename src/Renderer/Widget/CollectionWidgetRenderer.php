@@ -28,6 +28,7 @@ use Derafu\Form\Schema\FormSchema;
 use Derafu\Form\UiSchema\Control;
 use Derafu\Form\UiSchema\VerticalLayout;
 use Derafu\Translation\Exception\Logic\TranslatableInvalidArgumentException as InvalidArgumentException;
+use Derafu\Value\ValueType;
 
 /**
  * Renderer for collection widgets (array of objects).
@@ -89,7 +90,11 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
                     $formRenderer,
                     $itemsSchema,
                     $detailUiSchema,
-                    is_array($rowData) ? $rowData : [],
+                    ValueType::map()->parse(
+                        is_array($rowData) ? $rowData : [],
+                        path: $fieldName . '[' . $i . ']',
+                        source: 'collection row'
+                    ),
                     $fieldName,
                     $i
                 );
@@ -185,7 +190,11 @@ final class CollectionWidgetRenderer implements WidgetRendererInterface
         $subForm = $this->buildSubForm(
             $itemsSchema,
             $detailUiSchema,
-            $rowData,
+            ValueType::map()->parse(
+                $rowData,
+                path: $fieldName . '[' . $index . ']',
+                source: 'collection row'
+            ),
             $fieldName,
             $index
         );

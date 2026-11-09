@@ -23,8 +23,10 @@ use Derafu\Form\Type\TypeProvider;
 use Derafu\Form\Type\TypeRegistry;
 use Derafu\Form\Type\TypeResolver;
 use Derafu\Form\UiSchema\UiSchemaElementDefinition;
+use Derafu\Value\Exception\TypeMismatchException;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
@@ -201,6 +203,33 @@ final class PhpFormLoaderTest extends TestCase
         $form = $loader->load('explicit-csrf');
 
         $this->assertSame('authenticate', $form->getCsrfTokenId());
+    }
+
+    #[TestWith(['closure-null', 'null'])]
+    #[TestWith(['closure-string', 'string'])]
+    #[TestWith(['closure-list', 'array'])]
+    #[TestWith(['numeric-key', 'array'])]
+    public function testInvalidDefinitionsIdentifyTheirFileAndType(string $name, string $type): void
+    {
+        $loader = new PhpFormLoader($this->makeFactory());
+        $loader->addPath(__DIR__ . '/../../fixtures/invalid-definitions');
+
+        $this->expectException(TypeMismatchException::class);
+        $this->expectExceptionMessage($name . '.form.php must be of type map, ' . $type . ' given.');
+
+        $loader->load($name);
+    }
+
+    public function testInvalidDataFromPhpCanNotBeMerged(): void
+    {
+        $loader = new PhpFormLoader($this->makeFactory());
+        $loader->addPath(__DIR__ . '/../../fixtures/invalid-definitions');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The key "data" of ');
+        $this->expectExceptionMessage('bad-data.form.php must be of type map, string given.');
+
+        $loader->load('bad-data', [], ['name' => 'from-call']);
     }
 
     private function makeFactory(): FormFactoryInterface

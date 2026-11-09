@@ -44,10 +44,13 @@ abstract class AbstractType implements TypeInterface
      */
     public function __construct(array $options = [])
     {
-        $this->options = array_replace_recursive(
+        // Both inputs have string keys; recursive replacement preserves them.
+        /** @var array<string, mixed> $options */
+        $options = array_replace_recursive(
             $this->getDefaultOptions(),
             $options
         );
+        $this->options = $options;
     }
 
     /**

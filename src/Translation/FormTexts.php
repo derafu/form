@@ -77,10 +77,11 @@ final class FormTexts
      * Gives the definition with each of its texts replaced by what the callback
      * returns for it.
      *
-     * @param array<string, mixed> $definition
+     * @template K of array-key
+     * @param array<K, mixed> $definition
      * @param Closure(string, string): string $translate Receives the text and
      * where it is (for example `schema.properties.name.title`).
-     * @return array<string, mixed>
+     * @return array<K, mixed>
      */
     public function map(array $definition, Closure $translate): array
     {
@@ -98,7 +99,7 @@ final class FormTexts
     /**
      * The texts of the definition, in the order they are found.
      *
-     * @param array<string, mixed> $definition
+     * @param array<array-key, mixed> $definition
      * @return list<array{text: string, path: string}>
      */
     public function collect(array $definition): array

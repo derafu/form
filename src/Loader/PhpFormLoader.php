@@ -13,10 +13,12 @@ declare(strict_types=1);
 namespace Derafu\Form\Loader;
 
 use Closure;
+use Derafu\Array\ArrayReader;
 use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
+use Derafu\Value\ValueType;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -47,7 +49,7 @@ class PhpFormLoader extends AbstractFileFormLoader
     /**
      * The file extension for PHP form files.
      */
-    protected const EXTENSION = '.form.php';
+    protected const string EXTENSION = '.form.php';
 
     /**
      * Constructor.
@@ -101,8 +103,10 @@ class PhpFormLoader extends AbstractFileFormLoader
             ]);
         }
 
+        $definition = ValueType::map()->parse($definition, source: $file);
+
         if ($data !== []) {
-            $definition['data'] = array_merge($definition['data'] ?? [], $data);
+            $definition['data'] = array_merge(ArrayReader::fromArray($definition, $file)->getMap('data') ?? [], $data);
         }
 
         $definition = $this->applyDefaultCsrfTokenId($name, $definition, $file);

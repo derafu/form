@@ -17,6 +17,7 @@ use Derafu\Form\Abstract\AbstractFileFormLoader;
 use Derafu\Form\Contract\Factory\FormFactoryInterface;
 use Derafu\Form\Contract\FormInterface;
 use Derafu\Translation\Exception\Core\TranslatableRuntimeException as RuntimeException;
+use Derafu\Value\ValueType;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -35,7 +36,7 @@ class YamlFormLoader extends AbstractFileFormLoader
     /**
      * The file extension for YAML form files.
      */
-    protected const EXTENSION = '.form.yaml';
+    protected const string EXTENSION = '.form.yaml';
 
     /**
      * Constructor.
@@ -84,6 +85,8 @@ class YamlFormLoader extends AbstractFileFormLoader
                 'type' => get_debug_type($definition),
             ]);
         }
+
+        $definition = ValueType::map()->parse($definition, source: $file);
 
         if ($data !== []) {
             $definition['data'] = array_merge(ArrayReader::fromArray($definition)->getMap('data') ?? [], $data);

@@ -87,6 +87,7 @@ final class InputActionResolverTest extends TestCase
         $translator->method('trans')->willReturnCallback(
             function (string $id, array $parameters): string {
                 if ($id === 'Value from field "{title}" copied.') {
+                    $this->assertIsString($parameters['title']);
                     return sprintf('Valor del campo "%s" copiado.', $parameters['title']);
                 }
 
